@@ -471,8 +471,7 @@
                     <nav class="menu">
                         {% if user.is_authenticated %}
 
-                        {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol
-                        == 'moderador' %}
+                        {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol == 'moderador' %}
                         <a href="{% url 'dashboard' %}"
                             class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
                             <span>📊</span>
