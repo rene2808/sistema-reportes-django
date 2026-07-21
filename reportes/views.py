@@ -1092,6 +1092,27 @@ def api_notificaciones_sin_leer(request):
     unread_count = Notificacion.objects.filter(usuario=request.user, leida=False).count()
     return JsonResponse({'unread_count': unread_count})
 
+
+@login_required
+def api_estado_usuarios(request):
+    """
+    Retorna un mapeo JSON de todos los usuarios registrados y su estado 'esta_en_linea'.
+    Solo accesible para administradores.
+    """
+    if not (request.user.is_superuser or (hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.rol == 'administrador')):
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+        
+    from django.contrib.auth.models import User
+    usuarios = User.objects.all()
+    estados = {}
+    for u in usuarios:
+        if hasattr(u, 'perfilusuario'):
+            estados[u.id] = u.perfilusuario.esta_en_linea
+        else:
+            estados[u.id] = False
+            
+    return JsonResponse({'estados': estados})
+
 @rol_requerido('administrador')
 def eliminar_categoria(request, id):
     categoria = get_object_or_404(Categoria, id=id)

@@ -418,6 +418,16 @@
 
 <body>
 
+{% if user.is_authenticated %}
+<script>
+    if (!sessionStorage.getItem('sessionActive')) {
+        // Si no existe la variable en sessionStorage para esta pestaña/ventana,
+        // significa que es un acceso nuevo (otra pestaña) o restaurado, por lo que forzamos logout.
+        window.location.href = "{% url 'logout' %}";
+    }
+</script>
+{% endif %}
+
 {% url 'dashboard' as dashboard_url %}
 {% url 'panel_ciudadano' as panel_ciudadano_url %}
 {% url 'panel_administrador' as panel_administrador_url %}
@@ -498,7 +508,7 @@
                         </div>
                     </div>
 
-                    <a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a>
+                    <a href="{% url 'logout' %}" class="logout-btn" onclick="sessionStorage.removeItem('sessionActive');">Cerrar Sesión</a>
                 {% endif %}
             </div>
         </div>

@@ -127,9 +127,13 @@ class PerfilUsuario(models.Model):
         """
         Determina si el usuario está en línea basado en su última actividad
         registrada en la caché del sistema (vigente por 10 minutos).
+        De forma segura retorna False si falla la conexión con el servidor de caché.
         """
         from django.core.cache import cache
-        return cache.get(f'seen_user_{self.usuario.id}') is not None
+        try:
+            return cache.get(f'seen_user_{self.usuario.id}') is not None
+        except Exception:
+            return False
 
 
 # --- Señales de Django (Signals) ---

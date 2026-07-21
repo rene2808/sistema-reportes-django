@@ -76,6 +76,7 @@ urlpatterns = [
     path('notificaciones/<int:id>/eliminar/', views.eliminar_notificacion, name='eliminar_notificacion'),
     path('notificaciones/leidas/', views.marcar_notificaciones_leidas, name='marcar_notificaciones_leidas'),
     path('api/notificaciones/sin-leer/', views.api_notificaciones_sin_leer, name='api_notificaciones_sin_leer'),
+    path('api/usuarios/estados/', views.api_estado_usuarios, name='api_estado_usuarios'),
 
     # --- Galería Pública y Reseñas ---
     path('resena/nueva/', views.dejar_reseña, name='dejar_reseña'),

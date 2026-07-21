@@ -490,6 +490,9 @@
     </div>
 
     <script>
+        // Inicializar la sesión en sessionStorage para el control de pestaña/ventana activa
+        sessionStorage.setItem('sessionActive', 'true');
+
         function togglePasswordVisibility(fieldId, iconId) {
             const passwordField = document.getElementById(fieldId);
             const toggleIcon = document.getElementById(iconId);

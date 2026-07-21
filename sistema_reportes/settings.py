@@ -181,6 +181,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Habilitar WhiteNoise para comprimir y cachear estáticos
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Evita errores 500 si algún archivo estático no se encuentra en el manifest
+WHITENOISE_MANIFEST_STRICT = False
 
 # --- Gestión de Archivos Multimedia (Imágenes y Evidencias subidas por ciudadanos) ---
 

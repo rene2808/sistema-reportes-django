@@ -759,7 +759,7 @@
                         <span class="badge bg-danger text-white ms-1" style="font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; background-color: #ef4444;">Bloqueado</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td id="user-status-cell-{{ usuario.id }}">
                         {% if usuario.perfilusuario.esta_en_linea %}
                             <span class="badge" style="background-color: #22c55e; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
                                 <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: white; animation: status-pulse 1.5s infinite;"></span> En línea
@@ -1078,6 +1078,39 @@
             padding: [30, 30]
         });
     }
+
+    // Polling en tiempo real para actualizar el estado de actividad (en línea) de los usuarios
+    function actualizarEstadosUsuarios() {
+        fetch("{% url 'api_estado_usuarios' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.estados) {
+                    Object.keys(data.estados).forEach(userId => {
+                        const cell = document.getElementById(`user-status-cell-${userId}`);
+                        if (cell) {
+                            const estaEnLinea = data.estados[userId];
+                            if (estaEnLinea) {
+                                cell.innerHTML = `
+                                    <span class="badge" style="background-color: #22c55e; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: white; animation: status-pulse 1.5s infinite;"></span> En línea
+                                    </span>
+                                `;
+                            } else {
+                                cell.innerHTML = `
+                                    <span class="badge" style="background-color: #64748b; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center;">
+                                        Desconectado
+                                    </span>
+                                `;
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error("Error al actualizar estados de usuarios:", err));
+    }
+
+    // Ejecutar la actualización cada 10 segundos
+    setInterval(actualizarEstadosUsuarios, 10000);
 </script>
 
 {% endblock %}
