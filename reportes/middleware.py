@@ -1,13 +1,13 @@
 import logging
-from django.core.cache import cache
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
 class ActiveUserMiddleware:
     """
     Middleware que registra la última actividad de cada usuario autenticado
-    para determinar si se encuentra en línea de forma segura y evita
-    el almacenamiento en caché de páginas privadas.
+    en la base de datos para determinar si se encuentra en línea
+    de forma segura e impide el almacenamiento en caché de páginas privadas.
     """
     def __init__(self, get_response):
         self.get_response = get_response
@@ -15,12 +15,12 @@ class ActiveUserMiddleware:
     def __call__(self, request):
         if request.user.is_authenticated:
             try:
-                # Almacena en la caché un valor booleano simple (evita problemas de serialización)
-                # con un tiempo de expiración de 10 minutos (600 segundos)
-                cache.set(f'seen_user_{request.user.id}', True, 600)
+                from reportes.models import PerfilUsuario
+                # Actualiza de forma directa y rápida el campo ultimo_acceso en la base de datos
+                PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=timezone.now())
             except Exception as e:
-                # Registra el error pero permite que la petición continúe sin caer en error 500
-                logger.error(f"Error al actualizar la caché de actividad del usuario: {e}")
+                # Registra el error pero permite que la petición continúe sin interrumpir al usuario
+                logger.error(f"Error al actualizar la actividad del usuario en base de datos: {e}")
         
         response = self.get_response(request)
 

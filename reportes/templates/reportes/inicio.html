@@ -168,6 +168,15 @@
 
 <body class="bg-light-gray">
 
+{% if user.is_authenticated %}
+<script>
+    if (!sessionStorage.getItem('sessionActive')) {
+        // Si no existe la sesión en sessionStorage de esta pestaña, cerramos sesión
+        window.location.href = "{% url 'logout' %}";
+    }
+</script>
+{% endif %}
+
 
 
     <!-- NAVBAR MODERNA Y PROFESIONAL -->
@@ -202,7 +211,7 @@
                         class="btn btn-outline-light fw-semibold px-4 py-2 rounded-pill fs-6">
                         <i class="bi bi-layout-text-sidebar-reverse me-1"></i> Mi Panel
                     </a>
-                    <a href="{% url 'logout' %}"
+                    <a href="{% url 'logout' %}" onclick="sessionStorage.removeItem('sessionActive');"
                         class="btn btn-danger fw-semibold px-4 py-2 rounded-pill fs-6 shadow-sm text-white">
                         <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión
                     </a>

@@ -118,6 +118,9 @@ class PerfilUsuario(models.Model):
     # Número de teléfono del usuario para fines de contacto o seguimiento
     telefono = models.CharField(max_length=20, blank=True, null=True)
 
+    # Fecha y hora de su última actividad en el sistema para determinar si está en línea
+    ultimo_acceso = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         # Muestra el nombre de usuario de Django y su rol correspondiente
         return f'{self.usuario.username} - {self.get_rol_display()}'
@@ -126,14 +129,12 @@ class PerfilUsuario(models.Model):
     def esta_en_linea(self):
         """
         Determina si el usuario está en línea basado en su última actividad
-        registrada en la caché del sistema (vigente por 10 minutos).
-        De forma segura retorna False si falla la conexión con el servidor de caché.
+        registrada en la base de datos (vigente por 10 minutos).
         """
-        from django.core.cache import cache
-        try:
-            return cache.get(f'seen_user_{self.usuario.id}') is not None
-        except Exception:
-            return False
+        if self.ultimo_acceso:
+            from django.utils import timezone
+            return (timezone.now() - self.ultimo_acceso).total_seconds() < 600
+        return False
 
 
 # --- Señales de Django (Signals) ---
