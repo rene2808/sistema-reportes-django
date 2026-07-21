@@ -277,9 +277,51 @@
     }
 
     @media (max-width: 768px) {
+        .report-header {
+            padding: 20px 16px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+        }
+
+        .report-header h1 {
+            font-size: 22px;
+        }
+
+        .report-header p {
+            font-size: 13px;
+        }
+
+        .form-card {
+            padding: 18px 14px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .card-section-title {
+            font-size: 1.05rem;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+
         .address-fields-grid {
             grid-template-columns: 1fr;
             gap: 10px;
+        }
+
+        #mapaReporte {
+            height: 280px;
+        }
+
+        .buttons {
+            flex-direction: column-reverse;
+            gap: 10px;
+        }
+
+        .btn-save, .btn-cancel {
+            width: 100%;
+            text-align: center;
+            padding: 14px 18px;
+            box-sizing: border-box;
         }
     }
 

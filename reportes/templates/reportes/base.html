@@ -293,6 +293,18 @@
             background: #1d4ed8;
         }
 
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .mobile-header-bar {
+            display: none;
+        }
+
         @media (max-width: 900px) {
             .layout {
                 flex-direction: column;
@@ -300,21 +312,93 @@
 
             .sidebar {
                 width: 100%;
-                position: static;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
                 height: auto;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            }
+
+            .mobile-header-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 16px;
+                background: linear-gradient(90deg, #03152d 0%, #020d1e 100%);
+            }
+
+            .mobile-brand-link {
+                display: flex;
+                align-items: center;
+                text-decoration: none;
+            }
+
+            .mobile-brand-link img {
+                height: 46px;
+                object-fit: contain;
+            }
+
+            .mobile-toggle-btn {
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                color: white;
+                font-size: 20px;
+                padding: 8px 14px;
+                border-radius: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: background 0.2s ease;
+            }
+
+            .mobile-toggle-btn:hover {
+                background: rgba(255, 255, 255, 0.22);
+            }
+
+            .sidebar-content-wrapper {
+                display: none;
+                flex-direction: column;
+                background: #020d1e;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            .sidebar-content-wrapper.active {
+                display: flex;
+            }
+
+            .sidebar-top {
+                padding-top: 5px;
+            }
+
+            .logo-box-desktop {
+                display: none !important;
             }
 
             .menu {
-                flex-direction: row;
-                overflow-x: auto;
+                flex-direction: column;
+                padding: 10px 14px;
             }
 
             .menu a {
-                min-width: max-content;
+                padding: 12px 14px;
+                font-size: 14.5px;
             }
 
             .main-content {
-                padding: 20px;
+                padding: 16px 14px;
+                overflow-x: hidden;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-subtitle {
+                font-size: 13.5px;
+                margin-bottom: 18px;
             }
         }
     </style>
@@ -331,62 +415,80 @@
 
 <div class="layout">
     <aside class="sidebar">
-        <div class="sidebar-top">
-            <a href="{% url 'inicio' %}" style="display: block; text-decoration: none; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-                <div class="logo-box" style="margin: 15px 10px; padding: 6px; display: flex; justify-content: center; align-items: center; border-bottom: none;">
-                    <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco" style="height: 72px; width: 100%; object-fit: contain;">
-                </div>
+        <!-- Encabezado Móvil (Solo visible en dispositivos < 900px) -->
+        <div class="mobile-header-bar">
+            <a href="{% url 'inicio' %}" class="mobile-brand-link">
+                <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco">
             </a>
-
-            <nav class="menu">
-                {% if user.is_authenticated %}
-
-                    {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol == 'moderador' %}
-                        <a href="{% url 'dashboard' %}" class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
-                            <span>📊</span>
-                            <span>Panel</span>
-                        </a>
-
-                        <a href="{% url 'reporte_general' %}" class="{% if request.path == reporte_general_url %}active{% endif %}">
-                            <span>📄</span>
-                            <span>Informes detallados</span>
-                        </a>
-                    {% else %}
-                        <a href="{% url 'panel_ciudadano' %}" class="{% if request.path == panel_ciudadano_url %}active{% endif %}">
-                            <span>📊</span>
-                            <span>Panel</span>
-                        </a>
-                    {% endif %}
-
-                    <a href="{% url 'notificaciones' %}" class="{% if request.path == notificaciones_url %}active{% endif %}">
-                        <span>🔔</span>
-                        <span>Notificaciones</span>
-                        <span class="notif-badge" id="notif-badge-counter" style="{% if notificaciones_sin_leer_count == 0 %}display: none;{% endif %}">
-                            {{ notificaciones_sin_leer_count }}
-                        </span>
-                    </a>
-
-                    <a href="{% url 'perfil' %}" class="{% if request.path == perfil_url %}active{% endif %}">
-                        <span>👤</span>
-                        <span>Mi Perfil</span>
-                    </a>
-
+            
+            <button type="button" class="mobile-toggle-btn" id="mobile-menu-trigger" aria-label="Abrir Menú">
+                <i class="bi bi-list" id="mobile-menu-icon"></i>
+                <span style="font-size: 13px; font-weight: bold;">Menú</span>
+                {% if notificaciones_sin_leer_count > 0 %}
+                    <span class="notif-badge" style="margin-left: 2px;">{{ notificaciones_sin_leer_count }}</span>
                 {% endif %}
-            </nav>
+            </button>
         </div>
 
-        <div class="sidebar-bottom">
-            {% if user.is_authenticated %}
-                <div class="user-mini">
-                    <div class="mini-avatar">{{ user.username|first|upper }}</div>
-                    <div>
-                        <strong>{{ user.username }}</strong>
-                        <small>{{ user.email }}</small>
+        <!-- Contenido Completo del Menú (Desktop y Colapsable en Móvil) -->
+        <div class="sidebar-content-wrapper" id="sidebar-collapsible-content">
+            <div class="sidebar-top">
+                <a href="{% url 'inicio' %}" class="logo-box-desktop" style="display: block; text-decoration: none; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+                    <div class="logo-box" style="margin: 15px 10px; padding: 6px; display: flex; justify-content: center; align-items: center; border-bottom: none;">
+                        <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco" style="height: 72px; width: 100%; object-fit: contain;">
                     </div>
-                </div>
+                </a>
 
-                <a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a>
-            {% endif %}
+                <nav class="menu">
+                    {% if user.is_authenticated %}
+
+                        {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol == 'moderador' %}
+                            <a href="{% url 'dashboard' %}" class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
+                                <span>📊</span>
+                                <span>Panel</span>
+                            </a>
+
+                            <a href="{% url 'reporte_general' %}" class="{% if request.path == reporte_general_url %}active{% endif %}">
+                                <span>📄</span>
+                                <span>Informes detallados</span>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'panel_ciudadano' %}" class="{% if request.path == panel_ciudadano_url %}active{% endif %}">
+                                <span>📊</span>
+                                <span>Panel</span>
+                            </a>
+                        {% endif %}
+
+                        <a href="{% url 'notificaciones' %}" class="{% if request.path == notificaciones_url %}active{% endif %}">
+                            <span>🔔</span>
+                            <span>Notificaciones</span>
+                            <span class="notif-badge" id="notif-badge-counter" style="{% if notificaciones_sin_leer_count == 0 %}display: none;{% endif %}">
+                                {{ notificaciones_sin_leer_count }}
+                            </span>
+                        </a>
+
+                        <a href="{% url 'perfil' %}" class="{% if request.path == perfil_url %}active{% endif %}">
+                            <span>👤</span>
+                            <span>Mi Perfil</span>
+                        </a>
+
+                    {% endif %}
+                </nav>
+            </div>
+
+            <div class="sidebar-bottom">
+                {% if user.is_authenticated %}
+                    <div class="user-mini">
+                        <div class="mini-avatar">{{ user.username|first|upper }}</div>
+                        <div>
+                            <strong>{{ user.username }}</strong>
+                            <small>{{ user.email }}</small>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a>
+                {% endif %}
+            </div>
         </div>
     </aside>
 
@@ -493,6 +595,24 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Manejo del menú colapsable en dispositivos móviles
+        const mobileTrigger = document.getElementById('mobile-menu-trigger');
+        const sidebarContent = document.getElementById('sidebar-collapsible-content');
+        const mobileIcon = document.getElementById('mobile-menu-icon');
+
+        if (mobileTrigger && sidebarContent) {
+            mobileTrigger.addEventListener('click', function() {
+                const isActive = sidebarContent.classList.toggle('active');
+                if (mobileIcon) {
+                    if (isActive) {
+                        mobileIcon.className = 'bi bi-x-lg';
+                    } else {
+                        mobileIcon.className = 'bi bi-list';
+                    }
+                }
+            });
+        }
+
         let confirmacionCallback = null;
 
         const modal = document.getElementById('custom-confirm-modal');

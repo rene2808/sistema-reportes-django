@@ -430,6 +430,21 @@
         font-size: 14px;
     }
 
+    .table-container,
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .table-container table,
+    .table-responsive table {
+        width: 100%;
+        min-width: 650px;
+    }
+
     /* Adaptabilidad de Pantallas */
     @media (max-width: 1300px) {
         .stats-grid {
@@ -442,12 +457,28 @@
     }
 
     @media (max-width: 768px) {
+        .admin-section {
+            padding: 18px 14px;
+            border-radius: 16px;
+            margin-bottom: 22px;
+        }
+
         .stats-grid {
             grid-template-columns: 1fr;
+            gap: 12px;
         }
 
         .form-grid {
             grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            padding: 16px 14px;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
         }
     }
 

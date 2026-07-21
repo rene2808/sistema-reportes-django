@@ -518,58 +518,79 @@ def crear_reporte(request):
                 form.add_error('categoria', 'Por favor especifica el nombre de tu incidencia en el campo de texto.')
 
         if form.is_valid() and not errores_foto:
-            reporte = form.save(commit=False)
-            reporte.usuario = request.user
-            reporte.estado = 'Pendiente'
-            reporte.prioridad = 'Media'
-            reporte.municipio = 'Acapulco de Juárez'
-            reporte.foto = fotos[0]  # Primera fotografía como foto principal
+            try:
+                reporte = form.save(commit=False)
+                reporte.usuario = request.user
+                reporte.estado = 'Pendiente'
+                reporte.prioridad = 'Media'
+                reporte.municipio = 'Acapulco de Juárez'
+                reporte.foto = fotos[0]  # Primera fotografía como foto principal
 
-            # Si seleccionó 'Otro' y especificó un nombre personalizado
-            if reporte.categoria and 'otro' in reporte.categoria.nombre.lower() and nombre_incidencia_otro:
-                cat_custom, _ = Categoria.objects.get_or_create(
-                    nombre=nombre_incidencia_otro.strip().capitalize(),
-                    defaults={'codigo': 'OT'}
-                )
-                reporte.categoria = cat_custom
-                reporte.titulo = f'Reporte de {cat_custom.nombre}'
-            elif reporte.categoria:
-                reporte.titulo = f'Reporte de {reporte.categoria.nombre}'
-            else:
-                reporte.titulo = 'Reporte ciudadano'
+                # Si seleccionó 'Otro' y especificó un nombre personalizado
+                if reporte.categoria and 'otro' in reporte.categoria.nombre.lower() and nombre_incidencia_otro:
+                    nombre_custom = nombre_incidencia_otro.strip().capitalize()
+                    cat_custom = Categoria.objects.filter(nombre__iexact=nombre_custom).first()
+                    if not cat_custom:
+                        idx = 1
+                        new_code = f"O{idx:02d}"
+                        while Categoria.objects.filter(codigo=new_code).exists():
+                            idx += 1
+                            new_code = f"O{idx:02d}"
+                        cat_custom = Categoria.objects.create(
+                            nombre=nombre_custom,
+                            codigo=new_code
+                        )
+                    reporte.categoria = cat_custom
+                    reporte.titulo = f'Reporte de {cat_custom.nombre}'
+                elif reporte.categoria:
+                    reporte.titulo = f'Reporte de {reporte.categoria.nombre}'
+                else:
+                    reporte.titulo = 'Reporte ciudadano'
 
-            reporte.save()
+                reporte.save()
 
-            # Guardar fotografías adicionales (2 y 3) como evidencias relacionales
-            for foto_extra in fotos[1:3]:
-                Evidencia.objects.create(
-                    reporte=reporte,
-                    archivo=foto_extra,
-                    descripcion='Evidencia fotográfica inicial del ciudadano'
-                )
+                # Guardar fotografías adicionales (2 y 3) como evidencias relacionales
+                for foto_extra in fotos[1:3]:
+                    Evidencia.objects.create(
+                        reporte=reporte,
+                        archivo=foto_extra,
+                        descripcion='Evidencia fotográfica inicial del ciudadano'
+                    )
 
-            # Notificar a administradores y moderadores sobre la nueva incidencia registrada
-            admins_y_mods = User.objects.filter(
-                Q(is_superuser=True) | Q(perfilusuario__rol__in=['administrador', 'moderador'])
-            ).exclude(id=request.user.id).distinct()
+                # Notificar a administradores y moderadores sobre la nueva incidencia registrada
+                try:
+                    admins_y_mods = User.objects.filter(
+                        Q(is_superuser=True) | Q(perfilusuario__rol__in=['administrador', 'moderador'])
+                    ).exclude(id=request.user.id).distinct()
 
-            for admin_mod in admins_y_mods:
-                crear_notificacion(
-                    usuario=admin_mod,
-                    reporte=reporte,
-                    titulo='Nuevo reporte registrado',
-                    mensaje=f'El usuario {request.user.username} ha registrado un nuevo reporte con folio {reporte.folio}.'
-                )
+                    for admin_mod in admins_y_mods:
+                        crear_notificacion(
+                            usuario=admin_mod,
+                            reporte=reporte,
+                            titulo='Nuevo reporte registrado',
+                            mensaje=f'El usuario {request.user.username} ha registrado un nuevo reporte con folio {reporte.folio}.'
+                        )
+                except Exception as notif_err:
+                    print(f"Error al enviar notificaciones: {notif_err}")
 
-            registrar_historial(
-                reporte=reporte,
-                usuario=request.user,
-                accion='Reporte registrado',
-                descripcion=f'El ciudadano generó un nuevo reporte en el sistema con {len(fotos)} fotografía(s) de evidencia.'
-            )
+                try:
+                    registrar_historial(
+                        reporte=reporte,
+                        usuario=request.user,
+                        accion='Reporte registrado',
+                        descripcion=f'El ciudadano generó un nuevo reporte en el sistema con {len(fotos)} fotografía(s) de evidencia.'
+                    )
+                except Exception as hist_err:
+                    print(f"Error al registrar historial: {hist_err}")
 
-            from django.urls import reverse
-            return redirect(f"{reverse('detalle_reporte', args=[reporte.id])}?creado=1")
+                from django.urls import reverse
+                return redirect(f"{reverse('detalle_reporte', args=[reporte.id])}?creado=1")
+
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f'Ocurrió un error al guardar el reporte: {str(e)}')
+                form.add_error(None, f'Error al guardar el reporte: {str(e)}')
 
     else:
         form = ReporteForm()

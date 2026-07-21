@@ -9,6 +9,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 
 class Categoria(models.Model):
@@ -236,8 +237,9 @@ class Reporte(models.Model):
             # Primero guarda para obtener un ID autoincrementable de base de datos
             super().save(*args, **kwargs)
 
-            # Estructurar la fecha del día actual
-            fecha = self.fecha_reporte.strftime('%Y%m%d')
+            # Estructurar la fecha del día actual evitando NoneType
+            fecha_ref = self.fecha_reporte or timezone.now()
+            fecha = fecha_ref.strftime('%Y%m%d')
             # Concatenar prefijo, fecha e ID con relleno a 5 dígitos
             folio_generado = f'REP-{fecha}-{self.id:05d}'
 

@@ -418,6 +418,31 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @media (max-width: 600px) {
+        .tabla-info th, .tabla-info td {
+            display: block;
+            width: 100%;
+            padding: 6px 10px;
+        }
+
+        .tabla-info tr {
+            border-bottom: 1px solid #e2e8f0;
+            display: block;
+            padding: 6px 0;
+        }
+
+        .tabla-info th {
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 11.5px;
+            text-transform: uppercase;
+        }
+
+        #mapaDetalle {
+            height: 260px !important;
+        }
+    }
 </style>
 
 <div class="detalle-page">

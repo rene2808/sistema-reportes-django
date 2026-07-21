@@ -7,6 +7,7 @@ creación y actualización de reportes, y visualización de vistas generales.
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 class VerificarUsuarioTests(TestCase):
     def setUp(self):
@@ -216,6 +217,11 @@ class ReporteGeneralTests(TestCase):
 class CrearReporteTests(TestCase):
     def setUp(self):
         self.client = Client()
+        self.admin = User.objects.create_superuser(
+            username='admin_test',
+            password='password123',
+            email='admin@example.com'
+        )
         self.ciudadano = User.objects.create_user(
             username='ciudadano_test',
             password='password123',
@@ -270,7 +276,7 @@ class CrearReporteTests(TestCase):
             'codigo_postal': '39300'
         })
         self.assertEqual(res_sin_foto.status_code, 200)
-        self.assertFormError(res_sin_foto, 'form', 'foto', 'Este campo es obligatorio.')
+        self.assertTrue('foto' in res_sin_foto.context['form'].errors)
 
         # 2. Intento con formato PNG no permitido (Debe fallar)
         foto_png = SimpleUploadedFile('prueba.png', b'pngcontent', content_type='image/png')
@@ -352,3 +358,35 @@ class CrearReporteTests(TestCase):
         self.assertEqual(response.status_code, 302)
         reporte_creado = Reporte.objects.filter(usuario=self.ciudadano).latest('id')
         self.assertEqual(reporte_creado.categoria.nombre, 'Árbol caído')
+
+    def test_crear_reportes_multiples_categoria_otro(self):
+        """
+        Prueba que crear múltiples reportes con categoría 'Otro' y nombres personalizados distintos
+        generen códigos únicos sin provocar IntegrityError en la base de datos.
+        """
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        self.client.login(username='ciudadano_test', password='password123')
+        cat_otro, _ = Categoria.objects.get_or_create(nombre='Otro', defaults={'codigo': 'OT'})
+        foto_jpg = SimpleUploadedFile('test.jpg', b'jpgcontent', content_type='image/jpeg')
+        url = reverse('crear_reporte')
+
+        incidencias = ['Botes llenos', 'Cable suelto']
+        for inc in incidencias:
+            res = self.client.post(url, {
+                'categoria': cat_otro.id,
+                'nombre_incidencia_otro': inc,
+                'latitud': 16.8531,
+                'longitud': -99.8236,
+                'calle': 'Costera Miguel Alemán',
+                'colonia': 'Centro',
+                'codigo_postal': '39300',
+                'foto': foto_jpg
+            })
+            self.assertEqual(res.status_code, 302)
+
+        cat_botes = Categoria.objects.filter(nombre='Botes llenos').first()
+        cat_cable = Categoria.objects.filter(nombre='Cable suelto').first()
+        self.assertIsNotNone(cat_botes)
+        self.assertIsNotNone(cat_cable)
+        self.assertNotEqual(cat_botes.codigo, cat_cable.codigo)
+

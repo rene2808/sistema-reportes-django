@@ -206,7 +206,47 @@
     }
 
     @media (max-width: 900px) {
+        .citizen-header {
+            padding: 20px 16px;
+            border-radius: 16px;
+        }
+
+        .citizen-header h1 {
+            font-size: 22px;
+        }
+
+        .citizen-header p {
+            font-size: 13.5px;
+        }
+
+        .quick-actions {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quick-btn {
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
         .filter-form {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        #mapaCiudadano {
+            height: 280px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cards-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -304,49 +344,38 @@
     <h2>Mis reportes</h2>
 
     {% if reportes %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Folio</th>
-                    <th>Título</th>
-                    <th>Categoría</th>
-                    <th>Distrito</th>
-                    <th>Prioridad</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th>Ver</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for reporte in reportes %}
+        <div class="table-responsive">
+            <table>
+                <thead>
                     <tr>
-                        <td><strong>{{ reporte.folio|default:"Sin folio" }}</strong></td>
-                        <td>{{ reporte.titulo }}</td>
-                        <td>{{ reporte.categoria }}</td>
-                        <td>{{ reporte.distrito|default:"Otro" }}</td>
-                        <td>{{ reporte.prioridad }}</td>
-                        <td>
-                            {% if reporte.estado == 'Pendiente' %}
-                                <span class="status-badge status-registrado">Pendiente</span>
-                            {% elif reporte.estado == 'En proceso' %}
-                                <span class="status-badge status-proceso">En proceso</span>
-                            {% elif reporte.estado == 'Resuelto' %}
-                                <span class="status-badge status-atendido">Resuelto</span>
-                            {% elif reporte.estado == 'Cancelado' %}
-                                <span class="status-badge status-cancelado">Cancelado</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                        <td>
-                            <a class="action-btn" href="{% url 'detalle_reporte' reporte.id %}">
-                                Ver
-                            </a>
-                        </td>
+                        <th>Folio</th>
+                        <th>Título</th>
+                        <th>Categoría</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acción</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes %}
+                        <tr>
+                            <td><strong>{{ reporte.folio|default:"Sin folio" }}</strong></td>
+                            <td>{{ reporte.titulo }}</td>
+                            <td>{{ reporte.categoria.nombre }}</td>
+                            <td>{{ reporte.prioridad }}</td>
+                            <td><span class="estado-badge">{{ reporte.estado }}</span></td>
+                            <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a class="action-btn" href="{% url 'detalle_reporte' reporte.id %}">
+                                    Ver
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
         <p>No tienes reportes registrados todavía.</p>
     {% endif %}
