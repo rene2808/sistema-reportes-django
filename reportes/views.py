@@ -362,8 +362,23 @@ def politica_privacidad(request):
 def cerrar_sesion(request):
     if request.user.is_authenticated:
         try:
+            from django.contrib.sessions.models import Session
+            from django.utils import timezone
             from reportes.models import PerfilUsuario
-            PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=None)
+            
+            # Contamos cuántas sesiones activas tiene el usuario
+            sesiones_activas = 0
+            for s in Session.objects.filter(expire_date__gt=timezone.now()):
+                try:
+                    data = s.get_decoded()
+                    if data.get('_auth_user_id') == str(request.user.id):
+                        sesiones_activas += 1
+                except Exception:
+                    pass
+            
+            # Si solo tiene una sesión activa (la que está cerrando), lo marcamos como desconectado
+            if sesiones_activas <= 1:
+                PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=None)
         except Exception:
             pass
     logout(request)
