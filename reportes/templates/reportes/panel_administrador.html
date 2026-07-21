@@ -1,0 +1,1034 @@
+<!-- 
+  Plantilla: panel_administrador.html
+  Descripción: Panel de control de administración (Dashboard).
+  Permite gestionar reportes (cambiar estado, prioridad), ver el mapa de calor de incidentes,
+  agregar y editar usuarios con diferentes roles, y generar informes en PDF.
+-->
+{% extends 'reportes/base.html' %}
+{% block title %}Panel Administrador{% endblock %}
+{% block content %}
+
+<!-- Importación de iconos profesionales para las tarjetas métricas -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+    /* Estilos Globales de la Interfaz */
+    :root {
+        --bg-main: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-slate-900: #0f172a;
+        --text-slate-500: #64748b;
+    }
+
+    .admin-section {
+        background: white;
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        margin-bottom: 32px;
+        border: 2px solid var(--border-color);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .admin-section:hover {
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+    }
+
+    .section-mapa {
+        border: 2px solid #93c5fd;
+        border-left: 8px solid #2563eb;
+        background: linear-gradient(180deg, #eff6ff 0%, #ffffff 90px);
+    }
+
+    .section-acciones {
+        border: 2px solid #a7f3d0;
+        border-left: 8px solid #10b981;
+        background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 90px);
+    }
+
+    .section-pdf {
+        border: 2px solid #fed7aa;
+        border-left: 8px solid #f97316;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffffff 90px);
+    }
+
+    .section-usuarios {
+        border: 2px solid #bae6fd;
+        border-left: 8px solid #0ea5e9;
+        background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 90px);
+    }
+
+    .section-historial {
+        border: 2px solid #c7d2fe;
+        border-left: 8px solid #6366f1;
+        background: linear-gradient(180deg, #eef2ff 0%, #ffffff 90px);
+    }
+
+    .section-galeria {
+        border: 2px solid #ddd6fe;
+        border-left: 8px solid #8b5cf6;
+        background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 90px);
+    }
+
+    .admin-section h2 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        color: var(--text-slate-900);
+        font-size: 1.3rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .admin-section p {
+        color: var(--text-slate-500);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    /* Solución Definitiva al Grid de Métricas (image_5bdd7d.jpg) */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    .stat-card h3 {
+        margin: 0 0 6px 0;
+        color: var(--text-slate-500);
+        font-size: 0.8rem;
+        text-uppercase: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+
+    .stat-card .number {
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--text-slate-900);
+        line-height: 1;
+    }
+
+    .stat-icon {
+        font-size: 1.5rem;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    /* Paleta de Colores Lógicos para Control Administrativo */
+    .card-usuarios {
+        border-left: 5px solid #0ea5e9;
+    }
+
+    .icon-usuarios {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0ea5e9;
+    }
+
+    .card-totales {
+        border-left: 5px solid #6366f1;
+    }
+
+    .icon-totales {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .card-pendientes {
+        border-left: 5px solid #ef4444;
+    }
+
+    .icon-pendientes {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .card-proceso {
+        border-left: 5px solid #f59e0b;
+    }
+
+    .icon-proceso {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .card-resueltos {
+        border-left: 5px solid #10b981;
+    }
+
+    .icon-resueltos {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .card-cancelados {
+        border-left: 5px solid #64748b;
+    }
+
+    .icon-cancelados {
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+    }
+
+    .card-baches {
+        border-left: 5px solid #ea580c;
+    }
+
+    .icon-baches {
+        background: rgba(234, 88, 12, 0.1);
+        color: #ea580c;
+    }
+
+    .card-basura {
+        border-left: 5px solid #16a34a;
+    }
+
+    .icon-basura {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+    }
+
+    /* Formularios Estilizados */
+    .buscar-reportes-form {
+        display: flex;
+        gap: 12px;
+        margin: 20px 0;
+        align-items: center;
+    }
+
+    .buscar-reportes-form input,
+    .form-grid input,
+    .form-grid select,
+    .pdf-grid input,
+    .pdf-grid select,
+    table input,
+    table select {
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 14px;
+        background-color: #fff;
+        color: var(--text-slate-900);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .buscar-reportes-form input:focus,
+    .form-grid input:focus,
+    .pdf-grid input:focus,
+    .pdf-grid select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .buscar-reportes-form input {
+        flex: 1;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr) auto;
+        gap: 12px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .pdf-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .pdf-grid label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-slate-900);
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+    /* Tablas Modernas */
+    .table-container {
+        border-radius: 12px;
+        overflow-x: auto;
+        border: 1px solid var(--border-color);
+        margin-top: 15px;
+    }
+
+    table input,
+    table select {
+        width: 100%;
+        min-width: 130px;
+        box-sizing: border-box;
+    }
+
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    table th {
+        background: #f8fafc;
+        color: var(--text-slate-500);
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        text-uppercase: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 13.5px;
+        color: #334155;
+    }
+
+    table tr:last-child td {
+        border-bottom: none;
+    }
+
+    table tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Botones Administrativos Premium */
+    .btn-admin {
+        border: none;
+        border-radius: 10px;
+        padding: 11px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13.5px;
+        transition: background 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn-admin:active {
+        transform: scale(0.98);
+    }
+
+    .btn-green {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-green:hover {
+        background: #059669;
+    }
+
+    .btn-blue {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-blue:hover {
+        background: #2563eb;
+    }
+
+    .btn-red {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-red:hover {
+        background: #dc2626;
+    }
+
+    .btn-orange {
+        background: #f97316;
+        color: white;
+    }
+
+    .btn-orange:hover {
+        background: #ea580c;
+    }
+
+    .acciones {
+        display: flex;
+        gap: 6px;
+    }
+
+    /* Elementos del Mapa */
+    .mapa-admin {
+        width: 100%;
+        height: 450px;
+        border-radius: 14px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-top: 15px;
+        z-index: 1;
+    }
+
+    .map-legend {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+        font-weight: 600;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    /* Alertas de Mensajes */
+    .messages {
+        margin-bottom: 24px;
+    }
+
+    .message {
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    /* Adaptabilidad de Pantallas */
+    @media (max-width: 1300px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Clases para los Badges de Estado */
+    .badge-pendiente {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .badge-proceso {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .badge-resuelto {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-default {
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+    }
+
+    .usuario-bloqueado {
+        text-decoration: line-through;
+        color: #94a3b8;
+    }
+</style>
+
+<div class="mb-4">
+    <h1 class="page-title" style="font-weight: 800; color: var(--text-slate-900); margin-bottom: 4px;">Panel
+        Administrador</h1>
+    <div class="page-subtitle" style="color: var(--text-slate-500); font-size: 0.95rem;">Administración de reportes
+        ciudadanos de baches y basura</div>
+</div>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="message"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- CUADRÍCULA DE MÉTRICAS CORREGIDA (Distribución Perfecta 4x2) -->
+<div class="stats-grid">
+    <div class="stat-card card-usuarios">
+        <div>
+            <h3>Usuarios registrados</h3>
+            <div class="number">{{ usuarios_registrados }}</div>
+        </div>
+        <div class="stat-icon icon-usuarios"><i class="bi bi-people-fill"></i></div>
+    </div>
+
+    <div class="stat-card card-totales">
+        <div>
+            <h3>Reportes totales</h3>
+            <div class="number">{{ reportes_totales }}</div>
+        </div>
+        <div class="stat-icon icon-totales"><i class="bi bi-collection-fill"></i></div>
+    </div>
+
+    <div class="stat-card card-pendientes">
+        <div>
+            <h3>Pendientes</h3>
+            <div class="number">{{ reportes_pendientes }}</div>
+        </div>
+        <div class="stat-icon icon-pendientes"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    </div>
+
+    <div class="stat-card card-proceso">
+        <div>
+            <h3>En proceso</h3>
+            <div class="number">{{ reportes_proceso }}</div>
+        </div>
+        <div class="stat-icon icon-proceso"><i class="bi bi-gear-wide-connected"></i></div>
+    </div>
+
+    <div class="stat-card card-resueltos">
+        <div>
+            <h3>Resueltos</h3>
+            <div class="number">{{ reportes_resueltos }}</div>
+        </div>
+        <div class="stat-icon icon-resueltos"><i class="bi bi-check-circle-fill"></i></div>
+    </div>
+
+    <div class="stat-card card-cancelados">
+        <div>
+            <h3>Cancelados</h3>
+            <div class="number">{{ reportes_cancelados }}</div>
+        </div>
+        <div class="stat-icon icon-cancelados"><i class="bi bi-x-circle-fill"></i></div>
+    </div>
+</div>
+
+<!-- SECCIÓN: MAPA -->
+<div class="admin-section section-mapa">
+    <h2><i class="bi bi-map-fill me-2 text-primary"></i>Mapa de incidencias en tiempo real</h2>
+    <p>Visualiza en el mapa todos los reportes registrados. El color interno del punto representa el <strong>Estado</strong> y el borde exterior la <strong>Categoría</strong>.</p>
+
+    <div id="mapaAdmin" class="mapa-admin"></div>
+
+    <div class="map-legend d-flex flex-wrap gap-3 mt-3 p-3 bg-white border rounded-3 align-items-center">
+        <div class="me-2 fw-bold small text-dark"><i class="bi bi-palette-fill me-1 text-primary"></i> Estado del Reporte:</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Pendiente</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> En proceso</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Resuelto</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#64748b;"></span> Cancelado</div>
+    </div>
+</div>
+
+<!-- SECCIÓN: ACCIONES -->
+<div class="admin-section section-acciones">
+    <h2><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Acciones principales</h2>
+    <p>Desde aquí puedes registrar un nuevo reporte ciudadano de manera directa.</p>
+    <div class="acciones">
+        <a href="{% url 'crear_reporte' %}" class="btn-admin btn-green">
+            <i class="bi bi-plus-lg"></i> Generar nuevo reporte
+        </a>
+    </div>
+</div>
+
+<!-- SECCIÓN: EXPORTACIÓN PDF Y EXCEL -->
+<div class="admin-section section-pdf">
+    <h2><i class="bi bi-file-earmark-bar-graph-fill me-2 text-danger"></i>Generar y Exportar Reportes Oficiales (PDF & Excel)</h2>
+    <p>Filtra y compila la información de las incidencias para generar documentos oficiales en PDF y reportes analíticos en Excel con gráficas estadísticas de pastel.</p>
+
+    <form method="GET" action="{% url 'reporte_mensual_incidentes_pdf' %}" class="pdf-filter-form" id="formExportarReportes">
+        <div class="pdf-grid">
+            <div>
+                <label>Incidente / Categoría</label>
+                <select name="sector">
+                    <option value="">Todos los incidentes</option>
+                    <option value="bache">Solo Baches</option>
+                    <option value="basura">Solo Basura</option>
+                </select>
+            </div>
+            <div>
+                <label>Mes</label>
+                <select name="mes">
+                    <option value="1" {% if mes_actual == 1 %}selected{% endif %}>Enero</option>
+                    <option value="2" {% if mes_actual == 2 %}selected{% endif %}>Febrero</option>
+                    <option value="3" {% if mes_actual == 3 %}selected{% endif %}>Marzo</option>
+                    <option value="4" {% if mes_actual == 4 %}selected{% endif %}>Abril</option>
+                    <option value="5" {% if mes_actual == 5 or not mes_actual %}selected{% endif %}>Mayo</option>
+                    <option value="6" {% if mes_actual == 6 %}selected{% endif %}>Junio</option>
+                    <option value="7" {% if mes_actual == 7 %}selected{% endif %}>Julio</option>
+                    <option value="8" {% if mes_actual == 8 %}selected{% endif %}>Agosto</option>
+                    <option value="9" {% if mes_actual == 9 %}selected{% endif %}>Septiembre</option>
+                    <option value="10" {% if mes_actual == 10 %}selected{% endif %}>Octubre</option>
+                    <option value="11" {% if mes_actual == 11 %}selected{% endif %}>Noviembre</option>
+                    <option value="12" {% if mes_actual == 12 %}selected{% endif %}>Diciembre</option>
+                </select>
+            </div>
+            <div>
+                <label>Año</label>
+                <input type="number" name="anio" value="{{ anio_actual|default:2026 }}">
+            </div>
+            <div>
+                <label>Colonia</label>
+                <input type="text" name="colonia" placeholder="Todas las colonias">
+            </div>
+            <div>
+                <label>Estado</label>
+                <select name="estado">
+                    <option value="">Todos</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En proceso">En proceso</option>
+                    <option value="Resuelto">Resuelto</option>
+                    <option value="Cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div>
+                <label>Prioridad</label>
+                <select name="prioridad">
+                    <option value="">Todas</option>
+                    <option value="Baja">Baja</option>
+                    <option value="Media">Media</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Urgente">Urgente</option>
+                </select>
+            </div>
+            <div>
+                <label>Fotografía</label>
+                <select name="foto">
+                    <option value="">Todos</option>
+                    <option value="con_foto">Solo con foto</option>
+                    <option value="sin_foto">Solo sin foto</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 mt-4">
+            <button type="button" onclick="descargarAmbosReportes(this.form)" class="btn-admin btn-green shadow-sm fw-bold">
+                <i class="bi bi-cloud-arrow-down-fill me-1"></i> 📦 Descargar Ambos (PDF + Excel)
+            </button>
+            <button type="submit" formaction="{% url 'reporte_mensual_incidentes_pdf' %}" class="btn-admin btn-orange shadow-sm fw-bold">
+                <i class="bi bi-filetype-pdf me-1"></i> 📄 Descargar PDF
+            </button>
+            <button type="submit" formaction="{% url 'reporte_mensual_incidentes_excel' %}" class="btn-admin btn-blue shadow-sm fw-bold">
+                <i class="bi bi-filetype-xlsx me-1"></i> 📊 Descargar Excel (con Gráficas)
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function descargarAmbosReportes(form) {
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData).toString();
+        
+        const pdfUrl = "{% url 'reporte_mensual_incidentes_pdf' %}?" + params;
+        const excelUrl = "{% url 'reporte_mensual_incidentes_excel' %}?" + params;
+
+        // Descargar PDF en nueva ventana y Excel en la vista actual
+        window.open(pdfUrl, '_blank');
+        setTimeout(function() {
+            window.location.href = excelUrl;
+        }, 400);
+    }
+</script>
+
+{% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' %}
+<!-- SECCIÓN: CONTROL DE USUARIOS -->
+<div class="admin-section section-usuarios">
+    <h2><i class="bi bi-person-gear me-2 text-info"></i>Usuarios registrados</h2>
+    <p>Alta, edición de roles y administración de accesos del personal municipal y la ciudadanía.</p>
+
+    <form method="POST" action="{% url 'agregar_usuario' %}" style="margin-bottom: 25px;">
+        {% csrf_token %}
+        <div class="form-grid">
+            <input type="text" name="username" placeholder="Usuario" required>
+            <input type="email" name="email" placeholder="Correo corporativo">
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <select name="rol" required>
+                <option value="ciudadano">Ciudadano</option>
+                <option value="moderador">Moderador de Contenido</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="administrador">Administrador</option>
+            </select>
+            <button type="submit" class="btn-admin btn-green">
+                <i class="bi bi-person-plus-fill"></i> Agregar
+            </button>
+        </div>
+    </form>
+
+    {% if usuarios %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo electrónico</th>
+                    <th>Rol asignado</th>
+                    <th>Nueva Contraseña</th>
+                    <th style="text-align: right;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>
+                        <form id="editar-usuario-form-{{ usuario.id }}" method="POST"
+                            action="{% url 'editar_usuario' usuario.id %}">
+                            {% csrf_token %}
+                        </form>
+                        <input form="editar-usuario-form-{{ usuario.id }}" type="text" name="username"
+                            value="{{ usuario.username }}" required style="padding:6px 10px;" class="{% if not usuario.is_active %}usuario-bloqueado{% endif %}">
+                        {% if not usuario.is_active %}
+                        <span class="badge bg-danger text-white ms-1" style="font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; background-color: #ef4444;">Bloqueado</span>
+                        {% endif %}
+                    </td>
+                    <td><input form="editar-usuario-form-{{ usuario.id }}" type="email" name="email"
+                            value="{{ usuario.email }}" style="padding:6px 10px;"></td>
+                    <td>
+                        <select form="editar-usuario-form-{{ usuario.id }}" name="rol" style="padding:6px 10px;">
+                            <option value="ciudadano" {% if usuario.perfilusuario.rol == 'ciudadano' %}selected{% endif %}>Ciudadano</option>
+                            <option value="moderador" {% if usuario.perfilusuario.rol == 'moderador' %}selected{% endif %}>Moderador de Contenido</option>
+                            <option value="supervisor" {% if usuario.perfilusuario.rol == 'supervisor' %}selected{% endif %}>Supervisor</option>
+                            <option value="administrador" {% if usuario.perfilusuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>
+                        </select>
+                    </td>
+                    <td><input form="editar-usuario-form-{{ usuario.id }}" type="password" name="password"
+                            placeholder="Opcional" style="padding:6px 10px;"></td>
+                    <td>
+                        <div class="acciones" style="justify-content: flex-end;">
+                            <button form="editar-usuario-form-{{ usuario.id }}" type="submit" class="btn-admin btn-blue"
+                                style="padding: 6px 12px; font-size:12px;">
+                                Guardar
+                            </button>
+                            {% if usuario != request.user %}
+                                {% if usuario.is_active %}
+                                <a href="{% url 'toggle_bloqueo_usuario' usuario.id %}" class="btn-admin btn-orange"
+                                    style="padding: 6px 12px; font-size:12px; text-decoration: none;" title="Bloquear Usuario">
+                                    Bloquear
+                                </a>
+                                {% else %}
+                                <a href="{% url 'toggle_bloqueo_usuario' usuario.id %}" class="btn-admin btn-green"
+                                    style="padding: 6px 12px; font-size:12px; text-decoration: none;" title="Desbloquear Usuario">
+                                    Desbloquear
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn-admin btn-red"
+                                    style="padding: 6px 12px; font-size:12px; text-decoration: none;"
+                                    onclick="return confirm('¿Seguro que deseas eliminar al usuario {{ usuario.username }}?')">
+                                    Eliminar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No hay usuarios registrados en el sistema.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- SECCIÓN: CONTROL DE REPORTES -->
+<div class="admin-section section-historial">
+    <h2><i class="bi bi-hdd-stack-fill me-2 text-secondary"></i>Buscador e Historial de Reportes</h2>
+    <p>Monitoreo completo, filtrado por folios específicos y revisión técnica interna de los incidentes urbanos.</p>
+
+    <form method="GET" action="{% url 'panel_administrador' %}" class="buscar-reportes-form">
+        <input type="text" name="buscar_folio" value="{{ buscar_folio }}"
+            placeholder="Buscar por número de folio exacto (Ej: REP-20260531-00003)">
+        <button type="submit" class="btn-admin btn-blue"><i class="bi bi-search"></i> Buscar</button>
+        {% if buscar_folio %}
+        <a href="{% url 'panel_administrador' %}" class="btn-admin btn-orange"><i class="bi bi-arrow-clockwise"></i>
+            Limpiar</a>
+        {% endif %}
+    </form>
+
+    {% if reportes %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Tipo de Incidencia</th>
+                    <th>Usuario Reportante</th>
+                    <th>Estado Actual</th>
+                    <th>Fecha y Hora</th>
+                    <th>Ver Ficha</th>
+                    <th style="text-align: right;">Eliminar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in reportes %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                    <td>{{ reporte.categoria }}</td>
+                    <td>{{ reporte.usuario.username }}</td>
+                    <td>
+                        <span class="badge {% if reporte.estado == 'Pendiente' %}badge-pendiente{% elif reporte.estado == 'En proceso' %}badge-proceso{% elif reporte.estado == 'Resuelto' %}badge-resuelto{% else %}badge-default{% endif %}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                            {{ reporte.estado }}
+                        </span>
+                    </td>
+                    <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
+                            style="padding: 6px 12px; font-size:12px;">
+                            <i class="bi bi-eye"></i> Examinar
+                        </a>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                            style="padding: 6px 12px; font-size:12px;"
+                            onclick="return confirm('¿Seguro que deseas eliminar este reporte?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No se encontraron reportes registrados bajo este criterio.</p>
+    {% endif %}
+</div>
+
+<!-- SECCIÓN: GALERÍA DE INCIDENCIAS RESUELTAS -->
+<div class="admin-section section-galeria">
+    <h2><i class="bi bi-images me-2 text-success"></i>Galería de Incidencias Resueltas</h2>
+    <p>Administra las fotografías del "Antes" y "Después" que se muestran públicamente en la galería de la página de
+        inicio para cada reporte en estado Resuelto.</p>
+
+    {% if reportes %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Incidencia / Ubicación</th>
+                    <th>Foto Antes (Ciudadano)</th>
+                    <th>Foto Después (Reparación)</th>
+                    <th>Subir / Modificar Fotografías</th>
+                    <th>Galería Pública</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in reportes %}
+                {% if reporte.estado == 'Resuelto' %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                    <td>
+                        <strong>{{ reporte.titulo }}</strong><br>
+                        <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ reporte.colonia|default:"Acapulco" }}</small>
+                    </td>
+                    <td>
+                        {% if reporte.foto %}
+                        <div style="margin-bottom: 5px;">
+                            <img src="{{ reporte.foto.url }}"
+                                style="height: 60px; width: 85px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                        {% else %}
+                        <span class="text-muted small">Sin Foto Antes</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reporte.evidencias.exists %}
+                        <div style="margin-bottom: 5px;">
+                            <img src="{{ reporte.evidencias.first.archivo.url }}"
+                                style="height: 60px; width: 85px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        </div>
+                        {% else %}
+                        <span class="text-muted small">Sin Foto Después</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'editar_fotos_galeria' reporte.id %}"
+                            enctype="multipart/form-data" class="d-flex align-items-center flex-wrap gap-3">
+                            {% csrf_token %}
+                            <div class="d-flex flex-column gap-1">
+                                <label class="small text-secondary fw-bold"
+                                    style="font-size: 11px; margin-bottom: 2px;">Foto Antes:</label>
+                                <input type="file" name="foto_antes" accept="image/*"
+                                    style="font-size: 11px; width: 220px; max-width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            </div>
+                            <div class="d-flex flex-column gap-1">
+                                <label class="small text-secondary fw-bold"
+                                    style="font-size: 11px; margin-bottom: 2px;">Foto Después:</label>
+                                <input type="file" name="foto_despues" accept="image/*"
+                                    style="font-size: 11px; width: 220px; max-width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            </div>
+                            <button type="submit" class="btn-admin btn-blue"
+                                style="padding: 8px 14px; font-size:12px; height: fit-content; align-self: flex-end; margin-bottom: 2px;">
+                                <i class="bi bi-cloud-arrow-up"></i> Guardar
+                            </button>
+                            {% if reporte.foto or reporte.evidencias.exists %}
+                            <a href="{% url 'eliminar_fotos_galeria' reporte.id %}" class="btn-admin btn-red"
+                                style="padding: 8px 14px; font-size:12px; height: fit-content; align-self: flex-end; margin-bottom: 2px; text-decoration: none;"
+                                onclick="return confirm('¿Seguro que deseas eliminar las fotos de este reporte de la galería?')">
+                                <i class="bi bi-trash"></i> Eliminar fotos
+                            </a>
+                            {% endif %}
+                        </form>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                            {% if reporte.mostrar_en_galeria %}
+                            <span style="background-color: #d1fae5; color: #065f46; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 999px; display: inline-block;">Público</span>
+                            <a href="{% url 'toggle_mostrar_galeria' reporte.id %}" class="btn-admin btn-orange"
+                                style="padding: 6px 12px; font-size: 11px; text-decoration: none; display: inline-block;"
+                                title="Quitar esta incidencia de la galería pública de inicio">
+                                Ocultar
+                            </a>
+                            {% else %}
+                            <span style="background-color: #fee2e2; color: #991b1b; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 999px; display: inline-block;">Oculto</span>
+                            <a href="{% url 'toggle_mostrar_galeria' reporte.id %}" class="btn-admin btn-green"
+                                style="padding: 6px 12px; font-size: 11px; text-decoration: none; display: inline-block;"
+                                title="Subir esta incidencia a la galería pública de inicio">
+                                Publicar
+                            </a>
+                            {% endif %}
+                            {% if not reporte.foto and not reporte.evidencias.exists %}
+                            <span style="font-size: 10px; color: #ef4444; font-weight: bold; margin-top: 2px;">(Faltan fotos)</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No hay reportes registrados para gestionar.</p>
+    {% endif %}
+</div>
+
+<!-- Lógica de Mapas Integrada sin Alteraciones -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{{ puntos_mapa|json_script:"puntos-mapa-admin" }}
+
+<script>
+    const puntosMapaAdmin = JSON.parse(document.getElementById('puntos-mapa-admin').textContent);
+    const centroAcapulco = [16.8531, -99.8237];
+    const mapaAdmin = L.map('mapaAdmin', {
+        center: centroAcapulco,
+        zoom: 12,
+        minZoom: 12,
+        maxBounds: [
+            [16.73, -100.00],
+            [16.97, -99.70]
+        ],
+        maxBoundsViscosity: 1.0
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(mapaAdmin);
+
+    function colorPorEstado(estado) {
+        const texto = (estado || '').toLowerCase();
+        if (texto.includes('pendiente')) return '#ef4444';  // Rojo
+        if (texto.includes('proceso')) return '#3b82f6';    // Azul
+        if (texto.includes('resuelto')) return '#10b981';   // Verde
+        return '#64748b';                                   // Gris
+    }
+
+    function colorPorCategoria(categoria) {
+        const texto = (categoria || '').toLowerCase();
+        if (texto.includes('bache')) return '#f59e0b';      // Naranja
+        if (texto.includes('basura')) return '#10b981';     // Verde
+        if (texto.includes('alumbrado')) return '#3b82f6';  // Azul
+        if (texto.includes('fuga') || texto.includes('agua')) return '#06b6d4'; // Cian
+        if (texto.includes('electricid')) return '#eab308'; // Amarillo
+        return '#8b5cf6';                                   // Púrpura
+    }
+
+    function crearIconoAdmin(colorEstado, colorCat) {
+        return L.divIcon({
+            className: '',
+            html: `
+                <div style="
+                    width: 22px;
+                    height: 22px;
+                    background: ${colorEstado};
+                    border: 3px solid ${colorCat};
+                    border-radius: 50%;
+                    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+                "></div>
+            `,
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+        });
+    }
+
+    if (puntosMapaAdmin.length > 0) {
+        const grupo = [];
+        puntosMapaAdmin.forEach(punto => {
+            const colorEst = colorPorEstado(punto.estado);
+            const colorCat = colorPorCategoria(punto.categoria);
+            const marker = L.marker(
+                [punto.latitud, punto.longitud],
+                { icon: crearIconoAdmin(colorEst, colorCat) }
+            ).addTo(mapaAdmin);
+
+            marker.bindPopup(`
+                <strong>${punto.folio}</strong><br>
+                <b>Incidencia:</b> ${punto.categoria}<br>
+                <b>Colonia:</b> ${punto.colonia}<br>
+                <b>Estado:</b> <span style="color:${colorEst}; font-weight:bold;">${punto.estado}</span><br>
+                <b>Prioridad:</b> ${punto.prioridad}<br><br>
+                <a href="${punto.url}">Ver detalle</a>
+            `);
+            grupo.push(marker);
+        });
+
+        const grupoMarcadores = L.featureGroup(grupo);
+        mapaAdmin.fitBounds(grupoMarcadores.getBounds(), {
+            padding: [30, 30]
+        });
+    }
+</script>
+
+{% endblock %}

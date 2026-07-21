@@ -1,0 +1,215 @@
+<!-- 
+  Plantilla: perfil.html
+  Descripción: Vista del perfil de usuario donde se muestra la información de la cuenta
+  (usuario, correo, rol, teléfono y total de reportes realizados) con botón para editar perfil.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #60a5fa 0%, #dbeafe 50%, #6ee7b7 100%) !important;
+    }
+
+    .profile-page {
+        max-width: 560px;
+        margin: 0 auto;
+    }
+
+    .profile-page .page-title,
+    .profile-page .page-subtitle {
+        text-align: center;
+    }
+
+    .profile-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 24px;
+        padding: 45px 40px;
+        border: 2px solid rgba(59, 130, 246, 0.25);
+        border-top: 6px solid #3B82F6 !important;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+        text-align: center;
+    }
+
+    .profile-avatar {
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        background: #ff7a14;
+        color: white;
+        font-size: 46px;
+        font-weight: 900;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 18px auto;
+        box-shadow: 0 14px 28px rgba(255, 122, 20, 0.28);
+    }
+
+    .profile-name {
+        font-size: 24px;
+        font-weight: 900;
+        color: #1f2937;
+        margin-bottom: 28px;
+        text-transform: capitalize;
+    }
+
+    .profile-info-box {
+        background: rgba(248, 250, 252, 0.8);
+        border: 1.5px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 8px 20px;
+        margin-bottom: 28px;
+        text-align: left;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 15px;
+        padding: 17px 0;
+        border-bottom: 1px solid #cbd5e1;
+        align-items: center;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-value {
+        color: #1f2937;
+        font-size: 15px;
+        font-weight: 700;
+        word-break: break-word;
+        text-align: right;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .soft-btn {
+        background: white;
+        border: 1px solid #d6dde7;
+        border-radius: 12px;
+        padding: 13px 28px;
+        color: #334155;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .soft-btn:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+    }
+
+    .edit-btn {
+        background: linear-gradient(135deg, #ff7417 0%, #ff5500 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 8px 20px rgba(255, 116, 23, 0.25);
+    }
+
+    .edit-btn:hover {
+        background: linear-gradient(135deg, #ea650d 0%, #d84500 100%);
+        box-shadow: 0 12px 24px rgba(255, 116, 23, 0.35);
+    }
+</style>
+
+<div class="profile-page">
+    <h1 class="page-title">Mi Perfil</h1>
+    <div class="page-subtitle">Información registrada en el sistema</div>
+
+    <div class="profile-card">
+        <div class="profile-avatar">
+            {% if user.first_name %}
+                {{ user.first_name|first|upper }}
+            {% else %}
+                {{ user.username|first|upper }}
+            {% endif %}
+        </div>
+
+        <div class="profile-name">
+            {% if user.first_name %}
+                {{ user.first_name }} {{ user.last_name }}
+            {% else %}
+                {{ user.username }}
+            {% endif %}
+        </div>
+
+        <div class="profile-info-box">
+            {% if user.first_name %}
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="bi bi-person-fill" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                    <span>Nombre</span>
+                </div>
+                <div class="info-value">
+                    {{ user.first_name }} {{ user.last_name }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="bi bi-envelope-fill" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                    <span>Correo</span>
+                </div>
+                <div class="info-value">
+                    {{ user.email|default:"No registrado" }}
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="bi bi-telephone-fill" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                    <span>Teléfono</span>
+                </div>
+                <div class="info-value">
+                    {{ user.perfilusuario.telefono|default:"No registrado" }}
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="bi bi-shield-lock-fill" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                    <span>Rol</span>
+                </div>
+                <div class="info-value">
+                    {{ user.perfilusuario.get_rol_display }}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'editar_perfil' %}" class="soft-btn edit-btn">
+                ✏️ Editar perfil
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

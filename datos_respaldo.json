@@ -1,0 +1,80 @@
+[
+{
+  "model": "auth.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$21ZPczdxRGjc15of4wVddx$O23mDIgybbjqhthydXGBjhog5+F5POp9lKC6Bipfic0=",
+    "last_login": "2026-07-14T03:25:27.098Z",
+    "is_superuser": true,
+    "username": "rene",
+    "first_name": "",
+    "last_name": "",
+    "email": "rene@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-07-14T03:21:02.007Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$ZlwcBvUS1pETkbpJrCjYSy$khjiZa9jc8fAXAfsqjvzndOlrqvucg/7YyyjNZjy+44=",
+    "last_login": "2026-07-14T03:25:11.251Z",
+    "is_superuser": false,
+    "username": "jorge",
+    "first_name": "",
+    "last_name": "",
+    "email": "jorge@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-07-14T03:25:10.103Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "0hma9e2s2l8ei4q292i51jzt065jzkeu",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4bALqXQo3e_gSwvqRqalPZk_HfTpAe9zkzmDZ73rfq959XPCSZQcPllgeMzt0OkB7f7IuLStnUO4kjEabu4LSm_rmf7N6jcK0yAI6UsTbHaErIxyiAyadJDHDJLTtEGlkUhGSJr3BjYFSdJYQlIheDzBb7FNwE:1wjTlv:eXg8GTW-lnSujAsKHnyJYCRdDWD_1m6x-suQflHPo8g",
+    "expire_date": "2026-07-28T03:25:27.105Z"
+  }
+},
+{
+  "model": "reportes.categoria",
+  "pk": 1,
+  "fields": {
+    "nombre": "Basura",
+    "codigo": "BS"
+  }
+},
+{
+  "model": "reportes.categoria",
+  "pk": 2,
+  "fields": {
+    "nombre": "Baches en Vía Pública",
+    "codigo": "BV"
+  }
+},
+{
+  "model": "reportes.perfilusuario",
+  "pk": 1,
+  "fields": {
+    "usuario": 1,
+    "rol": "ciudadano",
+    "telefono": null
+  }
+},
+{
+  "model": "reportes.perfilusuario",
+  "pk": 2,
+  "fields": {
+    "usuario": 2,
+    "rol": "ciudadano",
+    "telefono": null
+  }
+}
+]

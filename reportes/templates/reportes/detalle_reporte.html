@@ -1,0 +1,841 @@
+<!-- 
+  Plantilla: detalle_reporte.html
+  Descripción: Vista detallada de un reporte individual.
+  Muestra la información técnica (folio, tipo, prioridad, estado), la ubicación en mapa Leaflet,
+  las evidencias fotográficas ("Antes" y "Después"), e historial de eventos del reporte.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Detalle del Reporte{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+    .detalle-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .reporte-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 16px 35px rgba(15, 23, 42, 0.10);
+        border: 1px solid #e5eaf0;
+        overflow: hidden;
+    }
+
+    .reporte-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #e5eaf0;
+        padding-bottom: 20px;
+    }
+
+    .reporte-title {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .orange-line {
+        width: 6px;
+        height: 48px;
+        border-radius: 999px;
+        background: #ff7417;
+    }
+
+    .reporte-title h1 {
+        margin: 0;
+        font-size: 32px;
+        color: #0f172a;
+        font-weight: 900;
+    }
+
+    .reporte-title p {
+        margin: 4px 0 0 0;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .folio-pill {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .reporte-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: start;
+    }
+
+    .tabla-info-container {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 2px solid #93c5fd;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.06);
+    }
+
+    .tabla-info {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tabla-info th {
+        width: 210px;
+        text-align: left;
+        padding: 13px 18px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        border-bottom: 1px solid #dbeafe;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .tabla-info td {
+        padding: 13px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 600;
+        background: #ffffff;
+    }
+
+    .badge-estado {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 900;
+        font-size: 13px;
+    }
+
+    .badge-prioridad {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #ea580c;
+        font-weight: 900;
+        font-size: 13px;
+    }
+
+    .panel-box {
+        border: 2px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 20px;
+        background: #ffffff;
+        margin-bottom: 20px;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .panel-box:hover {
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
+    }
+
+    .panel-mapa {
+        border: 2px solid #a7f3d0;
+        border-left: 8px solid #10b981;
+        background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 60px);
+    }
+
+    .panel-evidencia {
+        border: 2px solid #fed7aa;
+        border-left: 8px solid #ff7417;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffffff 60px);
+    }
+
+    .panel-historial {
+        border: 2px solid #c7d2fe;
+        border-left: 8px solid #6366f1;
+        background: linear-gradient(180deg, #eef2ff 0%, #ffffff 60px);
+    }
+
+    .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 12px;
+    }
+
+    #mapDetalle {
+        width: 100%;
+        height: 280px;
+        border-radius: 14px;
+        border: 1px solid #e5eaf0;
+        overflow: hidden;
+    }
+
+    .foto-principal {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .foto-principal img {
+        width: 100%;
+        height: 130px;
+        border-radius: 14px;
+        border: 1px solid #e5eaf0;
+        object-fit: cover;
+    }
+
+    .no-image {
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        color: #64748b;
+        border-radius: 14px;
+        padding: 26px;
+        text-align: center;
+        font-weight: 800;
+    }
+
+    .timeline {
+        border-left: 4px solid #dbeafe;
+        padding-left: 18px;
+        margin-left: 8px;
+    }
+
+    .timeline-item {
+        position: relative;
+        background: #f8fafc;
+        border: 1px solid #e5eaf0;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+    }
+
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -29px;
+        top: 16px;
+        width: 12px;
+        height: 12px;
+        background: #2563eb;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #2563eb;
+    }
+
+    .timeline-item strong {
+        color: #0f172a;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .timeline-item p {
+        margin: 0;
+        color: #475569;
+        font-size: 14px;
+    }
+
+    .timeline-item small {
+        display: block;
+        margin-top: 6px;
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    .acciones-card {
+        margin-top: 28px;
+        border: 2px solid #bae6fd;
+        border-top: 6px solid #0ea5e9;
+        border-radius: 20px;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.2fr auto auto;
+        gap: 16px;
+        align-items: end;
+        background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 70px);
+        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.08);
+    }
+
+    .accion-box {
+        border-right: 1px solid #e5eaf0;
+        padding-right: 16px;
+        min-width: 0;
+    }
+
+    .accion-box:last-child {
+        border-right: none;
+        padding-right: 0;
+    }
+
+    .simple-action {
+        display: flex;
+        align-items: end;
+        height: 100%;
+    }
+
+    .accion-box label {
+        display: block;
+        color: #0f172a;
+        font-weight: 900;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #dbe2ea;
+        font-size: 14px;
+        background: white;
+        margin-bottom: 8px;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 900;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .btn-blue {
+        background: #2563eb;
+        color: white;
+        width: 100%;
+    }
+
+    .btn-orange {
+        background: #ff7417;
+        color: white;
+        width: 100%;
+    }
+
+    .btn-green {
+        background: #16a34a;
+        color: white;
+        width: 100%;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #1f2937;
+        border: 1px solid #cbd5e1;
+        white-space: nowrap;
+    }
+
+    .btn-print {
+        background: white;
+        color: #2563eb;
+        border: 1px solid #93c5fd;
+        white-space: nowrap;
+    }
+
+    .upload-box {
+        border: 2px dashed #cbd5e1;
+        border-radius: 14px;
+        padding: 12px;
+        background: #f8fafc;
+    }
+
+    .alert-message {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        padding: 12px 15px;
+        border-radius: 14px;
+        margin-bottom: 18px;
+        font-weight: 800;
+    }
+
+    @media print {
+        .sidebar,
+        .acciones-card,
+        .btn {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .reporte-card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+    }
+
+    @media (max-width: 1000px) {
+        .reporte-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .acciones-card {
+            grid-template-columns: 1fr;
+        }
+
+        .accion-box {
+            border-right: none;
+            border-bottom: 1px solid #e5eaf0;
+            padding-right: 0;
+            padding-bottom: 16px;
+        }
+
+        .accion-box:last-child {
+            border-bottom: none;
+        }
+
+        .simple-action {
+            display: block;
+        }
+
+        .reporte-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .folio-pill {
+            text-align: center;
+        }
+
+        .foto-principal {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="detalle-page">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="reporte-card" id="reporteCompleto">
+
+        <div class="reporte-header">
+            <div class="reporte-title">
+                <div class="orange-line"></div>
+                <div>
+                    <h1>Detalle del Reporte</h1>
+                    <p>Información completa del reporte ciudadano</p>
+                </div>
+            </div>
+
+            <div class="folio-pill">
+                Reporte {{ reporte.folio|default:"Sin folio" }}
+            </div>
+        </div>
+
+        <div class="reporte-layout">
+
+            <div>
+                <div class="tabla-info-container">
+                    <table class="tabla-info">
+                    <tr>
+                        <th>Folio</th>
+                        <td>{{ reporte.folio|default:"Sin folio" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Fecha</th>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Ciudadano</th>
+                        <td>{{ reporte.usuario.username }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Correo</th>
+                        <td>{{ reporte.usuario.email|default:"No registrado" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Sector / Categoría</th>
+                        <td>{{ reporte.categoria }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Título</th>
+                        <td>{{ reporte.titulo|default:"Reporte ciudadano" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Descripción</th>
+                        <td>{{ reporte.descripcion|default:"Sin descripción registrada" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Estado</th>
+                        <td><span class="badge-estado">{{ reporte.estado }}</span></td>
+                    </tr>
+
+                    <tr>
+                        <th>Prioridad</th>
+                        <td><span class="badge-prioridad">{{ reporte.prioridad }}</span></td>
+                    </tr>
+
+                    <tr>
+                        <th>Municipio</th>
+                        <td>{{ reporte.municipio|default:"Acapulco de Juárez" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Colonia</th>
+                        <td>{{ reporte.colonia|default:"No registrada" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Calle / Avenida</th>
+                        <td>{{ reporte.calle|default:"No registrada" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Código postal</th>
+                        <td>{{ reporte.codigo_postal|default:"No registrado" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Referencia</th>
+                        <td>{{ reporte.referencia|default:"No registrada" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Latitud</th>
+                        <td>{{ reporte.latitud|default:"No registrada" }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Longitud</th>
+                        <td>{{ reporte.longitud|default:"No registrada" }}</td>
+                    </tr>
+                </table>
+            </div>
+            </div>
+
+            <div>
+                <div class="panel-box panel-mapa">
+                    <div class="panel-title">📍 Ubicación en el mapa</div>
+
+                    {% if reporte.latitud and reporte.longitud %}
+                        <div id="mapDetalle"></div>
+                    {% else %}
+                        <div class="no-image">No se registró ubicación en el mapa.</div>
+                    {% endif %}
+                </div>
+
+                <div class="panel-box panel-evidencia">
+                    <div class="panel-title">📷 Evidencia principal</div>
+
+                    <div class="foto-principal">
+                        {% if reporte.foto %}
+                            <img src="{{ reporte.foto.url }}" alt="Foto del reporte">
+                            <div>
+                                <strong>Foto principal del reporte</strong>
+                                <p>Imagen cargada por el ciudadano al generar el reporte.</p>
+                            </div>
+                        {% else %}
+                            <div class="no-image">No se subió foto principal.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="panel-box panel-historial">
+                    <div class="panel-title">🕒 Historial / Línea de tiempo</div>
+
+                    <div class="timeline">
+                        {% for evento in reporte.historial_eventos.all %}
+                            <div class="timeline-item">
+                                <strong>{{ evento.accion }}</strong>
+                                <p>{{ evento.descripcion|default:"Sin descripción" }}</p>
+                                <small>
+                                    {{ evento.fecha|date:"d/m/Y H:i" }}
+                                    {% if evento.usuario %}
+                                        — {{ evento.usuario.username }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        {% empty %}
+                            <div class="no-image">No hay historial registrado.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="acciones-card">
+            {% if rol == 'administrador' or rol == 'moderador' or rol == 'supervisor' or user.is_superuser %}
+                <div class="accion-box">
+                    <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <label>Estado del reporte</label>
+                        <select name="estado" class="form-control">
+                            <option value="Pendiente" {% if reporte.estado == "Pendiente" %}selected{% endif %}>Pendiente</option>
+                            <option value="En proceso" {% if reporte.estado == "En proceso" %}selected{% endif %}>En proceso</option>
+                            <option value="Resuelto" {% if reporte.estado == "Resuelto" %}selected{% endif %}>Resuelto</option>
+                            <option value="Cancelado" {% if reporte.estado == "Cancelado" %}selected{% endif %}>Cancelado</option>
+                        </select>
+
+                        <label style="margin-top: 15px;">Prioridad del reporte</label>
+                        <select name="prioridad" class="form-control">
+                            <option value="Baja" {% if reporte.prioridad == "Baja" %}selected{% endif %}>Baja</option>
+                            <option value="Media" {% if reporte.prioridad == "Media" %}selected{% endif %}>Media</option>
+                            <option value="Alta" {% if reporte.prioridad == "Alta" %}selected{% endif %}>Alta</option>
+                            <option value="Urgente" {% if reporte.prioridad == "Urgente" %}selected{% endif %}>Urgente</option>
+                        </select>
+
+                        {% if user.is_superuser or rol == 'administrador' or rol == 'moderador' %}
+                            <label style="margin-top: 15px;">Subir evidencia (opcional)</label>
+                            <div class="upload-box" style="margin-top: 5px;">
+                                <input type="file" name="archivo" class="form-control" accept="image/*">
+                                <textarea name="descripcion" class="form-control" rows="2" placeholder="Descripción de la evidencia" style="margin-top: 5px;"></textarea>
+                            </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-blue" style="margin-top: 20px; width: 100%;">
+                            Guardar cambios
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <a href="{% url 'reporte_individual_pdf' reporte.id %}" class="btn btn-print">
+    📄 Descargar informe
+</a>
+
+            <div class="accion-box simple-action">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                    ← Volver
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% if reporte.latitud and reporte.longitud %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const lat = parseFloat("{{ reporte.latitud }}");
+    const lng = parseFloat("{{ reporte.longitud }}");
+
+    const mapDetalle = L.map('mapDetalle', {
+        center: [lat, lng],
+        zoom: 16,
+        minZoom: 12,
+        maxBounds: [
+            [16.73, -100.00],
+            [16.97, -99.70]
+        ],
+        maxBoundsViscosity: 1.0
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(mapDetalle);
+
+    L.marker([lat, lng])
+        .addTo(mapDetalle)
+        .bindPopup("Ubicación del reporte<br><strong>{{ reporte.folio|default:'Sin folio' }}</strong>")
+        .openPopup();
+</script>
+{% endif %}
+
+{% if request.GET.creado %}
+<!-- Modal Personalizado de Reporte Exitoso -->
+<div id="modalReporteExitoso" class="modal-overlay-exitoso">
+    <div class="modal-box-exitoso">
+        <div class="modal-icon-exitoso">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3>¡Reporte Registrado!</h3>
+        <p>Tu reporte ha sido guardado exitosamente con la siguiente información:</p>
+        
+        <div class="modal-details-exitoso">
+            <div><strong>Folio:</strong> <span>{{ reporte.folio }}</span></div>
+            <div><strong>Categoría:</strong> <span>{{ reporte.categoria.nombre }}</span></div>
+            <div><strong>Prioridad Inicial:</strong> <span class="badge-prioridad">{{ reporte.prioridad }}</span></div>
+        </div>
+
+        <p class="modal-footer-text-exitoso">Puedes dar seguimiento al avance de tu reporte desde este panel.</p>
+        
+        <button onclick="cerrarModalExitoso()" class="btn-cerrar-exitoso">Entendido</button>
+    </div>
+</div>
+
+<style>
+    /* Estilos Premium para la Ventana Emergente */
+    .modal-overlay-exitoso {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        animation: fadeInOverlay 0.3s ease forwards;
+    }
+
+    .modal-box-exitoso {
+        background: white;
+        padding: 35px 30px;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 440px;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transform: translateY(30px);
+        opacity: 0;
+        animation: slideInBox 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .modal-icon-exitoso {
+        font-size: 64px;
+        color: #14b8a6; /* Color Turquesa premium */
+        line-height: 1;
+        margin-bottom: 15px;
+        animation: scaleIcon 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    .modal-box-exitoso h3 {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .modal-box-exitoso p {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .modal-details-exitoso {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-details-exitoso div {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+        color: #334155;
+    }
+
+    .modal-details-exitoso div strong {
+        color: #475569;
+    }
+
+    .badge-prioridad {
+        background: #3b82f6; /* Azul medio del tema */
+        color: white;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    .modal-footer-text-exitoso {
+        font-size: 12.5px !important;
+        color: #94a3b8 !important;
+        margin-bottom: 25px !important;
+    }
+
+    .btn-cerrar-exitoso {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 13px;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-cerrar-exitoso:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Animaciones */
+    @keyframes fadeInOverlay {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideInBox {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes scaleIcon {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+</style>
+
+<script>
+    function cerrarModalExitoso() {
+        const modal = document.getElementById('modalReporteExitoso');
+        if (modal) {
+            modal.style.animation = 'fadeInOverlay 0.25s ease reverse forwards';
+            modal.querySelector('.modal-box-exitoso').style.animation = 'slideInBox 0.25s ease reverse forwards';
+            setTimeout(() => {
+                modal.remove();
+                // Limpiar el parámetro de la URL para evitar que reaparezca en recarga
+                const url = new URL(window.location.href);
+                url.searchParams.delete('creado');
+                window.history.replaceState({}, document.title, url.pathname);
+            }, 250);
+        }
+    }
+</script>
+{% endif %}
+
+{% endblock %}

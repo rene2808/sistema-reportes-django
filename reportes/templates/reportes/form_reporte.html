@@ -1,0 +1,894 @@
+<!-- 
+  Plantilla: form_reporte.html
+  Descripción: Formulario interactivo para registrar un nuevo reporte ciudadano.
+  Incluye validación obligatoria de 1 a 3 fotografías JPG, mapa interactivo Leaflet y tarjetas con bordes distintivos por sección.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Generar Reporte{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+    .report-wrapper {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+
+    .report-header {
+        background: linear-gradient(135deg, #0f172a, #1e40af);
+        color: white;
+        padding: 28px;
+        border-radius: 22px;
+        margin-bottom: 25px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15);
+    }
+
+    .report-header h1 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .report-header p {
+        margin: 8px 0 0 0;
+        color: #dbeafe;
+        font-size: 14.5px;
+    }
+
+    /* Estilos para las tarjetas de sección con bordes distintivos */
+    .form-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+        margin-bottom: 28px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .form-card:hover {
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    .card-incidente {
+        border: 2px solid #93c5fd;
+        border-left: 8px solid #2563eb;
+        background: linear-gradient(180deg, #eff6ff 0%, #ffffff 90px);
+    }
+
+    .card-ubicacion {
+        border: 2px solid #a7f3d0;
+        border-left: 8px solid #10b981;
+        background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 90px);
+    }
+
+    .card-evidencia {
+        border: 2px solid #fed7aa;
+        border-left: 8px solid #ff7417;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffffff 90px);
+    }
+
+    .card-section-title {
+        margin: 0 0 20px 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1.5px solid rgba(226, 232, 240, 0.8);
+        padding-bottom: 12px;
+    }
+
+    label {
+        display: block;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-control,
+    select,
+    textarea,
+    input {
+        width: 100%;
+        padding: 13px 15px;
+        border-radius: 12px;
+        border: 1.5px solid #cbd5e1;
+        font-size: 15px;
+        background: white;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-control:focus,
+    select:focus,
+    textarea:focus,
+    input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    #mapaReporte {
+        width: 100%;
+        height: 380px;
+        border-radius: 16px;
+        border: 1.5px solid #cbd5e1;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .location-box {
+        background: #ffffff;
+        border: 1.5px solid #a7f3d0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-top: 14px;
+        color: #334155;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 8px;
+        line-height: 1.5;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .btn-save {
+        background: #ff7417;
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 15px;
+        box-shadow: 0 8px 18px rgba(255, 116, 23, 0.25);
+        transition: all 0.2s ease;
+    }
+
+    .btn-save:hover {
+        background: #e6620f;
+        box-shadow: 0 12px 24px rgba(255, 116, 23, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .btn-cancel {
+        background: white;
+        color: #334155;
+        border: 1.5px solid #cbd5e1;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .error-box {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+        padding: 14px 18px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .address-fields-grid {
+        display: grid;
+        grid-template-columns: 2fr 2fr 1fr;
+        gap: 12px;
+        margin-top: 15px;
+        text-align: left;
+    }
+
+    .address-field-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .address-field-group label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 6px !important;
+        text-transform: none !important;
+        letter-spacing: normal !important;
+    }
+
+    /* Estilos para el cuadro de reglas de la evidencia fotográfica */
+    .evidence-rules-box {
+        background: #ffffff;
+        border: 1.5px solid #fed7aa;
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 12px rgba(255, 116, 23, 0.08);
+    }
+
+    .evidence-rules-list {
+        margin: 8px 0 0 0;
+        padding-left: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13.5px;
+        color: #334155;
+    }
+
+    .evidence-rules-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .file-status-info {
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 13.5px;
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        line-height: 1.5;
+    }
+
+    .file-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+    }
+
+    .file-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1.5px solid #bbf7d0;
+    }
+
+    @media (max-width: 768px) {
+        .address-fields-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+    }
+
+    /* Estilos para el Modal de Verificación */
+    .modal-overlay-verificar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+    }
+
+    .modal-box-verificar {
+        background: white;
+        padding: 30px;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        animation: slideInBox 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .modal-icon-verificar {
+        font-size: 54px;
+        color: #2563eb;
+        line-height: 1;
+        margin-bottom: 12px;
+    }
+
+    .modal-icon-advertencia {
+        font-size: 54px;
+        color: #f59e0b;
+        line-height: 1;
+        margin-bottom: 12px;
+    }
+
+    .modal-box-verificar h3 {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+
+    .modal-box-verificar p {
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .modal-details-verificar {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-details-verificar div {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 6px;
+    }
+
+    .modal-details-verificar div:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .modal-details-verificar div strong {
+        color: #475569;
+        font-weight: 600;
+    }
+
+    .modal-buttons-verificar {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-verificar-editar {
+        flex: 1;
+        background: white;
+        color: #1e293b;
+        border: 1px solid #cbd5e1;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-verificar-editar:hover {
+        background: #f1f5f9;
+    }
+
+    .btn-verificar-confirmar {
+        flex: 1;
+        background: #ff7417;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(255, 116, 23, 0.2);
+    }
+
+    .btn-verificar-confirmar:hover {
+        background: #e6620f;
+        box-shadow: 0 6px 15px rgba(255, 116, 23, 0.3);
+    }
+
+    @keyframes slideInBox {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="report-wrapper">
+
+    <div class="report-header">
+        <h1>Generar Reporte Ciudadano</h1>
+        <p>Reporta únicamente incidentes de bache o basura.</p>
+    </div>
+
+    <form method="POST" action="{% url 'crear_reporte' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="error-box">
+                <div class="fw-bold mb-1" style="font-size: 15px;">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i> No se pudo guardar el reporte. Corrige los siguientes detalles:
+                </div>
+                <ul class="mb-0 ps-3" style="margin-top: 6px;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>
+                                {% if field != '__all__' and field != 'foto' and field != 'categoria' %}
+                                    <strong>{{ field|title }}:</strong>
+                                {% endif %}
+                                {{ error }}
+                            </li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- SECCIÓN 1: TIPO Y DESCRIPCIÓN -->
+        <div class="form-card card-incidente">
+            <h2 class="card-section-title">
+                <i class="bi bi-list-task text-primary"></i> Categoría y Descripción
+            </h2>
+
+            <div class="form-group">
+                <label>Tipo de incidente *</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}
+                    <div class="text-danger small fw-bold mt-1">{{ form.categoria.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Campo dinámico para especificar el nombre cuando se selecciona la opción 'Otro' -->
+            <div class="form-group" id="containerOtroNombre" style="display: none;">
+                <label for="inputNombreOtro" style="color: #2563eb; font-weight: 800;">
+                    <i class="bi bi-pencil-square me-1"></i> Especifica el nombre de tu incidencia *
+                </label>
+                <input type="text" name="nombre_incidencia_otro" id="inputNombreOtro" class="form-control" placeholder="Ej. Árbol caído, Alcantarilla abierta, Cable suelto..." value="{{ request.POST.nombre_incidencia_otro|default:'' }}" style="border: 2px solid #93c5fd; background-color: #f8fafc; font-weight: 600;">
+                <div class="help-text">Ingresa el nombre del tipo de incidencia que deseas reportar.</div>
+            </div>
+
+            <div class="form-group mb-0">
+                <label>Descripción opcional</label>
+                {{ form.descripcion }}
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: UBICACIÓN -->
+        <div class="form-card card-ubicacion">
+            <h2 class="card-section-title">
+                <i class="bi bi-geo-alt-fill text-success"></i> Ubicación del Incidente
+            </h2>
+
+            <div class="form-group mb-0">
+                <label>Marca la ubicación en el mapa *</label>
+
+                {{ form.latitud }}
+                {{ form.longitud }}
+
+                <div id="mapaReporte"></div>
+
+                <div class="location-box" id="ubicacionTexto">
+                    Da clic en el mapa para seleccionar la ubicación del reporte.
+                </div>
+
+                <div class="address-fields-grid">
+                    <div class="address-field-group">
+                        <label>Calle y Número</label>
+                        {{ form.calle }}
+                    </div>
+                    <div class="address-field-group">
+                        <label>Colonia / Fraccionamiento</label>
+                        {{ form.colonia }}
+                    </div>
+                    <div class="address-field-group">
+                        <label>Código Postal</label>
+                        {{ form.codigo_postal }}
+                    </div>
+                </div>
+
+                <p class="help-text" style="margin-top: 10px; margin-bottom: 15px;">
+                    Puedes hacer clic en el mapa para ubicar el reporte y rellenar automáticamente la dirección. Si el mapa no detecta correctamente la calle o colonia, puedes corregirla o escribirla tú mismo en los campos de arriba.
+                </p>
+
+                <div class="form-group" style="margin-top: 0; margin-bottom: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: none; letter-spacing: normal; display: block;">
+                        Referencias de la ubicación (opcional)
+                    </label>
+                    {{ form.referencia }}
+                    <p class="help-text" style="margin-top: 4px; font-size: 12px; margin-bottom: 0;">
+                        Ej. "Frente a la tienda OXXO", "Cruzando la calle frente al parque", "Portón blanco".
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: EVIDENCIA FOTOGRÁFICA OBLIGATORIA -->
+        <div class="form-card card-evidencia">
+            <h2 class="card-section-title">
+                <i class="bi bi-camera-fill text-warning"></i> Evidencias Fotográficas
+                <span style="font-size: 12px; color: #ef4444; font-weight: 800; margin-left: auto;">* Obligatorio (1 a 3 fotos JPG)</span>
+            </h2>
+
+            <div class="evidence-rules-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 14px;">
+                    <i class="bi bi-info-circle-fill text-warning me-1"></i> Requisitos de la evidencia:
+                </div>
+                <ul class="evidence-rules-list">
+                    <li><i class="bi bi-check2-circle text-success"></i> <strong>Formato obligatorio:</strong> Exclusivamente fotografías en formato <code>.jpg</code> o <code>.jpeg</code>.</li>
+                    <li><i class="bi bi-check2-circle text-success"></i> <strong>Cantidad permitida:</strong> Mínimo <strong>1 fotografía (obligatoria)</strong> y máximo <strong>3 fotografías</strong>.</li>
+                </ul>
+            </div>
+
+            <div class="form-group mb-0">
+                <label>Adjuntar imágenes (Selecciona de 1 a 3 fotos en formato JPG) *</label>
+                <input type="file" name="foto" id="id_foto" class="form-control" accept=".jpg, .jpeg, image/jpeg" multiple required onchange="validarEvidencias(this)">
+                
+                {% if form.foto.errors %}
+                    <div class="file-status-info file-error" style="margin-top: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ form.foto.errors.0 }}
+                    </div>
+                {% endif %}
+
+                <div id="fileStatusMessage" class="file-status-info" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <a href="{% url 'panel_ciudadano' %}" class="btn-cancel">
+                Cancelar
+            </a>
+
+            <button type="submit" class="btn-save">
+                Guardar reporte
+            </button>
+        </div>
+    </form>
+
+    <!-- Modal de Verificación de Dirección -->
+    <div id="modalConfirmarDireccion" class="modal-overlay-verificar" style="display: none;">
+        <div class="modal-box-verificar">
+            <div class="modal-icon-verificar">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <h3>Verificar Dirección</h3>
+            <p>Por favor, confirma si la ubicación seleccionada en el mapa es correcta antes de guardar:</p>
+            
+            <div class="modal-details-verificar">
+                <div><strong>Calle:</strong> <span id="confirmarCalle"></span></div>
+                <div><strong>Colonia:</strong> <span id="confirmarColonia"></span></div>
+                <div><strong>Código Postal:</strong> <span id="confirmarCP"></span></div>
+                <div><strong>Referencia:</strong> <span id="confirmarReferencia"></span></div>
+                <div><strong>Evidencias:</strong> <span id="confirmarEvidencias"></span></div>
+            </div>
+
+            <div class="modal-buttons-verificar">
+                <button type="button" onclick="cerrarModalVerificar()" class="btn-verificar-editar">Modificar datos</button>
+                <button type="button" onclick="confirmarYEnviar()" class="btn-verificar-confirmar">Confirmar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Advertencia (Sin ubicación seleccionada) -->
+    <div id="modalAdvertenciaUbicacion" class="modal-overlay-verificar" style="display: none;">
+        <div class="modal-box-verificar">
+            <div class="modal-icon-advertencia">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h3>Falta Ubicación</h3>
+            <p>Para crear el reporte es obligatorio que selecciones la ubicación del incidente haciendo clic sobre el mapa.</p>
+            <button type="button" onclick="cerrarModalAdvertencia()" class="btn-verificar-confirmar">Entendido</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    function validarEvidencias(input) {
+        const statusBox = document.getElementById('fileStatusMessage');
+        if (!input || !input.files) return false;
+        const files = Array.from(input.files);
+
+        if (files.length === 0) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-error';
+            statusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Debes seleccionar al menos 1 fotografía de evidencia en formato JPG.';
+            return false;
+        }
+
+        if (files.length > 3) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-error';
+            statusBox.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Solo puedes adjuntar como máximo 3 fotografías. Has seleccionado ${files.length} imágenes.`;
+            input.value = ''; // Limpiar la selección
+            return false;
+        }
+
+        // Verificar extensiones JPG / JPEG (insensible a mayúsculas/minúsculas)
+        let invalidFormat = false;
+        let fileNames = [];
+        files.forEach(file => {
+            const parts = file.name.split('.');
+            const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+            fileNames.push(file.name);
+            if (ext !== 'jpg' && ext !== 'jpeg') {
+                invalidFormat = true;
+            }
+        });
+
+        if (invalidFormat) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-error';
+            statusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Formato no permitido. Todas las imágenes deben ser archivos .jpg o .jpeg.';
+            input.value = ''; // Limpiar la selección
+            return false;
+        }
+
+        // Selección correcta
+        statusBox.style.display = 'flex';
+        statusBox.className = 'file-status-info file-success';
+        statusBox.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${files.length} fotografía(s) JPG lista(s): ${fileNames.join(', ')}`;
+        return true;
+    }
+
+    const acapulcoCentro = [16.8531, -99.8237];
+
+    const mapa = L.map('mapaReporte', {
+        center: acapulcoCentro,
+        zoom: 13,
+        minZoom: 12,
+        maxBounds: [
+            [16.73, -100.00],
+            [16.97, -99.70]
+        ],
+        maxBoundsViscosity: 1.0
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(mapa);
+
+    let marcador = null;
+
+    const inputLat = document.getElementById('id_latitud');
+    const inputLng = document.getElementById('id_longitud');
+    const inputCalle = document.getElementById('id_calle');
+    const inputColonia = document.getElementById('id_colonia');
+    const inputCP = document.getElementById('id_codigo_postal');
+    const inputReferencia = document.getElementById('id_referencia');
+    const ubicacionTexto = document.getElementById('ubicacionTexto');
+
+    function colocarMarcador(lat, lng) {
+        if (marcador) {
+            mapa.removeLayer(marcador);
+        }
+
+        marcador = L.marker([lat, lng]).addTo(mapa);
+
+        inputLat.value = lat.toFixed(7);
+        inputLng.value = lng.toFixed(7);
+
+        ubicacionTexto.innerHTML = `
+            <strong>Buscando dirección...</strong><br>
+            <span style="font-size: 13px; color: #64748b;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</span>
+        `;
+
+        const mapboxToken = "{{ mapbox_access_token|escapejs }}";
+
+        if (mapboxToken && mapboxToken !== 'TU_MAPBOX_ACCESS_TOKEN_AQUI' && mapboxToken.trim() !== '') {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&language=es&limit=1`;
+            
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    
+                    let calle = feature.text || 'No detectada';
+                    if (feature.address) {
+                        calle = `${calle} ${feature.address}`;
+                    }
+
+                    let colonia = 'No registrada';
+                    let cp = 'No registrado';
+
+                    if (feature.context) {
+                        for (let ctx of feature.context) {
+                            if (ctx.id.startsWith('neighborhood') || ctx.id.startsWith('sublocality') || ctx.id.startsWith('subdistrict')) {
+                                colonia = ctx.text;
+                            }
+                            if (ctx.id.startsWith('postcode')) {
+                                cp = ctx.text;
+                            }
+                        }
+                    }
+
+                    inputCalle.value = calle;
+                    inputColonia.value = colonia;
+                    inputCP.value = cp;
+
+                    ubicacionTexto.innerHTML = `
+                        <strong>Ubicación seleccionada (Mapbox):</strong><br>
+                        <span style="color: #0f172a;">${calle}, ${colonia}, CP ${cp}</span><br>
+                        <small style="color: #64748b; font-size: 12px;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</small>
+                    `;
+                } else {
+                    const errorMsg = data.message ? `Mapbox API: ${data.message}` : 'Dirección no encontrada por Mapbox';
+                    establecerValoresPorDefecto(lat, lng, errorMsg);
+                }
+            })
+            .catch(err => {
+                console.error('Error al obtener la dirección con Mapbox:', err);
+                establecerValoresPorDefecto(lat, lng, 'Error de conexión con Mapbox');
+            });
+        } else {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+            
+            fetch(url, {
+                headers: {
+                    'Accept-Language': 'es'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.address) {
+                    const addr = data.address;
+                    const calle = addr.road || addr.pedestrian || addr.footway || addr.cycleway || addr.path || 'No detectada';
+                    const colonia = addr.suburb || addr.neighbourhood || addr.quarter || addr.village || addr.hamlet || 'No registrada';
+                    const cp = addr.postcode || 'No registrado';
+
+                    inputCalle.value = calle;
+                    inputColonia.value = colonia;
+                    inputCP.value = cp;
+
+                    ubicacionTexto.innerHTML = `
+                        <strong>Ubicación seleccionada:</strong><br>
+                        <span style="color: #0f172a;">${calle}, ${colonia}, CP ${cp}</span><br>
+                        <small style="color: #64748b; font-size: 12px;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</small>
+                    `;
+                } else {
+                    establecerValoresPorDefecto(lat, lng, 'Dirección no encontrada');
+                }
+            })
+            .catch(err => {
+                console.error('Error al obtener la dirección con Nominatim:', err);
+                establecerValoresPorDefecto(lat, lng, 'Error de conexión');
+            });
+        }
+    }
+
+    function establecerValoresPorDefecto(lat, lng, mensaje) {
+        inputCalle.value = 'No detectada';
+        inputColonia.value = 'No registrada';
+        inputCP.value = 'No registrado';
+        
+        ubicacionTexto.innerHTML = `
+            <strong>Ubicación seleccionada:</strong><br>
+            <span style="color: #ef4444;">${mensaje}</span><br>
+            <small style="color: #64748b; font-size: 12px;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</small>
+        `;
+    }
+
+    mapa.on('click', function(e) {
+        colocarMarcador(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Lógica dinámica para la opción 'Otro' en Categorías
+    const selectCategoria = document.getElementById('id_categoria') || document.querySelector('select[name="categoria"]');
+    const containerOtro = document.getElementById('containerOtroNombre');
+    const inputOtro = document.getElementById('inputNombreOtro');
+
+    function toggleCampoOtro() {
+        if (!selectCategoria || !containerOtro) return;
+        const opt = selectCategoria.options[selectCategoria.selectedIndex];
+        const textoSelect = opt ? opt.text.trim().toLowerCase() : '';
+        if (textoSelect.includes('otro')) {
+            containerOtro.style.display = 'block';
+            if (inputOtro) inputOtro.setAttribute('required', 'required');
+        } else {
+            containerOtro.style.display = 'none';
+            if (inputOtro) inputOtro.removeAttribute('required');
+        }
+    }
+
+    if (selectCategoria) {
+        selectCategoria.addEventListener('change', toggleCampoOtro);
+        toggleCampoOtro();
+    }
+
+    const form = document.querySelector('form');
+    let verificado = false;
+
+    form.addEventListener('submit', function(e) {
+        if (!verificado) {
+            e.preventDefault();
+
+            // 0. Validar campo 'Otro' si está seleccionado
+            if (selectCategoria && selectCategoria.options[selectCategoria.selectedIndex]) {
+                const txt = selectCategoria.options[selectCategoria.selectedIndex].text.trim().toLowerCase();
+                if (txt.includes('otro')) {
+                    if (!inputOtro || !inputOtro.value.trim()) {
+                        alert('Por favor especifica el nombre de tu incidencia en el campo de texto.');
+                        inputOtro.focus();
+                        return;
+                    }
+                }
+            }
+
+            // 1. Validar ubicación del mapa
+            if (!inputLat.value || !inputLng.value) {
+                mostrarModalAdvertencia();
+                return;
+            }
+
+            // 2. Validar fotografías (Mínimo 1, Máximo 3, Formato JPG)
+            const fileInput = document.getElementById('id_foto');
+            if (!validarEvidencias(fileInput)) {
+                return;
+            }
+
+            // 3. Mostrar modal de confirmación
+            mostrarModalConfirmar();
+        }
+    });
+
+    function mostrarModalAdvertencia() {
+        document.getElementById('modalAdvertenciaUbicacion').style.display = 'flex';
+    }
+
+    function cerrarModalAdvertencia() {
+        document.getElementById('modalAdvertenciaUbicacion').style.display = 'none';
+    }
+
+    function mostrarModalConfirmar() {
+        document.getElementById('confirmarCalle').textContent = inputCalle.value || 'No detectada';
+        document.getElementById('confirmarColonia').textContent = inputColonia.value || 'No registrada';
+        document.getElementById('confirmarCP').textContent = inputCP.value || 'No registrado';
+        document.getElementById('confirmarReferencia').textContent = inputReferencia.value || 'No registrada';
+
+        const fileInput = document.getElementById('id_foto');
+        const numFotos = fileInput.files ? fileInput.files.length : 0;
+        document.getElementById('confirmarEvidencias').textContent = `${numFotos} foto(s) JPG`;
+
+        document.getElementById('modalConfirmarDireccion').style.display = 'flex';
+    }
+
+    function cerrarModalVerificar() {
+        document.getElementById('modalConfirmarDireccion').style.display = 'none';
+    }
+
+    function confirmarYEnviar() {
+        verificado = true;
+        form.submit();
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django / Python files
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/reportes/
+media/evidencias/bache*
+media/evidencias/semaforo*
+media/evidencias/WhatsApp*
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo

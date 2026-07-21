@@ -1,0 +1,474 @@
+<!-- 
+  Plantilla: panel_ciudadano.html
+  Descripción: Panel de control (Dashboard) para los ciudadanos autenticados.
+  Muestra sus estadísticas individuales, mapa de reportes marcados, barra de búsqueda y filtros,
+  y un listado interactivo con todos sus reportes registrados.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Panel Ciudadano{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+    .citizen-header {
+        background: linear-gradient(135deg, #0f172a, #1e40af);
+        color: white;
+        padding: 28px;
+        border-radius: 22px;
+        margin-bottom: 25px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15);
+    }
+
+    .citizen-header h1 {
+        margin: 0;
+        font-size: 32px;
+    }
+
+    .citizen-header p {
+        margin: 8px 0 0 0;
+        color: #dbeafe;
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .quick-btn {
+        background: #ff7417;
+        color: white;
+        padding: 13px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 800;
+    }
+
+    .quick-btn.secondary {
+        background: white;
+        color: #1e293b;
+    }
+
+    .map-card {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 12px 25px rgba(15, 23, 42, 0.05);
+    }
+
+    .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .map-header h2 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .map-legend {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: #475569;
+        font-weight: 700;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .dot-pendiente { background: #f97316; }
+    .dot-proceso { background: #2563eb; }
+    .dot-resuelto { background: #16a34a; }
+    .dot-cancelado { background: #dc2626; }
+
+    #mapaCiudadano {
+        width: 100%;
+        height: 400px;
+        border-radius: 16px;
+        border: 1px solid #dbe2ea;
+        overflow: hidden;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 12px 25px rgba(15, 23, 42, 0.05);
+    }
+
+    .filter-form {
+        display: grid;
+        grid-template-columns: 1fr 220px 130px;
+        gap: 12px;
+    }
+
+    .filter-form input,
+    .filter-form select {
+        padding: 12px;
+        border: 1px solid #dbe2ea;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .filter-form button {
+        border: none;
+        background: #2563eb;
+        color: white;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .status-registrado {
+        background: #fff7ed;
+        color: #f97316;
+    }
+
+    .status-proceso {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .status-atendido {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .status-cancelado {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .popup-reporte {
+        min-width: 220px;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .popup-reporte h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        color: #0f172a;
+    }
+
+    .popup-reporte p {
+        margin: 5px 0;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    .popup-reporte .popup-folio {
+        color: #f97316;
+        font-weight: 900;
+    }
+
+    .popup-reporte a {
+        display: inline-block;
+        margin-top: 8px;
+        background: #2563eb;
+        color: white;
+        padding: 7px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    @media (max-width: 900px) {
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="citizen-header">
+    <h1>Bienvenido, {{ user.username }}</h1>
+    <p>Desde aquí puedes generar reportes ciudadanos y consultar el estado de tus solicitudes.</p>
+
+    <div class="quick-actions">
+        <a class="quick-btn" href="{% url 'crear_reporte' %}">
+            + Generar nuevo reporte
+        </a>
+   
+        <a class="quick-btn secondary" href="{% url 'perfil' %}">
+            Ver mi perfil
+        </a>
+    </div>
+</div>
+
+<div class="cards-grid">
+    <div class="mini-card">
+        <h3>Total de reportes</h3>
+        <div class="number">{{ total_reportes }}</div>
+    </div>
+
+    <div class="mini-card">
+        <h3>Pendientes</h3>
+        <div class="number">{{ pendientes }}</div>
+    </div>
+
+    <div class="mini-card">
+        <h3>En proceso</h3>
+        <div class="number">{{ en_proceso }}</div>
+    </div>
+
+    <div class="mini-card">
+        <h3>Resueltos</h3>
+        <div class="number">{{ resueltos }}</div>
+    </div>
+
+    <div class="mini-card">
+        <h3>Cancelados</h3>
+        <div class="number">{{ cancelados }}</div>
+    </div>
+</div>
+
+<div class="map-card">
+    <div class="map-header">
+        <h2>Zonas de mis reportes</h2>
+
+        <div class="map-legend">
+            <div class="legend-item">
+                <span class="legend-dot dot-pendiente"></span>
+                Pendiente
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot dot-proceso"></span>
+                En proceso
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot dot-resuelto"></span>
+                Resuelto
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-dot dot-cancelado"></span>
+                Cancelado
+            </div>
+        </div>
+    </div>
+
+    <div id="mapaCiudadano"></div>
+</div>
+
+<div class="filter-card">
+    <form method="GET" class="filter-form">
+        <input type="text" name="buscar" placeholder="Buscar por folio, título o descripción" value="{{ buscar }}">
+
+        <select name="estado">
+            <option value="Todos" {% if estado_actual == 'Todos' %}selected{% endif %}>Todos</option>
+            <option value="Pendiente" {% if estado_actual == 'Pendiente' %}selected{% endif %}>Pendientes</option>
+            <option value="En proceso" {% if estado_actual == 'En proceso' %}selected{% endif %}>En proceso</option>
+            <option value="Resuelto" {% if estado_actual == 'Resuelto' %}selected{% endif %}>Resueltos</option>
+            <option value="Cancelado" {% if estado_actual == 'Cancelado' %}selected{% endif %}>Cancelados</option>
+        </select>
+
+        <button type="submit">Filtrar</button>
+    </form>
+</div>
+
+<div class="table-card">
+    <h2>Mis reportes</h2>
+
+    {% if reportes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Título</th>
+                    <th>Categoría</th>
+                    <th>Distrito</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Ver</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for reporte in reportes %}
+                    <tr>
+                        <td><strong>{{ reporte.folio|default:"Sin folio" }}</strong></td>
+                        <td>{{ reporte.titulo }}</td>
+                        <td>{{ reporte.categoria }}</td>
+                        <td>{{ reporte.distrito|default:"Otro" }}</td>
+                        <td>{{ reporte.prioridad }}</td>
+                        <td>
+                            {% if reporte.estado == 'Pendiente' %}
+                                <span class="status-badge status-registrado">Pendiente</span>
+                            {% elif reporte.estado == 'En proceso' %}
+                                <span class="status-badge status-proceso">En proceso</span>
+                            {% elif reporte.estado == 'Resuelto' %}
+                                <span class="status-badge status-atendido">Resuelto</span>
+                            {% elif reporte.estado == 'Cancelado' %}
+                                <span class="status-badge status-cancelado">Cancelado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a class="action-btn" href="{% url 'detalle_reporte' reporte.id %}">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tienes reportes registrados todavía.</p>
+    {% endif %}
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+{{ puntos_mapa|json_script:"puntos-mapa-ciudadano-data" }}
+{{ zonas_mapa|json_script:"zonas-mapa-ciudadano-data" }}
+
+<script>
+    const puntosMapa = JSON.parse(
+        document.getElementById('puntos-mapa-ciudadano-data').textContent
+    );
+
+    const zonasMapa = JSON.parse(
+        document.getElementById('zonas-mapa-ciudadano-data').textContent
+    );
+
+    const acapulcoCentro = [16.8531, -99.8237];
+
+    const mapa = L.map('mapaCiudadano', {
+        center: acapulcoCentro,
+        zoom: 12,
+        minZoom: 12,
+        maxBounds: [
+            [16.73, -100.00],
+            [16.97, -99.70]
+        ],
+        maxBoundsViscosity: 1.0
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(mapa);
+
+    function obtenerColorPorEstado(estado) {
+        if (estado === 'Pendiente') return '#f97316';
+        if (estado === 'En proceso') return '#2563eb';
+        if (estado === 'Resuelto') return '#16a34a';
+        if (estado === 'Cancelado') return '#dc2626';
+        return '#64748b';
+    }
+
+    function obtenerTextoEstado(estado) {
+        if (estado === 'Pendiente') return 'Pendiente';
+        if (estado === 'Resuelto') return 'Resuelto';
+        return estado;
+    }
+
+    const grupoElementos = L.featureGroup();
+
+    if (zonasMapa.length > 0) {
+        zonasMapa.forEach(function(zona) {
+            const color = obtenerColorPorEstado(zona.estado);
+            const estadoTexto = obtenerTextoEstado(zona.estado);
+
+            const circuloZona = L.circle([zona.latitud, zona.longitud], {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.22,
+                weight: 3,
+                radius: zona.radio
+            }).addTo(mapa);
+
+            circuloZona.bindPopup(`
+                <div class="popup-reporte">
+                    <h3>Zona ${zona.distrito}</h3>
+                    <p><strong>Estado principal:</strong> ${estadoTexto}</p>
+                    <p><strong>Total reportes:</strong> ${zona.total}</p>
+                    <p><strong>Pendientes:</strong> ${zona.pendientes}</p>
+                    <p><strong>En proceso:</strong> ${zona.en_proceso}</p>
+                    <p><strong>Resueltos:</strong> ${zona.resueltos}</p>
+                    <p><strong>Cancelados:</strong> ${zona.cancelados}</p>
+                </div>
+            `);
+
+            circuloZona.addTo(grupoElementos);
+        });
+    }
+
+    if (puntosMapa.length > 0) {
+        puntosMapa.forEach(function(reporte) {
+            const color = obtenerColorPorEstado(reporte.estado);
+            const estadoTexto = obtenerTextoEstado(reporte.estado);
+
+            const marcador = L.circleMarker([reporte.latitud, reporte.longitud], {
+                radius: 9,
+                color: '#ffffff',
+                fillColor: color,
+                fillOpacity: 1,
+                weight: 3
+            }).addTo(mapa);
+
+            marcador.bindPopup(`
+                <div class="popup-reporte">
+                    <h3>${reporte.titulo}</h3>
+                    <p class="popup-folio">${reporte.folio}</p>
+                    <p><strong>Distrito:</strong> ${reporte.distrito}</p>
+                    <p><strong>Categoría:</strong> ${reporte.categoria}</p>
+                    <p><strong>Prioridad:</strong> ${reporte.prioridad}</p>
+                    <p><strong>Estado:</strong> ${estadoTexto}</p>
+                    <a href="${reporte.url}">Ver reporte</a>
+                </div>
+            `);
+
+            marcador.addTo(grupoElementos);
+        });
+    }
+
+    if (zonasMapa.length > 0 || puntosMapa.length > 0) {
+        mapa.fitBounds(grupoElementos.getBounds(), {
+            padding: [40, 40],
+            maxZoom: 15
+        });
+    } else {
+        L.popup()
+            .setLatLng(acapulcoCentro)
+            .setContent('Todavía no tienes reportes con ubicación registrada.')
+            .openOn(mapa);
+    }
+</script>
+
+{% endblock %}

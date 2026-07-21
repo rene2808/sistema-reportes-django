@@ -1,0 +1,1199 @@
+<!-- 
+  Plantilla: inicio.html
+  Descripción: Página de aterrizaje (Landing Page) pública para la ciudadanía.
+  Muestra estadísticas de incidentes resueltos, mapa interactivo (Leaflet) con reportes,
+  carrusel con fotos del "Antes" y "Después", testimonios de ciudadanos y enlace a registro.
+-->
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reportes Acapulco | Inicio</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="{% static 'css/inicio.css' %}?v=1.4">
+
+    <!-- CSS personalizado para cambiar el fondo de la página principal -->
+    <style>
+        .bg-light-gray {
+            background-image: url("{% static 'fondo_principal.jpg.jpeg' %}") !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Contenedor de las imágenes de la galería */
+        .gallery-image-wrapper {
+            overflow: hidden;
+            border-radius: 10px;
+            height: 110px;
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            background: #f1f5f9;
+        }
+
+        .gallery-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+
+        .gallery-image-wrapper img:hover {
+            opacity: 0.9;
+        }
+
+        /* Estilos de la Ventana Flotante (Lightbox) para ampliar las imágenes */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            /* Fondo obscuro semitransparente */
+            backdrop-filter: blur(8px);
+            /* Difuminado de fondo estilo premium */
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-overlay img {
+            max-width: 50%;
+            /* Abarca aproximadamente la mitad de la pantalla */
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .lightbox-overlay.active img {
+            transform: scale(1);
+        }
+
+        /* Contenedor unificado para secciones */
+        .section-unified-container {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 70px !important;
+            /* Más separación entre secciones */
+        }
+
+        /* Degradado azul sutil para galería */
+        .section-gallery-container {
+            background: linear-gradient(135deg, rgba(219, 234, 254, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.25);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Degradado azul sutil para reseñas (alineado con la galería) */
+        .section-reviews-container {
+            background: linear-gradient(135deg, rgba(219, 234, 254, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.25);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Degradado azul sutil para contacto (alineado con reseñas y galería) */
+        .section-contact-container {
+            background: linear-gradient(135deg, rgba(219, 234, 254, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.25);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.08), 0 5px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Responsive para dispositivos móviles */
+        @media (max-width: 768px) {
+            .lightbox-overlay img {
+                max-width: 90%;
+            }
+
+            .section-unified-container {
+                padding: 24px 16px;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Indicador deslizante suave en navbar */
+        .navbar-nav {
+            position: relative;
+        }
+
+        .nav-indicator {
+            position: absolute;
+            bottom: 0;
+            height: 3px;
+            background-color: #3b82f6;
+            /* Azul medio */
+            border-radius: 2px;
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .custom-navbar .nav-link.active::after {
+            display: none !important;
+        }
+
+        .custom-navbar .nav-link {
+            position: relative;
+            padding-bottom: 8px !important;
+        }
+    </style>
+</head>
+
+<body class="bg-light-gray">
+
+
+
+    <!-- NAVBAR MODERNA Y PROFESIONAL -->
+    <nav class="navbar navbar-expand-lg navbar-dark py-3 sticky-top custom-navbar">
+        <div class="container-fluid px-4 px-xl-5">
+            <a class="navbar-brand d-flex align-items-center p-1" href="#"
+                style="max-height: 56px; overflow: hidden;">
+                <img src="/media/evidencias/logo_sin_fondo.png" alt="Logo PIGRICA Acapulco"
+                    style="height: 48px; width: auto; object-fit: contain;">
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuPrincipal">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menuPrincipal">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 fw-semibold fs-6 ms-lg-4 gap-2">
+                    <li class="nav-item"><a class="nav-link active" href="#"><i
+                                class="bi bi-house-door me-1 text-info"></i> Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50" href="#mapa"><i
+                                class="bi bi-geo-alt me-1"></i> Mapa</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50" href="#galeria"><i
+                                class="bi bi-image me-1"></i> Resueltas</a></li>
+                    <li class="nav-item"><a class="nav-link text-white-50" href="#resenas"><i
+                                class="bi bi-star me-1"></i> Reseñas</a></li>
+                </ul>
+
+                <div class="d-flex gap-2">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}"
+                        class="btn btn-outline-light fw-semibold px-4 py-2 rounded-pill fs-6">
+                        <i class="bi bi-layout-text-sidebar-reverse me-1"></i> Mi Panel
+                    </a>
+                    <a href="{% url 'logout' %}"
+                        class="btn btn-danger fw-semibold px-4 py-2 rounded-pill fs-6 shadow-sm text-white">
+                        <i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light fw-semibold px-4 py-2 rounded-pill fs-6">
+                        <i class="bi bi-person me-1"></i> Iniciar sesión
+                    </a>
+                    <a href="{% url 'registro' %}"
+                        class="btn btn-primary fw-semibold px-4 py-2 rounded-pill fs-6 shadow-sm text-white custom-btn-nav-register">
+                        <i class="bi bi-person-plus me-1"></i> Registrarse
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+
+        <!-- HERO SECTION REDISEÑADO CON BOTONES E IMAGEN DE REFERENCIA -->
+        <section class="text-center mb-5 hero-section py-5">
+            <h1 class="display-4 fw-extrabold text-dark-blue mb-2 tracking-tight">
+                Crea tu reporte ciudadano
+            </h1>
+            <h2 class="h3 fw-bold text-secondary mb-4">
+                Juntos hacemos un mejor <span class="text-primary-accent">Acapulco</span>
+            </h2>
+            <p class="lead text-muted mx-auto mb-4 hero-desc"
+                style="max-width: 680px; font-size: 1.15rem; line-height: 1.6;">
+                Descubre la plataforma que te brinda la libertad de reportar, mapear y seguir las incidencias de tu
+                comunidad exactamente como lo imaginaste.
+            </p>
+
+            <div class="d-flex justify-content-center gap-3 mb-5 mt-2">
+                <a href="{% url 'crear_reporte' %}"
+                    class="btn btn-primary btn-lg rounded-pill px-4 py-2-5 fw-bold shadow-sm d-flex align-items-center gap-2">
+                    <i class="bi bi-pencil-square"></i> Crear un reporte
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}"
+                    class="btn btn-outline-primary btn-lg rounded-pill px-4 py-2-5 fw-bold bg-white d-flex align-items-center gap-2">
+                    <i class="bi bi-layout-text-sidebar-reverse"></i> Mi Panel
+                </a>
+                {% else %}
+                <a href="{% url 'registro' %}"
+                    class="btn btn-outline-primary btn-lg rounded-pill px-4 py-2-5 fw-bold bg-white d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus"></i> Registrarse
+                </a>
+                {% endif %}
+            </div>
+        </section>
+
+        <section id="mapa" class="mb-5">
+            <div class="card border-0 shadow-sm overflow-hidden rounded-4 bg-white">
+
+                <div class="p-4 text-center">
+                    <h2 class="fw-bold d-flex align-items-center justify-content-center gap-2 text-dark-blue mb-1">
+                        <i class="bi bi-map text-primary fs-3"></i> Mapa de Acapulco
+                    </h2>
+                    <p class="text-muted small mb-0">Explora los reportes por estado en diferentes zonas de la ciudad.
+                    </p>
+                </div>
+
+                <div class="position-relative px-4 pb-4">
+                    <div
+                        class="map-legend bg-white rounded-3 shadow-sm px-3 py-2 d-inline-flex gap-3 position-absolute z-3 mt-3 ms-3 border">
+                        <span class="fw-semibold text-secondary small">
+                            <i class="bi bi-geo-alt-fill text-danger"></i> Pendiente
+                        </span>
+                        <span class="fw-semibold text-secondary small">
+                            <i class="bi bi-geo-alt-fill text-warning"></i> En proceso
+                        </span>
+                        <span class="fw-semibold text-secondary small">
+                            <i class="bi bi-geo-alt-fill text-success"></i> Resuelto
+                        </span>
+                    </div>
+
+                    <div id="map" class="rounded-4"></div>
+                </div>
+
+                <div class="border-top bg-light-card py-4 px-3">
+                    <div class="row g-3 text-center align-items-center">
+                        <div class="col-md-4 border-end-custom">
+                            <div class="d-flex align-items-center justify-content-center gap-3 px-3 text-start">
+                                <div class="icon-circle bg-danger-subtle text-danger">
+                                    <i class="bi bi-exclamation-circle-fill fs-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 lh-1">{{ pendientes|default_if_none:"0" }}</h3>
+                                    <span class="fw-semibold text-dark small">Pendientes</span>
+                                    <p class="text-muted small mb-0 font-xs">Reportes esperando atención</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 border-end-custom">
+                            <div class="d-flex align-items-center justify-content-center gap-3 px-3 text-start">
+                                <div class="icon-circle bg-warning-subtle text-warning">
+                                    <i class="bi bi-tools fs-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 lh-1">{{ proceso|default_if_none:"0" }}</h3>
+                                    <span class="fw-semibold text-dark small">En proceso</span>
+                                    <p class="text-muted small mb-0 font-xs">Reportes en seguimiento</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center gap-3 px-3 text-start">
+                                <div class="icon-circle bg-success-subtle text-success">
+                                    <i class="bi bi-check-circle-fill fs-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-0 lh-1">{{ resueltos|default_if_none:"0" }}</h3>
+                                    <span class="fw-semibold text-dark small">Resueltas</span>
+                                    <p class="text-muted small mb-0 font-xs">Reportes atendidos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Sección de botones obsoleta eliminada del cuerpo central ya que fue reubicada al hero -->
+
+        <section class="mb-5">
+            <div class="card border-0 shadow-sm rounded-4 p-5">
+                <div class="row align-items-center mb-5">
+                    <div class="col-auto">
+                        <div class="bg-primary bg-opacity-10 rounded-4 p-4">
+                            <i class="bi bi-file-earmark-text text-primary display-4"></i>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h2 class="fw-bold mb-2 text-dark-blue">¿Cómo funciona?</h2>
+                        <p class="text-muted fs-5 mb-0">
+                            Crear un reporte ciudadano es un proceso sencillo. Sigue estos cuatro pasos para que tu
+                            incidencia sea atendida por el municipio.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row text-center">
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 rounded-4 h-100" style="background: rgba(37, 99, 235, 0.03); border: 1px solid rgba(37, 99, 235, 0.18); transition: transform 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 20px -3px rgba(37, 99, 235, 0.12)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.02)';">
+                            <span class="badge rounded-pill bg-palette-blue fs-6 px-3 py-2 mb-3 shadow-sm">1</span>
+                            <div class="mb-3"><i class="bi bi-file-earmark-text text-palette-blue display-4"></i></div>
+                            <h5 class="fw-bold text-dark-blue">Crear reporte</h5>
+                            <p class="text-muted small mb-0">Completa el formulario con la ubicación, categoría, descripción y fotografía.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 rounded-4 h-100" style="background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.18); transition: transform 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 20px -3px rgba(245, 158, 11, 0.12)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.02)';">
+                            <span class="badge rounded-pill bg-palette-mustard fs-6 px-3 py-2 mb-3 shadow-sm">2</span>
+                            <div class="mb-3"><i class="bi bi-tools text-palette-mustard display-4"></i></div>
+                            <h5 class="fw-bold text-dark-blue">En proceso</h5>
+                            <p class="text-muted small mb-0">El reporte es recibido y asignado al área correspondiente para iniciar su atención.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 rounded-4 h-100" style="background: rgba(13, 148, 136, 0.03); border: 1px solid rgba(13, 148, 136, 0.18); transition: transform 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 20px -3px rgba(13, 148, 136, 0.12)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.02)';">
+                            <span class="badge rounded-pill bg-palette-teal fs-6 px-3 py-2 mb-3 shadow-sm">3</span>
+                            <div class="mb-3"><i class="bi bi-eye text-palette-teal display-4"></i></div>
+                            <h5 class="fw-bold text-dark-blue">En revisión</h5>
+                            <p class="text-muted small mb-0">El personal verifica la incidencia, realiza acciones y valida la solución.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-4">
+                        <div class="p-4 rounded-4 h-100" style="background: rgba(34, 197, 94, 0.03); border: 1px solid rgba(34, 197, 94, 0.18); transition: transform 0.25s ease, box-shadow 0.25s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 20px -3px rgba(34, 197, 94, 0.12)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.02)';">
+                            <span class="badge rounded-pill bg-palette-green fs-6 px-3 py-2 mb-3 shadow-sm">4</span>
+                            <div class="mb-3"><i class="bi bi-check-circle text-palette-green display-4"></i></div>
+                            <h5 class="fw-bold text-dark-blue">Resuelta</h5>
+                            <p class="text-muted small mb-0">Una vez solucionada, el ciudadano puede consultar el resultado final.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-primary border-0 rounded-4 mt-4 mb-0 bg-opacity-10">
+                    <div class="d-flex">
+                        <i class="bi bi-info-circle-fill fs-3 me-3 text-primary"></i>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-primary">Importante</h5>
+                            <p class="mb-0 text-secondary small">
+                                Puedes consultar el estado de tu reporte en cualquier momento. El sistema actualizará
+                                automáticamente el avance conforme sea atendida la incidencia.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {% if resueltas_lista %}
+        <section id="galeria" class="mb-5 section-unified-container section-gallery-container">
+            <h2 class="fw-bold text-center text-dark-blue mb-4">Galería de incidencias resueltas</h2>
+            <div class="row g-4">
+                {% for reporte in resueltas_lista|slice:":3" %}
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-lg h-100 gallery-card"
+                        style="background: linear-gradient(135deg, #0f2b5c 0%, #03152d 100%) !important; border: 1px solid rgba(255,255,255,0.08);">
+                        <div class="card-body">
+                            <h5 class="fw-bold text-white">{{ reporte.titulo }}</h5>
+                            <p class="text-white-50 small mb-2"><i class="bi bi-geo-alt text-warning"></i> {{ reporte.colonia|default:"Acapulco" }}</p>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="gallery-image-wrapper">
+                                        {% if reporte.foto %}
+                                        <img src="{{ reporte.foto.url }}" alt="Antes" onclick="openLightbox(this.src)">
+                                        {% else %}
+                                        <div
+                                            class="bg-secondary-subtle text-center py-4 text-muted small h-100 d-flex align-items-center justify-content-center">
+                                            Sin Foto Antes</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="gallery-image-wrapper">
+                                        {% if reporte.evidencias.exists %}
+                                        <img src="{{ reporte.evidencias.first.archivo.url }}" alt="Después"
+                                            onclick="openLightbox(this.src)">
+                                        {% else %}
+                                        <div
+                                            class="bg-primary-subtle text-center py-4 text-primary small h-100 d-flex align-items-center justify-content-center">
+                                            Sin Foto Después</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 d-flex justify-content-between align-items-center">
+                                <span class="badge bg-success">Resuelto</span>
+                                <small class="text-white-50">{{ reporte.fecha_reporte|date:"d M Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+
+
+        <section id="resenas" class="mb-5 section-unified-container section-reviews-container">
+            <h2 class="fw-bold text-center text-dark-blue mb-2">Reseñas de los Ciudadanos</h2>
+            <p class="text-center text-muted mb-4">Lo que opinan los habitantes de Acapulco sobre nuestro sistema de
+                reportes.</p>
+
+            <!-- Listado de reseñas dinámicas -->
+            <div class="row g-4 mb-4">
+                {% if resenas %}
+                {% for resena in resenas %}
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4 h-100 review-item position-relative overflow-hidden"
+                        style="border-radius: 18px; border-top: 4px solid #ff8c32 !important;">
+                        {% if request.user.is_authenticated and request.user.perfilusuario %}
+                        {% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' or request.user.perfilusuario.rol == 'moderador' %}
+                        <div class="position-absolute" style="top: 15px; right: 15px; z-index: 10;">
+                            <a href="{% url 'eliminar_resena' resena.id %}" class="text-danger" title="Eliminar reseña"
+                                onclick="return confirm('¿Seguro que deseas eliminar esta reseña?')">
+                                <i class="bi bi-trash-fill" style="font-size: 1.1rem; color: #ef4444;"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+
+                        {% if resena.reporte %}
+                        <div class="mb-2">
+                            <span class="badge bg-success text-white" style="font-size: 11px; padding: 4px 8px; border-radius: 6px;">
+                                <i class="bi bi-check-circle-fill me-1"></i> {{ resena.reporte.folio }} (Resuelto)
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-2">
+                            <span class="text-warning">
+                                {% if resena.puntuacion == 5 %}
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star-fill"></i>
+                                {% elif resena.puntuacion == 4 %}
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star"></i>
+                                {% elif resena.puntuacion == 3 %}
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                {% elif resena.puntuacion == 2 %}
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                    class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                {% else %}
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i
+                                    class="bi bi-star"></i><i class="bi bi-star"></i>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <p class="text-dark mb-3"
+                            style="font-style: italic; font-size: 0.92rem; color: #1e293b !important; line-height: 1.5;">
+                            "{{ resena.comentario }}"</p>
+
+                        <!-- Galería visual de evidencias de la reseña -->
+                        {% if resena.foto1 or resena.foto2 %}
+                        <div class="d-flex gap-2 mb-3">
+                            {% if resena.foto1 %}
+                            <a href="{{ resena.foto1.url }}" target="_blank" title="Ver evidencia fotográfica de la reseña">
+                                <img src="{{ resena.foto1.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                            </a>
+                            {% endif %}
+                            {% if resena.foto2 %}
+                            <a href="{{ resena.foto2.url }}" target="_blank" title="Ver evidencia fotográfica de la reseña">
+                                <img src="{{ resena.foto2.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-dark-blue mb-0"><i class="bi bi-person-circle me-1"
+                                    style="opacity: 0.7;"></i> {{ resena.usuario.username }}</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ resena.fecha|date:"d M Y" }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <div class="mb-3 text-muted" style="font-size: 3rem;"><i class="bi bi-chat-square-text"></i></div>
+                    <h5 class="fw-bold text-secondary">Aún no hay reseñas</h5>
+                    <p class="text-muted small">Sé el primero en compartir tu opinión sobre la plataforma.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Formulario de opinión -->
+            <div class="card border-0 shadow-lg rounded-4 p-4 mx-auto"
+                style="max-width: 630px; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 110px); border: 2px solid #93c5fd !important; border-top: 6px solid #2563eb !important; box-shadow: 0 14px 35px rgba(37, 99, 235, 0.12) !important;">
+                <h4 class="fw-bold mb-3 text-center" style="color: #1e3a8a;">
+                    <i class="bi bi-star-half text-warning me-2"></i>Dejar una Reseña
+                </h4>
+
+                {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'dejar_reseña' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if reportes_resueltos_usuario %}
+                    <div class="mb-3 text-start">
+                        <label for="reporte_id" class="form-label fw-bold" style="color: #1e40af; font-size: 14px;">
+                            <i class="bi bi-card-checklist me-1 text-primary"></i> Selecciona tu reporte resuelto a evaluar *
+                        </label>
+                        <select name="reporte_id" id="reporte_id" class="form-select rounded-3 text-dark font-weight-bold" 
+                            style="border: 2px solid #60a5fa; background-color: #f8fafc; font-weight: 600; color: #1e3a8a; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.07);" required>
+                            <option value="">-- Elige el reporte resuelto --</option>
+                            {% for rep in reportes_resueltos_usuario %}
+                            <option value="{{ rep.id }}">Folio: {{ rep.folio }} - {{ rep.titulo }} (Resuelto el {{ rep.fecha_reporte|date:"d/m/Y" }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 text-start">
+                        <label for="fotos_reseña" class="form-label fw-bold" style="color: #1e40af; font-size: 14px;">
+                            <i class="bi bi-camera-fill me-1 text-info"></i> Evidencias de la solución * (Mínimo 1, Máximo 2 fotos JPG)
+                        </label>
+                        <input type="file" name="fotos_reseña" id="fotos_reseña" class="form-control rounded-3" 
+                            accept=".jpg, .jpeg, image/jpeg" multiple required onchange="validarFotosResena(this)"
+                            style="border: 2px solid #38bdf8; background-color: #f0f9ff; font-weight: 600; box-shadow: 0 3px 10px rgba(14, 165, 233, 0.07);">
+                        <div id="statusFotosResena" class="small mt-1 font-weight-bold" style="display: none;"></div>
+                    </div>
+                    {% elif has_resueltos_evaluados %}
+                    <div class="alert alert-light border border-success rounded-3 p-3 mb-4 text-dark text-start small shadow-sm" style="border-left: 5px solid #10b981 !important; background-color: #ecfdf5;">
+                        <i class="bi bi-check-circle-fill text-success me-1"></i> <strong>¡Gracias!</strong> Ya has enviado tu reseña para tus reportes resueltos actuales. Podrás enviar nuevas reseñas cuando generes otros reportes y sean marcados como <strong>Resueltos</strong> por el municipio.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light border border-info rounded-3 p-3 mb-4 text-dark text-start small shadow-sm" style="border-left: 5px solid #0ea5e9 !important; background-color: #f0f9ff;">
+                        <i class="bi bi-info-circle-fill text-info me-1"></i> Cuando el municipio marque como <strong>Resuelto</strong> alguno de tus reportes, aquí podrás seleccionarlo y adjuntar de 1 a 2 fotos JPG comprobando el trabajo realizado.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3 text-center">
+                        <label class="form-label fw-bold d-block" style="color: #1e40af; font-size: 14px;">Califica tu experiencia</label>
+
+                        <div class="rating-stars-input d-flex gap-2 justify-content-center mb-3"
+                            style="font-size: 2.3rem; cursor: pointer;">
+                            <input type="radio" name="puntuacion" id="star1" value="1" class="d-none">
+                            <label for="star1" class="bi bi-star-fill text-warning star-label" data-value="1"></label>
+
+                            <input type="radio" name="puntuacion" id="star2" value="2" class="d-none">
+                            <label for="star2" class="bi bi-star-fill text-warning star-label" data-value="2"></label>
+
+                            <input type="radio" name="puntuacion" id="star3" value="3" class="d-none">
+                            <label for="star3" class="bi bi-star-fill text-warning star-label" data-value="3"></label>
+
+                            <input type="radio" name="puntuacion" id="star4" value="4" class="d-none">
+                            <label for="star4" class="bi bi-star-fill text-warning star-label" data-value="4"></label>
+
+                            <input type="radio" name="puntuacion" id="star5" value="5" class="d-none" checked>
+                            <label for="star5" class="bi bi-star-fill text-warning star-label" data-value="5"></label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 text-start">
+                        <label for="comentario" class="form-label fw-bold" style="color: #1e40af; font-size: 14px;">Comentario</label>
+                        <textarea class="form-control rounded-3 text-dark" id="comentario" name="comentario"
+                            rows="3" placeholder="Escribe tu opinión sobre la atención y resolución del incidente..." 
+                            style="border: 2px solid #60a5fa; background-color: #ffffff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.07); font-weight: 500;"
+                            required></textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit"
+                            class="btn px-5 py-2.5 rounded-pill fw-bold text-white shadow"
+                            style="background: linear-gradient(135deg, #ff7417 0%, #ff8c32 100%); border: 2px solid #ea580c; font-size: 15px;">
+                            <i class="bi bi-send-fill me-1"></i> Enviar reseña
+                        </button>
+                    </div>
+                </form>
+
+                <script>
+                    function validarFotosResena(input) {
+                        const statusBox = document.getElementById('statusFotosResena');
+                        if (!statusBox) return true;
+
+                        const files = Array.from(input.files);
+                        if (files.length === 0) {
+                            statusBox.style.display = 'block';
+                            statusBox.className = 'small text-danger fw-bold mt-1';
+                            statusBox.textContent = 'Debes adjuntar al menos 1 fotografía de evidencia en formato JPG.';
+                            return false;
+                        }
+
+                        if (files.length > 2) {
+                            statusBox.style.display = 'block';
+                            statusBox.className = 'small text-danger fw-bold mt-1';
+                            statusBox.textContent = 'Solo puedes adjuntar como máximo 2 fotografías para la reseña.';
+                            input.value = '';
+                            return false;
+                        }
+
+                        let invalidFormat = false;
+                        files.forEach(f => {
+                            const name = f.name.toLowerCase();
+                            if (!name.endsWith('.jpg') && !name.endsWith('.jpeg')) {
+                                invalidFormat = true;
+                            }
+                        });
+
+                        if (invalidFormat) {
+                            statusBox.style.display = 'block';
+                            statusBox.className = 'small text-danger fw-bold mt-1';
+                            statusBox.textContent = 'Todas las imágenes deben estar en formato JPG (.jpg / .jpeg).';
+                            input.value = '';
+                            return false;
+                        }
+
+                        statusBox.style.display = 'block';
+                        statusBox.className = 'small text-success fw-bold mt-1';
+                        statusBox.textContent = `${files.length} fotografía(s) JPG lista(s) para enviar.`;
+                        return true;
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const starLabels = document.querySelectorAll('.star-label');
+
+                        function updateStars(value) {
+                            starLabels.forEach(label => {
+                                const val = parseInt(label.getAttribute('data-value'));
+                                if (val <= value) {
+                                    label.classList.remove('bi-star');
+                                    label.classList.add('bi-star-fill');
+                                } else {
+                                    label.classList.remove('bi-star-fill');
+                                    label.classList.add('bi-star');
+                                }
+                            });
+                        }
+
+                        starLabels.forEach(label => {
+                            label.addEventListener('mouseenter', function () {
+                                const val = parseInt(this.getAttribute('data-value'));
+                                updateStars(val);
+                            });
+
+                            label.addEventListener('mouseleave', function () {
+                                const checkedRadio = document.querySelector('input[name="puntuacion"]:checked');
+                                const val = checkedRadio ? parseInt(checkedRadio.value) : 5;
+                                updateStars(val);
+                            });
+
+                            label.addEventListener('click', function () {
+                                const val = parseInt(this.getAttribute('data-value'));
+                                const radio = document.getElementById('star' + val);
+                                if (radio) radio.checked = true;
+                                updateStars(val);
+                            });
+                        });
+
+                        // Set initial stars
+                        const checkedRadio = document.querySelector('input[name="puntuacion"]:checked');
+                        updateStars(checkedRadio ? parseInt(checkedRadio.value) : 5);
+                    });
+                </script>
+                {% else %}
+                <div class="text-center py-4">
+                    <div class="mb-3 text-muted" style="font-size: 2.2rem;"><i class="bi bi-lock-fill"></i></div>
+                    <p class="text-muted mb-4">Debes iniciar sesión con tu cuenta para poder dejar una reseña.</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
+                            <i class="bi bi-person me-1"></i> Iniciar sesión
+                        </a>
+                        <a href="{% url 'registro' %}"
+                            class="btn btn-primary text-white rounded-pill px-4 py-2 fw-semibold">
+                            <i class="bi bi-person-plus me-1"></i> Registrarse
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section id="contacto" class="mb-5 section-unified-container section-contact-container">
+            <h2 class="fw-bold text-center text-dark-blue mb-2">Contáctanos</h2>
+            <p class="text-center text-muted mb-4">¿Tienes alguna duda o sugerencia? Envíanos un correo.</p>
+            
+            <div class="card border-0 shadow-sm rounded-4 p-4 mx-auto"
+                style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #3B82F6 !important; border-radius: 18px;">
+                <h4 class="fw-bold mb-3 text-center" style="color: #1e3a8a;"><i class="bi bi-envelope me-2"></i>Buzón de Contacto</h4>
+                <p class="text-muted text-center small mb-4">Tu mensaje se enviará directamente a nuestro equipo de soporte.</p>
+                
+                {% if user.is_authenticated %}
+                <form id="correo-form">
+                    {% csrf_token %}
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold" style="color: #1e293b;">Asunto</label>
+                        <input type="text" name="asunto" id="form-asunto" class="form-control rounded-3 bg-white text-dark" style="border: 1px solid #cbd5e1; padding: 10px;" required placeholder="Ej. Duda con un reporte, sugerencia...">
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-semibold" style="color: #1e293b;">Mensaje</label>
+                        <textarea name="mensaje" id="form-mensaje" class="form-control rounded-3 bg-white text-dark" style="border: 1px solid #cbd5e1; padding: 10px;" rows="5" required placeholder="Escribe detalladamente tu mensaje aquí..."></textarea>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-pill fw-bold shadow-sm text-white"
+                            style="background-color: #3B82F6; border: none; transition: all 0.3s ease;">
+                            <i class="bi bi-send-fill me-1"></i> Enviar Mensaje por Correo
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <div class="mb-3 text-muted" style="font-size: 2.2rem;"><i class="bi bi-lock-fill"></i></div>
+                    <p class="text-muted mb-4">Debes iniciar sesión con tu cuenta para poder enviar un mensaje de contacto.</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
+                            <i class="bi bi-person me-1"></i> Iniciar sesión
+                        </a>
+                        <a href="{% url 'registro' %}" class="btn btn-primary text-white rounded-pill px-4 py-2 fw-semibold" style="background-color: #3B82F6; border: none;">
+                            <i class="bi bi-person-plus me-1"></i> Registrarse
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div id="alerta-respuesta" class="mt-3 d-none alert text-center fw-bold small p-3 rounded-3"></div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-white pt-5 pb-3 mt-5">
+        <div class="container-fluid px-4 px-xl-5">
+            <div class="row gy-4">
+                <div class="col-lg-4">
+                    <!-- Integración armonizada del Logo también en el pie de página -->
+                    <h5 class="fw-bold text-white mb-3 d-flex align-items-center gap-2">
+                        <span class="d-inline-block"
+                            style="overflow: hidden;">
+                            <img src="/media/evidencias/logo_sin_fondo.png" alt="PIGRICA"
+                                style="height: 48px; width: auto; object-fit: contain;">
+                        </span>
+                    </h5>
+                    <p class="small text-white-50">Sistema Web de Reportes Ciudadanos<br>© 2026 Todos los derechos
+                        reservados.</p>
+                </div>
+
+                <div class="col-lg-3">
+                    <h6 class="fw-bold text-white mb-3">Contacto</h6>
+                    <ul class="list-unstyled small text-white-50 d-flex flex-column gap-2">
+                        <li><i class="bi bi-telephone me-2"></i> 33 4982 5403</li>
+                        <li><i class="bi bi-envelope me-2"></i> contacto@acapulco.gob.mx</li>
+                        <li><i class="bi bi-geo-alt me-2"></i> Acapulco de Juárez, Guerrero</li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 text-lg-end">
+                    <h6 class="fw-bold text-white mb-3">Síguenos</h6>
+                    <div class="d-flex gap-3 justify-content-lg-end">
+                        <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    {{ puntos_mapa|json_script:"datos-mapa-ciudadano" }}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                var mapaCiudadano = L.map('map', {
+                    zoomControl: true,
+                    center: [16.8531, -99.8236],
+                    zoom: 13,
+                    minZoom: 12,
+                    maxBounds: [
+                        [16.73, -100.00],
+                        [16.97, -99.70]
+                    ],
+                    maxBoundsViscosity: 1.0
+                });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 19
+                }).addTo(mapaCiudadano);
+
+                const scriptTag = document.getElementById('datos-mapa-ciudadano');
+                if (scriptTag) {
+                    const puntosMapa = JSON.parse(scriptTag.textContent || "[]");
+
+                    function colorPorEstado(estado) {
+                        const texto = (estado || '').toLowerCase();
+                        if (texto.includes('pendiente')) return '#ef4444';  // Rojo
+                        if (texto.includes('proceso')) return '#3b82f6';    // Azul
+                        if (texto.includes('resuelto')) return '#10b981';   // Verde
+                        return '#64748b';                                   // Gris
+                    }
+
+                    function colorPorCategoria(categoria) {
+                        const texto = (categoria || '').toLowerCase();
+                        if (texto.includes('bache')) return '#f59e0b';      // Naranja
+                        if (texto.includes('basura')) return '#10b981';     // Verde
+                        if (texto.includes('alumbrado')) return '#3b82f6';  // Azul
+                        if (texto.includes('fuga') || texto.includes('agua')) return '#06b6d4'; // Cian
+                        if (texto.includes('electricid')) return '#eab308'; // Amarillo
+                        return '#8b5cf6';                                   // Púrpura
+                    }
+
+                    function crearIconoCiudadano(colorEstado, colorCat) {
+                        return L.divIcon({
+                            className: '',
+                            html: `<div style="width: 20px; height: 20px; background: ${colorEstado}; border: 3px solid ${colorCat}; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.35);"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10],
+                        });
+                    }
+
+                    if (puntosMapa && puntosMapa.length > 0) {
+                        const grupoMarcadores = [];
+                        puntosMapa.forEach(punto => {
+                            const colorEst = colorPorEstado(punto.estado);
+                            const colorCat = colorPorCategoria(punto.categoria);
+                            const marker = L.marker(
+                                [punto.latitud, punto.longitud],
+                                { icon: crearIconoCiudadano(colorEst, colorCat) }
+                            ).addTo(mapaCiudadano);
+
+                            marker.bindPopup(`<strong>${punto.categoria}</strong><br><b>Estado:</b> <span style="color:${colorEst}; font-weight:bold;">${punto.estado}</span>`);
+                            grupoMarcadores.push(marker);
+                        });
+
+                        if (grupoMarcadores.length > 0) {
+                            const grupoFeature = L.featureGroup(grupoMarcadores);
+                            mapaCiudadano.fitBounds(grupoFeature.getBounds(), { padding: [40, 40] });
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <!-- Modal flotante para ampliar imágenes de la galería (Lightbox) -->
+    <div id="imageLightbox" class="lightbox-overlay" onclick="closeLightbox()">
+        <img id="lightboxImage" src="" alt="Imagen ampliada" onclick="event.stopPropagation();">
+    </div>
+
+    <script>
+        function openLightbox(src) {
+            const lightbox = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImage');
+            img.src = src;
+            lightbox.style.display = 'flex';
+            setTimeout(() => {
+                lightbox.classList.add('active');
+            }, 10);
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('imageLightbox');
+            lightbox.classList.remove('active');
+            setTimeout(() => {
+                lightbox.style.display = 'none';
+            }, 300);
+        }
+    </script>
+
+    <!-- Indicador deslizante suave y ScrollSpy en Navbar -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const navbarNav = document.querySelector('.navbar-nav');
+            if (!navbarNav) return;
+
+            // Crear el indicador deslizante
+            const indicator = document.createElement('div');
+            indicator.className = 'nav-indicator';
+            navbarNav.appendChild(indicator);
+
+            function actualizarIndicador() {
+                const activeLink = navbarNav.querySelector('.nav-link.active');
+                if (activeLink) {
+                    const navRect = navbarNav.getBoundingClientRect();
+                    const linkRect = activeLink.getBoundingClientRect();
+                    const padding = 8; // Alineación con el texto del enlace
+
+                    indicator.style.left = `${linkRect.left - navRect.left + padding}px`;
+                    indicator.style.width = `${linkRect.width - (padding * 2)}px`;
+                } else {
+                    indicator.style.width = '0px';
+                }
+            }
+
+            // Ejecutar inicialmente y en cambios de tamaño
+            setTimeout(actualizarIndicador, 150);
+            window.addEventListener('resize', actualizarIndicador);
+
+            // Lista de secciones a monitorear por su ID
+            const sections = [
+                { id: '', link: navbarNav.querySelector('a[href="#"]') },
+                { id: 'mapa', link: navbarNav.querySelector('a[href="#mapa"]') },
+                { id: 'galeria', link: navbarNav.querySelector('a[href="#galeria"]') },
+                { id: 'resenas', link: navbarNav.querySelector('a[href="#resenas"]') }
+            ];
+
+            // ScrollSpy para detectar la sección activa al desplazarse
+            window.addEventListener('scroll', function () {
+                let activeId = '';
+                const threshold = window.scrollY + 180; // umbral para considerar activa una sección
+
+                // Si estamos muy arriba, la activa siempre es Inicio
+                if (window.scrollY < 120) {
+                    activeId = '';
+                } else {
+                    sections.forEach(sec => {
+                        if (sec.id) {
+                            const el = document.getElementById(sec.id);
+                            if (el) {
+                                const top = el.offsetTop;
+                                if (threshold >= top - 20) {
+                                    activeId = sec.id;
+                                }
+                            }
+                        }
+                    });
+                }
+
+                let changed = false;
+                sections.forEach(sec => {
+                    if (sec.link) {
+                        const shouldBeActive = (sec.id === activeId);
+                        const isActive = sec.link.classList.contains('active');
+
+                        if (shouldBeActive && !isActive) {
+                            sec.link.classList.add('active');
+                            sec.link.classList.remove('text-white-50');
+                            const icon = sec.link.querySelector('i');
+                            if (icon) icon.classList.add('text-info');
+                            changed = true;
+                        } else if (!shouldBeActive && isActive) {
+                            sec.link.classList.remove('active');
+                            sec.link.classList.add('text-white-50');
+                            const icon = sec.link.querySelector('i');
+                            if (icon) icon.classList.remove('text-info');
+                            changed = true;
+                        }
+                    }
+                });
+
+                if (changed) {
+                    actualizarIndicador();
+                }
+            });
+        });
+    </script>
+
+<!-- Modal de Confirmación Personalizado -->
+<div id="custom-confirm-modal" style="
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(5px); 
+    z-index: 999999; 
+    justify-content: center; 
+    align-items: center;
+">
+    <div style="
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 20px;
+        width: 420px;
+        max-width: 90%;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        animation: scaleUpConfirm 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    ">
+        <!-- Icono de advertencia premium -->
+        <div style="
+            width: 60px;
+            height: 60px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px auto;
+        ">⚠️</div>
+        
+        <h3 id="custom-confirm-title" style="
+            margin: 0 0 10px 0;
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 700;
+        ">Confirmación requerida</h3>
+        
+        <p id="custom-confirm-message" style="
+            margin: 0 0 25px 0;
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        ">¿Estás seguro de realizar esta acción?</p>
+        
+        <div style="
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        ">
+            <button id="custom-confirm-cancel-btn" style="
+                border: 1px solid #cbd5e1;
+                background: #ffffff;
+                color: #334155;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
+                Cancelar
+            </button>
+            <button id="custom-confirm-confirm-btn" style="
+                border: none;
+                background: #ef4444;
+                color: #ffffff;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes scaleUpConfirm {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let confirmacionCallback = null;
+
+        const modal = document.getElementById('custom-confirm-modal');
+        const messageEl = document.getElementById('custom-confirm-message');
+        const cancelBtn = document.getElementById('custom-confirm-cancel-btn');
+        const confirmBtn = document.getElementById('custom-confirm-confirm-btn');
+
+        function abrirConfirmacionPersonalizada(mensaje, callback) {
+            messageEl.textContent = mensaje;
+            confirmacionCallback = callback;
+            modal.style.display = 'flex';
+        }
+
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            confirmacionCallback = null;
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            if (confirmacionCallback) {
+                confirmacionCallback();
+            }
+        });
+
+        // Interceptar eventos onclick que usan el confirm nativo
+        document.body.addEventListener('click', function(event) {
+            let target = event.target.closest('a, button');
+            if (!target) return;
+            
+            let onclickAttr = target.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes('confirm(')) {
+                // Cancelar navegación y ejecución del onclick original
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                
+                // Extraer el texto dentro del confirm('...')
+                let match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+                let mensaje = match ? match[1] : "¿Seguro que deseas realizar esta acción?";
+                
+                abrirConfirmacionPersonalizada(mensaje, function() {
+                    // Si confirma, navegamos a la URL si es enlace o disparamos click
+                    if (target.tagName === 'A' && target.href) {
+                        window.location.href = target.href;
+                    } else {
+                        target.removeAttribute('onclick');
+                        target.click();
+                    }
+                });
+            }
+        }, true); // Usar fase de captura
+    });
+
+    // Manejador del Formulario de Contacto por Correo SMTP
+    const correoForm = document.getElementById('correo-form');
+    if (correoForm) {
+        correoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const boton = this.querySelector('button[type="submit"]');
+            const alerta = document.getElementById('alerta-respuesta');
+            
+            boton.disabled = true;
+            boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Enviando mensaje...';
+            
+            const formData = new FormData(this);
+            
+            fetch('/contacto/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alerta.classList.remove('d-none', 'alert-success', 'alert-danger');
+                
+                if (data.status === 'success') {
+                    alerta.classList.add('alert-success');
+                    alerta.innerText = "¡Tu mensaje ha sido enviado con éxito al administrador!";
+                    this.reset();
+                } else {
+                    alerta.classList.add('alert-danger');
+                    alerta.innerText = "Hubo un problema al enviar el mensaje: " + data.message;
+                }
+            })
+            .catch(error => {
+                alerta.classList.remove('d-none', 'alert-success');
+                alerta.classList.add('alert-danger');
+                alerta.innerText = "Error de conexión con el servidor.";
+            })
+            .finally(() => {
+                boton.disabled = false;
+                boton.innerHTML = '<i class="bi bi-send-fill me-1"></i> Enviar Mensaje por Correo';
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

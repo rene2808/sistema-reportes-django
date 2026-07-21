@@ -1,0 +1,301 @@
+{% load static %}
+<!-- 
+  Plantilla: login.html
+  Descripción: Vista del formulario de inicio de sesión para los usuarios del sistema.
+  Contiene estilos locales en CSS y validación básica de campos obligatorios.
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Reportes</title>
+    <!-- Iconos de Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Estilos generales para el contenedor del login y diseño de la tarjeta */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, Helvetica, sans-serif;
+            position: relative;
+            z-index: 1;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(15, 23, 42, 0.15), rgba(15, 23, 42, 0.15)), url("{% static 'light_palette_wave_background.png' %}") no-repeat center/cover;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Caja contenedora principal (Glassmorphism usando #2D3748) */
+        .login-box {
+            width: 100%;
+            max-width: 520px;
+            min-height: 800px; /* Majestic tall height spanning most of the viewport height */
+            background: rgba(45, 55, 72, 0.92); /* Dark slate gray with high opacity for readability */
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
+            padding: 70px 45px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 50px rgba(45, 55, 72, 0.25);
+            text-align: center;
+            color: #FFFFFF; /* White text */
+            transition: all 0.3s ease;
+        }
+
+        .login-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 30px 60px rgba(45, 55, 72, 0.32);
+            border-color: rgba(255, 255, 255, 0.22);
+        }
+
+        .logo-container {
+            margin-bottom: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0 5px 0;
+        }
+
+        p {
+            color: #e3f2f4; /* Light text for subtitle */
+            font-size: 16px;
+            margin: 0 0 60px 0;
+            font-weight: 500;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 40px;
+            color: #e3f2f4; /* Light cyan text for contrast */
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        /* Estilos para inputs de texto y contraseña */
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            margin-top: 15px;
+            border-radius: 12px;
+            border: 1.5px solid #718096; /* Slate gray border */
+            background: #FFFFFF; /* White bg */
+            color: #2D3748; /* Dark slate text */
+            outline: none;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            background: #ffffff;
+            border-color: #3B82F6; /* Vibrant blue focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+        }
+
+        /* Botón de envío principal (#F59E0B) */
+        button {
+            width: 100%;
+            margin-top: 60px;
+            padding: 14px;
+            background: #F59E0B; /* Amber/Orange */
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        button:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Caja de mensaje de error por credenciales incorrectas (#EF4444) */
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Enlace de redirección a la página de registro */
+        .registro-link {
+            margin-top: 50px;
+            text-align: center;
+            color: #e3f2f4;
+            font-size: 14px;
+        }
+
+        .registro-link a {
+            color: #F59E0B; /* Amber/Orange link */
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .registro-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilo hover para el enlace de contraseña olvidada */
+        .olvido-contrasena:hover {
+            color: #F59E0B !important;
+            text-decoration: underline !important;
+        }
+
+        /* Estilos para el contenedor y botón de ver contraseña */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #718096;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password:hover {
+            color: #2D3748;
+        }
+
+        .btn-secondary-glass {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary-glass:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+        <div class="logo-container">
+            <img src="/media/evidencias/logo_sin_fondo.png" alt="PIGRICA Logo" style="height: 88px; width: auto; object-fit: contain;">
+        </div>
+        <h1>Iniciar sesión</h1>
+        <p>Sistema de Reportes</p>
+
+        <!-- Bloque condicional para desplegar mensajes de error si existen -->
+        {% if mensaje %}
+        <div class="error">
+            {{ mensaje }}
+        </div>
+        {% endif %}
+
+        <!-- Formulario de inicio de sesión por método POST -->
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %} <!-- Token de seguridad de Django contra ataques CSRF -->
+
+            <!-- Campo del Nombre de Usuario -->
+            <label>Usuario</label>
+            <input type="text" name="username" placeholder="Ingresa tu usuario" required>
+
+            <!-- Campo de la Contraseña -->
+            <label>Contraseña</label>
+            <div class="password-container" style="margin-top: 6px;">
+                <input type="password" name="password" id="password-field" placeholder="Ingresa tu contraseña" required style="margin-top: 0;">
+                <span class="toggle-password" onclick="togglePasswordVisibility('password-field', 'togglePasswordIcon')">
+                    <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                </span>
+            </div>
+
+            <!-- Enlace para recuperar la contraseña si el usuario la olvidó -->
+            <div style="text-align: right; margin-top: 8px;">
+                <a href="{% url 'password_reset' %}" class="olvido-contrasena" style="color: #e3f2f4; font-size: 0.85rem; text-decoration: none; font-weight: 500; transition: color 0.2s;">
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+
+            <!-- Botón de Envío -->
+            <button type="submit">Entrar</button>
+
+            <!-- Enlace alternativo para usuarios nuevos -->
+            <div class="registro-link">
+                ¿No tienes cuenta?
+                <a href="{% url 'registro' %}">Regístrate aquí</a>
+            </div>
+
+            <!-- Botón para regresar a la Landing Page del sistema -->
+            <div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 15px;">
+                <a href="{% url 'inicio' %}" class="btn-secondary-glass">
+                    Volver al inicio
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(fieldId, iconId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleIcon = document.getElementById(iconId);
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            }
+        }
+    </script>
+</body>
+
+</html>

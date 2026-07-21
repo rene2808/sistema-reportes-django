@@ -1,0 +1,641 @@
+{% load static %}
+<!-- 
+  Plantilla: registro.html
+  Descripción: Vista del formulario de registro de nuevos ciudadanos en el sistema.
+  Incluye validaciones asíncronas en tiempo real vía fetch/JSON para la existencia de usuarios,
+  comprobación de contraseñas idénticas y formato de correo electrónico.
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Sistema de Reportes</title>
+    <!-- Iconos de Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, Helvetica, sans-serif;
+            position: relative;
+            z-index: 1;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(15, 23, 42, 0.15), rgba(15, 23, 42, 0.15)), url("{% static 'light_palette_wave_background.png' %}") no-repeat center/cover;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .registro-box {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(45, 55, 72, 0.92);
+            backdrop-filter: blur(12px) saturate(120%);
+            -webkit-backdrop-filter: blur(12px) saturate(120%);
+            padding: 70px 45px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 50px rgba(45, 55, 72, 0.25);
+            text-align: center;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+
+        .registro-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 30px 60px rgba(45, 55, 72, 0.32);
+            border-color: rgba(255, 255, 255, 0.22);
+        }
+
+        .logo-container {
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0 5px 0;
+        }
+
+        p {
+            color: #e3f2f4;
+            font-size: 16px;
+            margin: 0 0 50px 0;
+            font-weight: 500;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 28px;
+            color: #e3f2f4;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            margin-top: 14px;
+            border-radius: 12px;
+            border: 1.5px solid #718096;
+            background: #FFFFFF;
+            color: #2D3748;
+            outline: none;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            background: #ffffff;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+        }
+
+        .input-error {
+            border-color: #EF4444 !important;
+            background-color: #fef2f2;
+            border-width: 1.5px;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+        }
+
+        .input-success {
+            border-color: #22C55E !important;
+            background-color: #f0fdf4;
+            border-width: 1.5px;
+            box-shadow: 0 0 0 3px rgba(34, 197, 148, 0.25) !important;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 13px;
+            background: #F59E0B;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        button:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .login-link {
+            margin-top: 18px;
+            text-align: center;
+            color: #e3f2f4;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #F59E0B;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Checkbox de Privacidad */
+        input[type="checkbox"] {
+            width: auto;
+            margin-top: 0;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .privacy-container {
+            display: flex;
+            align-items: center;
+            margin-top: 18px;
+            text-align: left;
+        }
+
+        .privacy-container label {
+            display: inline;
+            margin-top: 0;
+            font-weight: normal;
+            font-size: 0.9rem;
+            color: #e3f2f4;
+            cursor: pointer;
+        }
+
+        .privacy-container label a {
+            color: #F59E0B;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .privacy-container label a:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            border-radius: 18px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #94a3b8;
+            width: auto;
+            margin-top: 0;
+            padding: 0 5px;
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: #334155;
+            background: none;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .modal-body h4 {
+            color: #1e293b;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .modal-body p {
+            text-align: left;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        .modal-body ul {
+            padding-left: 20px;
+            margin-bottom: 12px;
+            list-style-type: disc;
+        }
+
+        .modal-body li {
+            margin-bottom: 6px;
+            color: #475569;
+        }
+
+        .modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #f8fafc;
+        }
+
+        .modal-footer button {
+            width: auto;
+            margin-top: 0;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            border-radius: 8px;
+        }
+
+        .modal-footer .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .modal-footer .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        /* Estilos para el contenedor y botón de ver contraseña */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #64748b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password:hover {
+            color: #1e293b;
+        }
+
+        .btn-secondary-glass {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary-glass:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="registro-box">
+        <div class="logo-container">
+            <img src="/media/evidencias/logo_sin_fondo.png" alt="PIGRICA Logo" style="height: 88px; width: auto; object-fit: contain;">
+        </div>
+        <h1>Crear cuenta</h1>
+        <p>Regístrate como usuario del sistema</p>
+
+        {% if mensaje %}
+        <div class="error">{{ mensaje }}</div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'registro' %}">
+            {% csrf_token %}
+
+            <label>Nombre de usuario <span style="color: #dc2626;">*</span></label>
+            <input type="text" id="id_username" name="username" value="{{ request.POST.username|default:'' }}" required autocomplete="off">
+            <div id="username-error-msg" style="color: #dc2626; font-size: 0.85rem; margin-top: 5px; font-weight: bold; display: none;"></div>
+            <div id="username-success-msg" style="color: #16a34a; font-size: 0.85rem; margin-top: 5px; font-weight: bold; display: none;"></div>
+
+            <label>Nombre <span style="color: #dc2626;">*</span></label>
+            <input type="text" name="first_name" value="{{ request.POST.first_name|default:'' }}" required placeholder="Ingresa tu nombre">
+
+            <label>Apellido <span style="color: #dc2626;">*</span></label>
+            <input type="text" name="last_name" value="{{ request.POST.last_name|default:'' }}" required placeholder="Ingresa tu apellido">
+
+            <label>Correo electrónico <span style="color: #dc2626;">*</span></label>
+            <input type="email" name="email" value="{{ request.POST.email|default:'' }}" required placeholder="ejemplo@correo.com">
+
+            <label>Teléfono (opcional)</label>
+            <input type="text" name="telefono" value="{{ request.POST.telefono|default:'' }}"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="10" placeholder="10 dígitos (opcional)">
+
+            <label>Contraseña <span style="color: #dc2626;">*</span></label>
+            <div class="password-container" style="margin-top: 6px;">
+                <input type="password" name="password1" id="id_password1" required style="margin-top: 0;"
+                    minlength="8" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z0-9]{8,}"
+                    title="La contraseña debe tener al menos 8 caracteres y contener solo letras y números (sin caracteres especiales)."
+                    placeholder="Al menos 8 caracteres, letras y números">
+                <span class="toggle-password" onclick="togglePasswordVisibility('id_password1', 'toggleIcon1')">
+                    <i class="bi bi-eye-slash" id="toggleIcon1"></i>
+                </span>
+            </div>
+
+            <label>Confirmar contraseña <span style="color: #dc2626;">*</span></label>
+            <div class="password-container" style="margin-top: 6px;">
+                <input type="password" name="password2" id="id_password2" required style="margin-top: 0;" placeholder="Repite tu contraseña">
+                <span class="toggle-password" onclick="togglePasswordVisibility('id_password2', 'toggleIcon2')">
+                    <i class="bi bi-eye-slash" id="toggleIcon2"></i>
+                </span>
+            </div>
+
+            <div class="privacy-container">
+                <input type="checkbox" id="acepta_politicas" name="acepta_politicas" required>
+                <label for="acepta_politicas">
+                    He leído y acepto la <a href="#" id="btn-politicas">Política de Privacidad</a> <span style="color: #dc2626;">*</span>
+                </label>
+            </div>
+
+            <button type="submit">Registrarme</button>
+
+            <div class="login-link">
+                ¿Ya tienes cuenta?
+                <a href="{% url 'login' %}">Inicia sesión aquí</a>
+            </div>
+
+            <div style="margin-top: 15px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 15px;">
+                <a href="{% url 'inicio' %}" class="btn-secondary-glass">
+                    Volver al inicio
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal de Política de Privacidad -->
+    <div id="modal-politica" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Política de Privacidad</h3>
+                <button type="button" class="modal-close-btn" id="btn-cerrar-modal-x">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4> Aviso de privacidad</h4>
+                <p>Los datos del formulario se usarán solo para verificar el reporte vial y enviar
+                   actualizaciones. La ubicación exacta del ciudadano no será pública y está protegida
+                   por la ley vigente.
+                </p>
+                <h4>. Enlace a Política Completa</h4>
+                <p>Puede consultar el documento completo y detallado en la siguiente dirección: <a
+                        href="{% url 'politica_privacidad' %}" target="_blank"
+                        style="color: #2563eb; font-weight: bold; text-decoration: none;">Ver política completa</a>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="btn-cerrar-modal">Cerrar</button>
+                <button type="button" class="btn-primary" id="btn-aceptar-modal"
+                    style="background:#2563eb;color:white;border:none;cursor:pointer;font-weight:bold;">Aceptar y
+                    Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(fieldId, iconId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleIcon = document.getElementById(iconId);
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            }
+        }
+
+        const btnPoliticas = document.getElementById('btn-politicas');
+        const modalPolitica = document.getElementById('modal-politica');
+        const btnCerrarX = document.getElementById('btn-cerrar-modal-x');
+        const btnCerrar = document.getElementById('btn-cerrar-modal');
+        const btnAceptar = document.getElementById('btn-aceptar-modal');
+        const checkboxPoliticas = document.getElementById('acepta_politicas');
+
+        function abrirModal(e) {
+            if (e) e.preventDefault();
+            modalPolitica.style.display = 'flex';
+            // Breve retraso para asegurar que display:flex se aplique antes del fade in
+            setTimeout(() => {
+                modalPolitica.classList.add('active');
+            }, 10);
+        }
+
+        function cerrarModal() {
+            modalPolitica.classList.remove('active');
+            setTimeout(() => {
+                modalPolitica.style.display = 'none';
+            }, 250);
+        }
+
+        btnPoliticas.addEventListener('click', abrirModal);
+        btnCerrarX.addEventListener('click', cerrarModal);
+        btnCerrar.addEventListener('click', cerrarModal);
+
+        btnAceptar.addEventListener('click', () => {
+            checkboxPoliticas.checked = true;
+            cerrarModal();
+        });
+
+        modalPolitica.addEventListener('click', (e) => {
+            if (e.target === modalPolitica) {
+                cerrarModal();
+            }
+        });
+
+        // Verificación de duplicación de usuario en tiempo real
+        const usernameInput = document.getElementById('id_username');
+        const usernameError = document.getElementById('username-error-msg');
+        const usernameSuccess = document.getElementById('username-success-msg');
+        const submitBtn = document.querySelector('form button[type="submit"]');
+        let checkTimeout = null;
+
+        function validarUsername() {
+            const username = usernameInput.value.trim();
+            
+            if (!username) {
+                usernameInput.classList.remove('input-error', 'input-success');
+                usernameError.style.display = 'none';
+                usernameSuccess.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                return;
+            }
+
+            fetch(`/verificar-usuario/?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.existe) {
+                        usernameInput.classList.remove('input-success');
+                        usernameInput.classList.add('input-error');
+                        usernameError.textContent = 'Este nombre de usuario ya está registrado. Por favor, elige otro.';
+                        usernameError.style.display = 'block';
+                        usernameSuccess.style.display = 'none';
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = '0.6';
+                        submitBtn.style.cursor = 'not-allowed';
+                    } else {
+                        usernameInput.classList.remove('input-error');
+                        usernameInput.classList.add('input-success');
+                        usernameError.style.display = 'none';
+                        usernameSuccess.textContent = 'Nombre de usuario disponible.';
+                        usernameSuccess.style.display = 'block';
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar el nombre de usuario:', error);
+                });
+        }
+
+        usernameInput.addEventListener('input', () => {
+            clearTimeout(checkTimeout);
+            checkTimeout = setTimeout(validarUsername, 350);
+        });
+
+        usernameInput.addEventListener('blur', validarUsername);
+
+        // Validación de coincidencia de contraseñas en tiempo real
+        const password1Input = document.getElementById('id_password1');
+        const password2Input = document.getElementById('id_password2');
+
+        function validarContrasenas() {
+            if (password1Input.value !== password2Input.value) {
+                password2Input.setCustomValidity("Las contraseñas no coinciden.");
+            } else {
+                password2Input.setCustomValidity("");
+            }
+        }
+
+        password1Input.addEventListener('input', validarContrasenas);
+        password2Input.addEventListener('input', validarContrasenas);
+
+        // Validar campos obligatorios en el envío del formulario
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            const firstName = form.querySelector('[name="first_name"]').value.trim();
+            const lastName = form.querySelector('[name="last_name"]').value.trim();
+            
+            if (!firstName || !lastName) {
+                e.preventDefault();
+                alert("⚠️ Los campos de Nombre y Apellido son obligatorios para el registro en el sistema.");
+                if (!firstName) {
+                    form.querySelector('[name="first_name"]').focus();
+                } else {
+                    form.querySelector('[name="last_name"]').focus();
+                }
+                return;
+            }
+
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                usernameInput.focus();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

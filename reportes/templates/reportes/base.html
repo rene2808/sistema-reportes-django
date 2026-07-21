@@ -1,0 +1,598 @@
+<!-- 
+  Plantilla: base.html
+  Descripción: Plantilla base/layout principal del sistema.
+  Contiene la estructura de la barra de navegación superior (Navbar),
+  estilos CSS comunes para botones, tarjetas y diseño responsive,
+  y los bloques de contenido reutilizados por las otras plantillas.
+-->
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Sistema de Reportes{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #eef2f6;
+            color: #14213d;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 235px;
+            background: linear-gradient(180deg, #03152d 0%, #020d1e 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 4px 0 18px rgba(15, 23, 42, 0.18);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .sidebar-top {
+            padding-top: 10px;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .sidebar-top::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #4fc3f7, #2962ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .logo-text strong {
+            display: block;
+            font-size: 15px;
+            letter-spacing: 2px;
+            color: white;
+        }
+
+        .logo-text span {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #ff8c32;
+            font-weight: bold;
+        }
+
+        .menu {
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            color: #c7d0df;
+            text-decoration: none;
+            border-radius: 14px;
+            transition: 0.25s;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: rgba(255, 121, 56, 0.12);
+            color: #ff8c32;
+        }
+
+        .notif-badge {
+            background-color: #ff3c3c;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 999px;
+            margin-left: auto;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .sidebar-bottom {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .user-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .mini-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ff8c1a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .user-mini strong {
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-mini small {
+            color: #cbd5e1;
+            display: block;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: rgba(255, 60, 60, 0.08);
+            color: #ff7d7d;
+            padding: 13px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid rgba(255, 60, 60, 0.18);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 60, 60, 0.16);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-x: auto;
+        }
+
+        .page-title {
+            font-size: 34px;
+            margin: 0;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            color: #7a8797;
+            margin-top: 8px;
+            margin-bottom: 28px;
+            font-size: 15px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .mini-card {
+            background: white;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 12px 25px rgba(15, 23, 42, 0.05);
+        }
+
+        .mini-card h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #7b8794;
+            margin-bottom: 10px;
+        }
+
+        .mini-card .number {
+            font-size: 30px;
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 12px 25px rgba(15, 23, 42, 0.05);
+        }
+
+        .table-card h2 {
+            margin-top: 0;
+            color: #0f172a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #0f172a;
+            color: white;
+            text-align: left;
+            padding: 14px;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5eaf0;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #eaf2ff;
+            color: #2563eb;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #1d4ed8;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+            }
+
+            .menu {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .menu a {
+                min-width: max-content;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+{% url 'dashboard' as dashboard_url %}
+{% url 'panel_ciudadano' as panel_ciudadano_url %}
+{% url 'panel_administrador' as panel_administrador_url %}
+{% url 'reporte_general' as reporte_general_url %}
+{% url 'perfil' as perfil_url %}
+{% url 'notificaciones' as notificaciones_url %}
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="{% url 'inicio' %}" style="display: block; text-decoration: none; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+                <div class="logo-box" style="margin: 15px 10px; padding: 6px; display: flex; justify-content: center; align-items: center; border-bottom: none;">
+                    <img src="/media/evidencias/logo_sin_fondo.png" alt="Logo Acapulco" style="height: 72px; width: 100%; object-fit: contain;">
+                </div>
+            </a>
+
+            <nav class="menu">
+                {% if user.is_authenticated %}
+
+                    {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol == 'moderador' %}
+                        <a href="{% url 'dashboard' %}" class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
+                            <span>📊</span>
+                            <span>Panel</span>
+                        </a>
+
+                        <a href="{% url 'reporte_general' %}" class="{% if request.path == reporte_general_url %}active{% endif %}">
+                            <span>📄</span>
+                            <span>Informes detallados</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'panel_ciudadano' %}" class="{% if request.path == panel_ciudadano_url %}active{% endif %}">
+                            <span>📊</span>
+                            <span>Panel</span>
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'notificaciones' %}" class="{% if request.path == notificaciones_url %}active{% endif %}">
+                        <span>🔔</span>
+                        <span>Notificaciones</span>
+                        <span class="notif-badge" id="notif-badge-counter" style="{% if notificaciones_sin_leer_count == 0 %}display: none;{% endif %}">
+                            {{ notificaciones_sin_leer_count }}
+                        </span>
+                    </a>
+
+                    <a href="{% url 'perfil' %}" class="{% if request.path == perfil_url %}active{% endif %}">
+                        <span>👤</span>
+                        <span>Mi Perfil</span>
+                    </a>
+
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            {% if user.is_authenticated %}
+                <div class="user-mini">
+                    <div class="mini-avatar">{{ user.username|first|upper }}</div>
+                    <div>
+                        <strong>{{ user.username }}</strong>
+                        <small>{{ user.email }}</small>
+                    </div>
+                </div>
+
+                <a href="{% url 'logout' %}" class="logout-btn">Cerrar Sesión</a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+</div>
+
+<!-- Modal de Confirmación Personalizado -->
+<div id="custom-confirm-modal" style="
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(5px); 
+    z-index: 999999; 
+    justify-content: center; 
+    align-items: center;
+">
+    <div style="
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 20px;
+        width: 420px;
+        max-width: 90%;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        animation: scaleUpConfirm 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    ">
+        <!-- Icono de advertencia premium -->
+        <div style="
+            width: 60px;
+            height: 60px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px auto;
+        ">⚠️</div>
+        
+        <h3 id="custom-confirm-title" style="
+            margin: 0 0 10px 0;
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 700;
+        ">Confirmación requerida</h3>
+        
+        <p id="custom-confirm-message" style="
+            margin: 0 0 25px 0;
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        ">¿Estás seguro de realizar esta acción?</p>
+        
+        <div style="
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        ">
+            <button id="custom-confirm-cancel-btn" style="
+                border: 1px solid #cbd5e1;
+                background: #ffffff;
+                color: #334155;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
+                Cancelar
+            </button>
+            <button id="custom-confirm-confirm-btn" style="
+                border: none;
+                background: #ef4444;
+                color: #ffffff;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                Confirmar
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes scaleUpConfirm {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let confirmacionCallback = null;
+
+        const modal = document.getElementById('custom-confirm-modal');
+        const messageEl = document.getElementById('custom-confirm-message');
+        const cancelBtn = document.getElementById('custom-confirm-cancel-btn');
+        const confirmBtn = document.getElementById('custom-confirm-confirm-btn');
+
+        function abrirConfirmacionPersonalizada(mensaje, callback) {
+            messageEl.textContent = mensaje;
+            confirmacionCallback = callback;
+            modal.style.display = 'flex';
+        }
+
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            confirmacionCallback = null;
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            if (confirmacionCallback) {
+                confirmacionCallback();
+            }
+        });
+
+        // Interceptar eventos onclick que usan el confirm nativo
+        document.body.addEventListener('click', function(event) {
+            let target = event.target.closest('a, button');
+            if (!target) return;
+            
+            let onclickAttr = target.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes('confirm(')) {
+                // Cancelar navegación y ejecución del onclick original
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                
+                // Extraer el texto dentro del confirm('...')
+                let match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+                let mensaje = match ? match[1] : "¿Seguro que deseas realizar esta acción?";
+                
+                abrirConfirmacionPersonalizada(mensaje, function() {
+                    // Si confirma, navegamos a la URL si es enlace o disparamos click
+                    if (target.tagName === 'A' && target.href) {
+                        window.location.href = target.href;
+                    } else {
+                        target.removeAttribute('onclick');
+                        target.click();
+                    }
+                });
+            }
+        }, true); // Usar fase de captura
+
+        // Auto-desaparecer mensajes de alerta después de 10 segundos con animación premium
+        const alertElements = document.querySelectorAll('.message, .messages, .alert-message');
+        alertElements.forEach(function(el) {
+            setTimeout(function() {
+                // Configurar la transición para desvanecer y achicar suavemente
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin 0.6s ease, padding 0.6s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-10px)';
+                
+                // Colapsar el espacio del elemento tras el desvanecimiento
+                setTimeout(function() {
+                    el.style.maxHeight = '0';
+                    el.style.margin = '0';
+                    el.style.padding = '0';
+                    // Eliminar físicamente del DOM al concluir
+                    setTimeout(function() {
+                        el.remove();
+                    }, 600);
+                }, 600);
+            }, 10000); // 10000 milisegundos = 10 segundos
+        });
+
+        // Polling en tiempo real para verificar nuevas notificaciones sin refrescar
+        {% if user.is_authenticated %}
+        const badge = document.getElementById('notif-badge-counter');
+        
+        function verificarNuevasNotificaciones() {
+            fetch("{% url 'api_notificaciones_sin_leer' %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data && typeof data.unread_count !== 'undefined') {
+                        const count = data.unread_count;
+                        if (count > 0) {
+                            badge.textContent = count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => console.error("Error al obtener notificaciones:", err));
+        }
+        
+        // Ejecutar cada 10 segundos
+        setInterval(verificarNuevasNotificaciones, 10000);
+        {% endif %}
+    });
+</script>
+
+</body>
+</html>

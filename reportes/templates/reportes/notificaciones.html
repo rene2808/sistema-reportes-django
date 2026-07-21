@@ -1,0 +1,291 @@
+<!-- 
+  Plantilla: notificaciones.html
+  Descripción: Vista del buzón de notificaciones del usuario.
+  Muestra las notificaciones con contenedores de colores vivos distintivos para estados Leído y No Leído.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Tarjeta genérica (Leída) con color Slate/Menta suave sin necesidad de hover */
+    .notif-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px solid #cbd5e1;
+        border-left: 8px solid #10b981; /* Verde esmeralda distintivo para leídas */
+        border-radius: 18px;
+        padding: 22px 24px;
+        margin-bottom: 22px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+    }
+
+    .notif-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.15);
+        border-color: #94a3b8;
+    }
+
+    /* Tarjeta No Leída con fondo degradado Azul/Cian marcado */
+    .notif-card.unread {
+        border: 2px solid #60a5fa;
+        border-left: 8px solid #2563eb; /* Azul rey vibrante para no leídas */
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 10px 28px rgba(37, 99, 235, 0.18);
+    }
+
+    .notif-card.unread:hover {
+        border-color: #2563eb;
+        box-shadow: 0 16px 36px rgba(37, 99, 235, 0.26);
+    }
+
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .notif-title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .notif-card h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-pill.unread {
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+    }
+
+    .status-pill.read {
+        background: #10b981;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    }
+
+    .notif-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .btn-action-sm {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+
+    .btn-mark-read {
+        background: #ffffff;
+        color: #2563eb;
+        border-color: #93c5fd;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
+    }
+
+    .btn-mark-read:hover {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-delete-notif {
+        background: #ffffff;
+        color: #ef4444;
+        border-color: #fca5a5;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.12);
+    }
+
+    .btn-delete-notif:hover {
+        background: #ef4444;
+        color: #ffffff;
+        border-color: #ef4444;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .notif-message {
+        color: #334155;
+        font-size: 14.5px;
+        line-height: 1.6;
+        margin: 0 0 14px 0;
+        font-weight: 600;
+    }
+
+    .notif-report-box {
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 16px;
+        margin-bottom: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+
+    .notif-card.unread .notif-report-box {
+        background: #ffffff;
+        border-color: #93c5fd;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+    }
+
+    .notif-date {
+        color: #475569;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-read {
+        background: #3B82F6;
+        color: white;
+        padding: 11px 22px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 14px;
+        box-shadow: 0 8px 18px rgba(59, 130, 246, 0.25);
+        transition: all 0.2s ease;
+        border: none;
+        display: inline-block;
+    }
+
+    .btn-read:hover {
+        background: #2563eb;
+        box-shadow: 0 12px 26px rgba(59, 130, 246, 0.35);
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="top-actions">
+    <div>
+        <h1 class="page-title">Notificaciones</h1>
+        <div class="page-subtitle">Seguimiento de tus reportes ciudadanos</div>
+    </div>
+
+    {% if notificaciones %}
+    <a href="{% url 'marcar_notificaciones_leidas' %}" class="btn-read">
+        <i class="bi bi-check2-all me-1"></i> Marcar todas como leídas
+    </a>
+    {% endif %}
+</div>
+
+{% if notificaciones %}
+    {% for notificacion in notificaciones %}
+        <div class="notif-card {% if not notificacion.leida %}unread{% endif %}">
+            <div class="notif-header">
+                <div class="notif-title-group">
+                    <h3>
+                        {% if not notificacion.leida %}
+                            <i class="bi bi-bell-fill" style="color: #2563eb; font-size: 1.25rem;"></i>
+                        {% else %}
+                            <i class="bi bi-check-circle-fill" style="color: #10b981; font-size: 1.25rem;"></i>
+                        {% endif %}
+                        {{ notificacion.titulo }}
+                    </h3>
+
+                    {% if not notificacion.leida %}
+                        <span class="status-pill unread">
+                            <i class="bi bi-circle-fill" style="font-size: 6px;"></i> Sin leer
+                        </span>
+                    {% else %}
+                        <span class="status-pill read">
+                            <i class="bi bi-check2"></i> Leída
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="notif-actions">
+                    {% if not notificacion.leida %}
+                        <a href="{% url 'marcar_notificacion_leida_individual' notificacion.id %}" class="btn-action-sm btn-mark-read" title="Marcar como leída">
+                            <i class="bi bi-check2"></i> <span>Marcar leída</span>
+                        </a>
+                    {% endif %}
+                    <form method="POST" action="{% url 'eliminar_notificacion' notificacion.id %}" style="margin: 0; display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta notificación?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-action-sm btn-delete-notif" title="Eliminar notificación">
+                            <i class="bi bi-trash3"></i> <span>Eliminar</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <p class="notif-message">{{ notificacion.mensaje }}</p>
+
+            {% if notificacion.reporte %}
+                <div class="notif-report-box">
+                    <span style="font-size: 13.5px; color: #475569;">
+                        <strong>Folio:</strong>
+                        <span style="color: #0f172a; font-weight: 800;">{{ notificacion.reporte.folio }}</span>
+                    </span>
+                    <span style="color: #cbd5e1;">|</span>
+                    <a href="{% url 'abrir_notificacion' notificacion.id %}" style="color: #2563eb; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px;">
+                        Ver reporte <i class="bi bi-arrow-right-short" style="font-size: 1.2rem;"></i>
+                    </a>
+                </div>
+            {% endif %}
+
+            <div class="notif-date">
+                <i class="bi bi-clock" style="font-size: 0.95rem;"></i>
+                <span>{{ notificacion.fecha|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div style="border: 2px solid #cbd5e1; border-top: 4px solid #718096 !important; text-align: center; padding: 40px; background: white; border-radius: 18px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);">
+        <i class="bi bi-bell-slash" style="font-size: 2.2rem; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
+        <p style="margin: 0; color: #718096; font-style: italic; font-weight: bold;">No tienes notificaciones todavía.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
