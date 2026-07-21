@@ -130,10 +130,15 @@ class PerfilUsuario(models.Model):
         """
         Determina si el usuario está en línea basado en su última actividad
         registrada en la base de datos (vigente por 10 minutos).
+        Usa marcas de tiempo POSIX (timestamp) para evitar cualquier discrepancia de zona horaria.
         """
         if self.ultimo_acceso:
             from django.utils import timezone
-            return (timezone.now() - self.ultimo_acceso).total_seconds() < 600
+            try:
+                diferencia = timezone.now().timestamp() - self.ultimo_acceso.timestamp()
+                return 0 <= diferencia < 600
+            except Exception:
+                return False
         return False
 
 
