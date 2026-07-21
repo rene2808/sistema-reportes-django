@@ -20,3 +20,7 @@ urlpatterns = [
 # Servir archivos multimedia (media) subidos por los usuarios en entorno de desarrollo local (DEBUG = True)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Añadir al final del archivo:
+if settings.DEBUG or not settings.DEBUG:  # Para asegurar que sirva media en Render sin S3/Cloudinary
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
