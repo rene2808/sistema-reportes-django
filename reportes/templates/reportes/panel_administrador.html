@@ -1084,7 +1084,14 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         function actualizarEstadosUsuarios() {
-            fetch("{% url 'api_estado_usuarios' %}")
+            fetch("{% url 'api_estado_usuarios' %}?_=" + new Date().getTime(), {
+                cache: "no-store",
+                headers: {
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.estados) {

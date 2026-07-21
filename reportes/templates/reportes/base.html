@@ -8,6 +8,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Sistema de Reportes{% endblock %}</title>
@@ -49,11 +50,13 @@
         .sidebar-top {
             padding-top: 10px;
             overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
+            /* Firefox */
         }
 
         .sidebar-top::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
+            display: none;
+            /* Chrome, Safari, Opera */
         }
 
         .logo-box {
@@ -61,7 +64,7 @@
             align-items: center;
             gap: 12px;
             padding: 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             margin-bottom: 12px;
         }
 
@@ -133,7 +136,7 @@
 
         .sidebar-bottom {
             padding: 15px;
-            border-top: 1px solid rgba(255,255,255,0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .user-mini {
@@ -418,73 +421,83 @@
 
 <body>
 
-{% if user.is_authenticated %}
-<script>
-    if (!sessionStorage.getItem('sessionActive')) {
-        // Si no existe la variable en sessionStorage para esta pestaña/ventana,
-        // significa que es un acceso nuevo (otra pestaña) o restaurado, por lo que forzamos logout.
-        window.location.href = "{% url 'logout' %}";
-    }
-</script>
-{% endif %}
+    {% if user.is_authenticated %}
+    <script>
+        if (!sessionStorage.getItem('sessionActive')) {
+            // Si no existe la variable en sessionStorage para esta pestaña/ventana,
+            // significa que es un acceso nuevo (otra pestaña) o restaurado, por lo que forzamos logout.
+            window.location.href = "{% url 'logout' %}";
+        }
+    </script>
+    {% endif %}
 
-{% url 'dashboard' as dashboard_url %}
-{% url 'panel_ciudadano' as panel_ciudadano_url %}
-{% url 'panel_administrador' as panel_administrador_url %}
-{% url 'reporte_general' as reporte_general_url %}
-{% url 'perfil' as perfil_url %}
-{% url 'notificaciones' as notificaciones_url %}
+    {% url 'dashboard' as dashboard_url %}
+    {% url 'panel_ciudadano' as panel_ciudadano_url %}
+    {% url 'panel_administrador' as panel_administrador_url %}
+    {% url 'reporte_general' as reporte_general_url %}
+    {% url 'perfil' as perfil_url %}
+    {% url 'notificaciones' as notificaciones_url %}
 
-<div class="layout">
-    <aside class="sidebar">
-        <!-- Encabezado Móvil (Solo visible en dispositivos < 900px) -->
-        <div class="mobile-header-bar">
-            <a href="{% url 'inicio' %}" class="mobile-brand-link">
-                <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco">
-            </a>
-            
-            <button type="button" class="mobile-toggle-btn" id="mobile-menu-trigger" aria-label="Abrir Menú">
-                <i class="bi bi-list" id="mobile-menu-icon"></i>
-                <span style="font-size: 13px; font-weight: bold;">Menú</span>
-                {% if notificaciones_sin_leer_count > 0 %}
-                    <span class="notif-badge" style="margin-left: 2px;">{{ notificaciones_sin_leer_count }}</span>
-                {% endif %}
-            </button>
-        </div>
-
-        <!-- Contenido Completo del Menú (Desktop y Colapsable en Móvil) -->
-        <div class="sidebar-content-wrapper" id="sidebar-collapsible-content">
-            <div class="sidebar-top">
-                <a href="{% url 'inicio' %}" class="logo-box-desktop" style="display: block; text-decoration: none; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-                    <div class="logo-box" style="margin: 15px 10px; padding: 6px; display: flex; justify-content: center; align-items: center; border-bottom: none;">
-                        <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco" style="height: 72px; width: 100%; object-fit: contain;">
-                    </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <!-- Encabezado Móvil (Solo visible en dispositivos < 900px) -->
+            <div class="mobile-header-bar">
+                <a href="{% url 'inicio' %}" class="mobile-brand-link">
+                    <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco">
                 </a>
 
-                <nav class="menu">
-                    {% if user.is_authenticated %}
+                <button type="button" class="mobile-toggle-btn" id="mobile-menu-trigger" aria-label="Abrir Menú">
+                    <i class="bi bi-list" id="mobile-menu-icon"></i>
+                    <span style="font-size: 13px; font-weight: bold;">Menú</span>
+                    {% if notificaciones_sin_leer_count > 0 %}
+                    <span class="notif-badge" style="margin-left: 2px;">{{ notificaciones_sin_leer_count }}</span>
+                    {% endif %}
+                </button>
+            </div>
 
-                        {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol == 'moderador' %}
-                            <a href="{% url 'dashboard' %}" class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
-                                <span>📊</span>
-                                <span>Panel</span>
-                            </a>
+            <!-- Contenido Completo del Menú (Desktop y Colapsable en Móvil) -->
+            <div class="sidebar-content-wrapper" id="sidebar-collapsible-content">
+                <div class="sidebar-top">
+                    <a href="{% url 'inicio' %}" class="logo-box-desktop"
+                        style="display: block; text-decoration: none; transition: transform 0.2s ease;"
+                        onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
+                        <div class="logo-box"
+                            style="margin: 15px 10px; padding: 6px; display: flex; justify-content: center; align-items: center; border-bottom: none;">
+                            <img src="{% static 'logo_sin_fondo.png' %}" alt="Logo Acapulco"
+                                style="height: 72px; width: 100%; object-fit: contain;">
+                        </div>
+                    </a>
 
-                            <a href="{% url 'reporte_general' %}" class="{% if request.path == reporte_general_url %}active{% endif %}">
-                                <span>📄</span>
-                                <span>Informes detallados</span>
-                            </a>
+                    <nav class="menu">
+                        {% if user.is_authenticated %}
+
+                        {% if user.is_superuser or user.perfilusuario.rol == 'administrador' or user.perfilusuario.rol
+                        == 'moderador' %}
+                        <a href="{% url 'dashboard' %}"
+                            class="{% if request.path == dashboard_url or request.path == panel_administrador_url %}active{% endif %}">
+                            <span>📊</span>
+                            <span>Panel</span>
+                        </a>
+
+                        <a href="{% url 'reporte_general' %}"
+                            class="{% if request.path == reporte_general_url %}active{% endif %}">
+                            <span>📄</span>
+                            <span>Informes detallados</span>
+                        </a>
                         {% else %}
-                            <a href="{% url 'panel_ciudadano' %}" class="{% if request.path == panel_ciudadano_url %}active{% endif %}">
-                                <span>📊</span>
-                                <span>Panel</span>
-                            </a>
+                        <a href="{% url 'panel_ciudadano' %}"
+                            class="{% if request.path == panel_ciudadano_url %}active{% endif %}">
+                            <span>📊</span>
+                            <span>Panel</span>
+                        </a>
                         {% endif %}
 
-                        <a href="{% url 'notificaciones' %}" class="{% if request.path == notificaciones_url %}active{% endif %}">
+                        <a href="{% url 'notificaciones' %}"
+                            class="{% if request.path == notificaciones_url %}active{% endif %}">
                             <span>🔔</span>
                             <span>Notificaciones</span>
-                            <span class="notif-badge" id="notif-badge-counter" style="{% if notificaciones_sin_leer_count == 0 %}display: none;{% endif %}">
+                            <span class="notif-badge" id="notif-badge-counter"
+                                style="{% if notificaciones_sin_leer_count == 0 %}display: none;{% endif %}">
                                 {{ notificaciones_sin_leer_count }}
                             </span>
                         </a>
@@ -494,12 +507,12 @@
                             <span>Mi Perfil</span>
                         </a>
 
-                    {% endif %}
-                </nav>
-            </div>
+                        {% endif %}
+                    </nav>
+                </div>
 
-            <div class="sidebar-bottom">
-                {% if user.is_authenticated %}
+                <div class="sidebar-bottom">
+                    {% if user.is_authenticated %}
                     <div class="user-mini">
                         <div class="mini-avatar">{{ user.username|first|upper }}</div>
                         <div>
@@ -508,20 +521,21 @@
                         </div>
                     </div>
 
-                    <a href="{% url 'logout' %}" class="logout-btn" onclick="sessionStorage.removeItem('sessionActive');">Cerrar Sesión</a>
-                {% endif %}
+                    <a href="{% url 'logout' %}" class="logout-btn"
+                        onclick="sessionStorage.removeItem('sessionActive');">Cerrar Sesión</a>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-    </aside>
+        </aside>
 
-    <main class="main-content">
-        {% block content %}
-        {% endblock %}
-    </main>
-</div>
+        <main class="main-content">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
 
-<!-- Modal de Confirmación Personalizado -->
-<div id="custom-confirm-modal" style="
+    <!-- Modal de Confirmación Personalizado -->
+    <div id="custom-confirm-modal" style="
     display: none; 
     position: fixed; 
     top: 0; 
@@ -534,7 +548,7 @@
     justify-content: center; 
     align-items: center;
 ">
-    <div style="
+        <div style="
         background: #ffffff;
         padding: 30px;
         border-radius: 20px;
@@ -545,8 +559,8 @@
         text-align: center;
         animation: scaleUpConfirm 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     ">
-        <!-- Icono de advertencia premium -->
-        <div style="
+            <!-- Icono de advertencia premium -->
+            <div style="
             width: 60px;
             height: 60px;
             background: #fee2e2;
@@ -558,27 +572,27 @@
             font-size: 30px;
             margin: 0 auto 20px auto;
         ">⚠️</div>
-        
-        <h3 id="custom-confirm-title" style="
+
+            <h3 id="custom-confirm-title" style="
             margin: 0 0 10px 0;
             color: #0f172a;
             font-size: 1.25rem;
             font-weight: 700;
         ">Confirmación requerida</h3>
-        
-        <p id="custom-confirm-message" style="
+
+            <p id="custom-confirm-message" style="
             margin: 0 0 25px 0;
             color: #64748b;
             font-size: 0.95rem;
             line-height: 1.5;
         ">¿Estás seguro de realizar esta acción?</p>
-        
-        <div style="
+
+            <div style="
             display: flex;
             gap: 12px;
             justify-content: center;
         ">
-            <button id="custom-confirm-cancel-btn" style="
+                <button id="custom-confirm-cancel-btn" style="
                 border: 1px solid #cbd5e1;
                 background: #ffffff;
                 color: #334155;
@@ -589,9 +603,9 @@
                 cursor: pointer;
                 transition: background 0.2s;
             " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
-                Cancelar
-            </button>
-            <button id="custom-confirm-confirm-btn" style="
+                    Cancelar
+                </button>
+                <button id="custom-confirm-confirm-btn" style="
                 border: none;
                 background: #ef4444;
                 color: #ffffff;
@@ -602,139 +616,147 @@
                 cursor: pointer;
                 transition: background 0.2s;
             " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                Confirmar
-            </button>
+                    Confirmar
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<style>
-@keyframes scaleUpConfirm {
-    0% { transform: scale(0.9); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Manejo del menú colapsable en dispositivos móviles
-        const mobileTrigger = document.getElementById('mobile-menu-trigger');
-        const sidebarContent = document.getElementById('sidebar-collapsible-content');
-        const mobileIcon = document.getElementById('mobile-menu-icon');
-
-        if (mobileTrigger && sidebarContent) {
-            mobileTrigger.addEventListener('click', function() {
-                const isActive = sidebarContent.classList.toggle('active');
-                if (mobileIcon) {
-                    if (isActive) {
-                        mobileIcon.className = 'bi bi-x-lg';
-                    } else {
-                        mobileIcon.className = 'bi bi-list';
-                    }
-                }
-            });
-        }
-
-        let confirmacionCallback = null;
-
-        const modal = document.getElementById('custom-confirm-modal');
-        const messageEl = document.getElementById('custom-confirm-message');
-        const cancelBtn = document.getElementById('custom-confirm-cancel-btn');
-        const confirmBtn = document.getElementById('custom-confirm-confirm-btn');
-
-        function abrirConfirmacionPersonalizada(mensaje, callback) {
-            messageEl.textContent = mensaje;
-            confirmacionCallback = callback;
-            modal.style.display = 'flex';
-        }
-
-        cancelBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
-            confirmacionCallback = null;
-        });
-
-        confirmBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
-            if (confirmacionCallback) {
-                confirmacionCallback();
+    <style>
+        @keyframes scaleUpConfirm {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
             }
-        });
 
-        // Interceptar eventos onclick que usan el confirm nativo
-        document.body.addEventListener('click', function(event) {
-            let target = event.target.closest('a, button');
-            if (!target) return;
-            
-            let onclickAttr = target.getAttribute('onclick');
-            if (onclickAttr && onclickAttr.includes('confirm(')) {
-                // Cancelar navegación y ejecución del onclick original
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                
-                // Extraer el texto dentro del confirm('...')
-                let match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
-                let mensaje = match ? match[1] : "¿Seguro que deseas realizar esta acción?";
-                
-                abrirConfirmacionPersonalizada(mensaje, function() {
-                    // Si confirma, navegamos a la URL si es enlace o disparamos click
-                    if (target.tagName === 'A' && target.href) {
-                        window.location.href = target.href;
-                    } else {
-                        target.removeAttribute('onclick');
-                        target.click();
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejo del menú colapsable en dispositivos móviles
+            const mobileTrigger = document.getElementById('mobile-menu-trigger');
+            const sidebarContent = document.getElementById('sidebar-collapsible-content');
+            const mobileIcon = document.getElementById('mobile-menu-icon');
+
+            if (mobileTrigger && sidebarContent) {
+                mobileTrigger.addEventListener('click', function () {
+                    const isActive = sidebarContent.classList.toggle('active');
+                    if (mobileIcon) {
+                        if (isActive) {
+                            mobileIcon.className = 'bi bi-x-lg';
+                        } else {
+                            mobileIcon.className = 'bi bi-list';
+                        }
                     }
                 });
             }
-        }, true); // Usar fase de captura
 
-        // Auto-desaparecer mensajes de alerta después de 10 segundos con animación premium
-        const alertElements = document.querySelectorAll('.message, .messages, .alert-message');
-        alertElements.forEach(function(el) {
-            setTimeout(function() {
-                // Configurar la transición para desvanecer y achicar suavemente
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin 0.6s ease, padding 0.6s ease';
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(-10px)';
-                
-                // Colapsar el espacio del elemento tras el desvanecimiento
-                setTimeout(function() {
-                    el.style.maxHeight = '0';
-                    el.style.margin = '0';
-                    el.style.padding = '0';
-                    // Eliminar físicamente del DOM al concluir
-                    setTimeout(function() {
-                        el.remove();
-                    }, 600);
-                }, 600);
-            }, 10000); // 10000 milisegundos = 10 segundos
-        });
+            let confirmacionCallback = null;
 
-        // Polling en tiempo real para verificar nuevas notificaciones sin refrescar
-        {% if user.is_authenticated %}
-        const badge = document.getElementById('notif-badge-counter');
-        
-        function verificarNuevasNotificaciones() {
-            fetch("{% url 'api_notificaciones_sin_leer' %}")
-                .then(response => response.json())
-                .then(data => {
-                    if (data && typeof data.unread_count !== 'undefined') {
-                        const count = data.unread_count;
-                        if (count > 0) {
-                            badge.textContent = count;
-                            badge.style.display = 'inline-block';
+            const modal = document.getElementById('custom-confirm-modal');
+            const messageEl = document.getElementById('custom-confirm-message');
+            const cancelBtn = document.getElementById('custom-confirm-cancel-btn');
+            const confirmBtn = document.getElementById('custom-confirm-confirm-btn');
+
+            function abrirConfirmacionPersonalizada(mensaje, callback) {
+                messageEl.textContent = mensaje;
+                confirmacionCallback = callback;
+                modal.style.display = 'flex';
+            }
+
+            cancelBtn.addEventListener('click', function () {
+                modal.style.display = 'none';
+                confirmacionCallback = null;
+            });
+
+            confirmBtn.addEventListener('click', function () {
+                modal.style.display = 'none';
+                if (confirmacionCallback) {
+                    confirmacionCallback();
+                }
+            });
+
+            // Interceptar eventos onclick que usan el confirm nativo
+            document.body.addEventListener('click', function (event) {
+                let target = event.target.closest('a, button');
+                if (!target) return;
+
+                let onclickAttr = target.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes('confirm(')) {
+                    // Cancelar navegación y ejecución del onclick original
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    // Extraer el texto dentro del confirm('...')
+                    let match = onclickAttr.match(/confirm\(['"](.*?)['"]\)/);
+                    let mensaje = match ? match[1] : "¿Seguro que deseas realizar esta acción?";
+
+                    abrirConfirmacionPersonalizada(mensaje, function () {
+                        // Si confirma, navegamos a la URL si es enlace o disparamos click
+                        if (target.tagName === 'A' && target.href) {
+                            window.location.href = target.href;
                         } else {
-                            badge.style.display = 'none';
+                            target.removeAttribute('onclick');
+                            target.click();
                         }
-                    }
-                })
-                .catch(err => console.error("Error al obtener notificaciones:", err));
-        }
-        
-        // Ejecutar cada 10 segundos
-        setInterval(verificarNuevasNotificaciones, 10000);
-        {% endif %}
-    });
-</script>
+                    });
+                }
+            }, true); // Usar fase de captura
+
+            // Auto-desaparecer mensajes de alerta después de 10 segundos con animación premium
+            const alertElements = document.querySelectorAll('.message, .messages, .alert-message');
+            alertElements.forEach(function (el) {
+                setTimeout(function () {
+                    // Configurar la transición para desvanecer y achicar suavemente
+                    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease, max-height 0.6s ease, margin 0.6s ease, padding 0.6s ease';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-10px)';
+
+                    // Colapsar el espacio del elemento tras el desvanecimiento
+                    setTimeout(function () {
+                        el.style.maxHeight = '0';
+                        el.style.margin = '0';
+                        el.style.padding = '0';
+                        // Eliminar físicamente del DOM al concluir
+                        setTimeout(function () {
+                            el.remove();
+                        }, 600);
+                    }, 600);
+                }, 10000); // 10000 milisegundos = 10 segundos
+            });
+
+            // Polling en tiempo real para verificar nuevas notificaciones sin refrescar
+            {% if user.is_authenticated %}
+            const badge = document.getElementById('notif-badge-counter');
+
+            function verificarNuevasNotificaciones() {
+                fetch("{% url 'api_notificaciones_sin_leer' %}")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && typeof data.unread_count !== 'undefined') {
+                            const count = data.unread_count;
+                            if (count > 0) {
+                                badge.textContent = count;
+                                badge.style.display = 'inline-block';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Error al obtener notificaciones:", err));
+            }
+
+            // Ejecutar cada 10 segundos
+            setInterval(verificarNuevasNotificaciones, 10000);
+            {% endif %}
+        });
+    </script>
 
 </body>
+
 </html>

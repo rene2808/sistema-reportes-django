@@ -384,6 +384,54 @@
             background: rgba(255, 255, 255, 0.18);
             border-color: rgba(255, 255, 255, 0.35);
         }
+
+        /* Ajustes específicos para dispositivos móviles */
+        @media (max-width: 576px) {
+            body {
+                padding: 15px 10px;
+            }
+            .registro-box {
+                padding: 25px 20px;
+                min-height: auto;
+                border-radius: 20px;
+            }
+            .logo-container {
+                margin-bottom: 12px;
+            }
+            .logo-container img {
+                height: 50px !important;
+            }
+            h1 {
+                font-size: 24px;
+                margin: 0 0 2px 0;
+            }
+            p {
+                margin: 0 0 10px 0;
+                font-size: 13.5px;
+            }
+            label {
+                margin-top: 12px;
+                font-size: 13.5px;
+            }
+            input {
+                padding: 10px 12px;
+                margin-top: 6px;
+                font-size: 14px;
+            }
+            form button[type="submit"] {
+                margin-top: 15px;
+                padding: 12px;
+                font-size: 15px;
+            }
+            .registro-link {
+                margin-top: 15px;
+                font-size: 13px;
+            }
+            .privacy-container {
+                margin-top: 10px;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 
