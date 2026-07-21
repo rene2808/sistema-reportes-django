@@ -168,7 +168,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 # URL pública que se utilizará para referenciar los archivos estáticos en las plantillas HTML (ej: /static/css/inicio.css)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Directorios adicionales de archivos estáticos
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Carpeta física en el disco duro donde django recolectará todos los archivos estáticos para producción (collectstatic)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
