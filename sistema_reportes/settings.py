@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',                 # Gestión de URLs limpias (ej. añadir barra diagonal al final).
     'django.middleware.csrf.CsrfViewMiddleware',                 # Protección contra vulnerabilidades de falsificación de petición en sitios cruzados (CSRF).
     'django.contrib.auth.middleware.AuthenticationMiddleware',   # Asocia el usuario actual a la petición HTTP (request.user).
+    'reportes.middleware.ActiveUserMiddleware',                  # Registra la actividad de usuarios en línea.
     'django.contrib.messages.middleware.MessageMiddleware',       # Habilita el manejo de mensajes/alertas de usuario.
     'django.middleware.clickjacking.XFrameOptionsMiddleware',     # Evita que el sitio sea embebido en iFrames de otros dominios (Clickjacking).
 ]
@@ -205,3 +206,11 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'reportespigrica@gmail.com'
 EMAIL_HOST_PASSWORD = 'fcsdlejhcchpkvww'
+
+# --- Configuración de Sesiones e Inactividad ---
+# Expira la sesión tras 10 minutos (600 segundos) de inactividad
+SESSION_COOKIE_AGE = 600
+# Guarda la sesión y actualiza la cookie en cada petición para reiniciar el contador de inactividad
+SESSION_SAVE_EVERY_REQUEST = True
+# Expira la sesión cuando el usuario cierra el navegador o la pestaña
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

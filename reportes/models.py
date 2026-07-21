@@ -122,6 +122,15 @@ class PerfilUsuario(models.Model):
         # Muestra el nombre de usuario de Django y su rol correspondiente
         return f'{self.usuario.username} - {self.get_rol_display()}'
 
+    @property
+    def esta_en_linea(self):
+        """
+        Determina si el usuario está en línea basado en su última actividad
+        registrada en la caché del sistema (vigente por 10 minutos).
+        """
+        from django.core.cache import cache
+        return cache.get(f'seen_user_{self.usuario.id}') is not None
+
 
 # --- Señales de Django (Signals) ---
 

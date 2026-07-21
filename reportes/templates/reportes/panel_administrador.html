@@ -88,6 +88,12 @@
         margin-bottom: 20px;
     }
 
+    @keyframes status-pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 1; }
+        100% { opacity: 0.4; }
+    }
+
     /* Solución Definitiva al Grid de Métricas (image_5bdd7d.jpg) */
     .stats-grid {
         display: grid;
@@ -732,6 +738,7 @@
             <thead>
                 <tr>
                     <th>Usuario</th>
+                    <th>Estado</th>
                     <th>Correo electrónico</th>
                     <th>Rol asignado</th>
                     <th>Nueva Contraseña</th>
@@ -750,6 +757,17 @@
                             value="{{ usuario.username }}" required style="padding:6px 10px;" class="{% if not usuario.is_active %}usuario-bloqueado{% endif %}">
                         {% if not usuario.is_active %}
                         <span class="badge bg-danger text-white ms-1" style="font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; background-color: #ef4444;">Bloqueado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if usuario.perfilusuario.esta_en_linea %}
+                            <span class="badge" style="background-color: #22c55e; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: white; animation: status-pulse 1.5s infinite;"></span> En línea
+                            </span>
+                        {% else %}
+                            <span class="badge" style="background-color: #64748b; color: white; font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center;">
+                                Desconectado
+                            </span>
                         {% endif %}
                     </td>
                     <td><input form="editar-usuario-form-{{ usuario.id }}" type="email" name="email"
