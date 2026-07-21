@@ -64,6 +64,7 @@ INSTALLED_APPS = [
 # MIDDLEWARE procesa cada petición (Request) y respuesta (Response) que entran y salen del servidor.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',             # Implementa cabeceras de seguridad HTTP básicas.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',       # Habilita el almacenamiento de sesiones en las peticiones.
     'django.middleware.common.CommonMiddleware',                 # Gestión de URLs limpias (ej. añadir barra diagonal al final).
     'django.middleware.csrf.CsrfViewMiddleware',                 # Protección contra vulnerabilidades de falsificación de petición en sitios cruzados (CSRF).
@@ -170,9 +171,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 # Carpeta física en el disco duro donde django recolectará todos los archivos estáticos para producción (collectstatic)
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-
+# Habilitar WhiteNoise para comprimir y cachear estáticos
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- Gestión de Archivos Multimedia (Imágenes y Evidencias subidas por ciudadanos) ---
 
