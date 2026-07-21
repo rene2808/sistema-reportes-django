@@ -301,6 +301,14 @@
             margin-bottom: 15px;
         }
 
+        .sidebar-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            height: 100%;
+        }
+
         .mobile-header-bar {
             display: none;
         }
@@ -359,6 +367,9 @@
             .sidebar-content-wrapper {
                 display: none;
                 flex-direction: column;
+                justify-content: flex-start;
+                flex: unset;
+                height: auto;
                 background: #020d1e;
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
                 max-height: 80vh;
