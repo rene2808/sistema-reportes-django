@@ -360,6 +360,12 @@ def politica_privacidad(request):
 
 
 def cerrar_sesion(request):
+    if request.user.is_authenticated:
+        try:
+            from reportes.models import PerfilUsuario
+            PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=None)
+        except Exception:
+            pass
     logout(request)
     return redirect('inicio')
 
