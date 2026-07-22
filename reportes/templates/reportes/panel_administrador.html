@@ -981,6 +981,10 @@
                                     <span class="badge" style="background-color: #64748b; color: white; font-size: 11px; padding: 6px 10px; border-radius: 6px; font-weight: bold;" title="Las cuentas de administradores no pueden ser bloqueadas">
                                         🛡️ Protegido
                                     </span>
+                                {% elif request.user.perfilusuario.rol == 'moderador' and usuario.perfilusuario.rol == 'moderador' %}
+                                    <span class="badge" style="background-color: #64748b; color: white; font-size: 11px; padding: 6px 10px; border-radius: 6px; font-weight: bold;" title="Los moderadores no pueden bloquear a otros moderadores">
+                                        🛡️ Protegido
+                                    </span>
                                 {% else %}
                                     {% if usuario.is_active %}
                                     <form method="POST" action="{% url 'toggle_bloqueo_usuario' usuario.id %}" style="display:inline; margin:0;">

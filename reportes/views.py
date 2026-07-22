@@ -2598,17 +2598,20 @@ def toggle_bloqueo_usuario(request, id):
     """
     usuario = get_object_or_404(User, id=id)
     
-    # Restricción: No se pueden bloquear cuentas de administradores
+    # Restricción: No se pueden bloquear cuentas de administradores ni moderadores entre sí
     target_is_admin = usuario.is_superuser or (hasattr(usuario, 'perfilusuario') and usuario.perfilusuario.rol == 'administrador')
+    target_is_moderator = hasattr(usuario, 'perfilusuario') and usuario.perfilusuario.rol == 'moderador'
+    requester_is_moderator = hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.rol == 'moderador'
     
     if usuario == request.user:
         messages.error(request, 'No puedes bloquear o desbloquear tu propia cuenta.')
     elif target_is_admin:
-        requester_is_moderator = hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.rol == 'moderador'
         if requester_is_moderator:
             messages.error(request, 'Un moderador no tiene permisos para bloquear o desbloquear a un administrador.')
         else:
             messages.error(request, 'Los administradores no pueden bloquear o desbloquear a otros administradores.')
+    elif target_is_moderator and requester_is_moderator:
+        messages.error(request, 'Un moderador no tiene permisos para bloquear o desbloquear a otro moderador.')
     else:
         duracion = 'toggle'
         if request.method == 'POST':

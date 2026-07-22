@@ -529,5 +529,46 @@ class ReabrirEditarReporteTests(TestCase):
         # No debió ser bloqueado
         self.assertTrue(admin_target.is_active)
 
+    def test_bloqueo_moderador_por_otro_moderador_rebotado(self):
+        # Crear dos moderadores
+        mod1 = User.objects.create_user(username='mod_req', password='password123')
+        mod1.perfilusuario.rol = 'moderador'
+        mod1.perfilusuario.save()
+
+        mod2 = User.objects.create_user(username='mod_target', password='password123')
+        mod2.perfilusuario.rol = 'moderador'
+        mod2.perfilusuario.save()
+
+        self.client.login(username='mod_req', password='password123')
+        url = reverse('toggle_bloqueo_usuario', kwargs={'id': mod2.id})
+        
+        response = self.client.post(url, {'duracion': 'permanente'})
+        self.assertEqual(response.status_code, 302)
+        
+        mod2.refresh_from_db()
+        # No debió ser bloqueado
+        self.assertTrue(mod2.is_active)
+
+    def test_bloqueo_moderador_por_admin_exito(self):
+        # Crear un admin y un moderador
+        admin = User.objects.create_user(username='admin_boss', password='password123')
+        admin.perfilusuario.rol = 'administrador'
+        admin.perfilusuario.save()
+
+        mod = User.objects.create_user(username='mod_underling', password='password123')
+        mod.perfilusuario.rol = 'moderador'
+        mod.perfilusuario.save()
+
+        self.client.login(username='admin_boss', password='password123')
+        url = reverse('toggle_bloqueo_usuario', kwargs={'id': mod.id})
+        
+        response = self.client.post(url, {'duracion': 'permanente'})
+        self.assertEqual(response.status_code, 302)
+        
+        mod.refresh_from_db()
+        # Debe estar bloqueado/inactivo
+        self.assertFalse(mod.is_active)
+
+
 
 
