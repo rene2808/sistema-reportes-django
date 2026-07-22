@@ -241,15 +241,21 @@
         list-style: none;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         font-size: 13.5px;
         color: #334155;
     }
 
     .evidence-rules-list li {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 8px;
+        line-height: 1.4;
+    }
+
+    .evidence-rules-list li i {
+        flex-shrink: 0;
+        margin-top: 2px;
     }
 
     .file-status-info {

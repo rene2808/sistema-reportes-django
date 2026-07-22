@@ -107,6 +107,24 @@
         background: #f8fafc;
         transform: translateY(-2px);
     }
+
+    /* Ajustes responsivos para pantallas móviles */
+    @media (max-width: 480px) {
+        .profile-edit-card {
+            padding: 30px 20px !important;
+            border-radius: 16px !important;
+        }
+        .profile-edit-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+        }
+        .btn-save-profile,
+        .btn-cancel {
+            width: 100% !important;
+            text-align: center !important;
+        }
+    }
 </style>
 
 <div class="profile-edit-page">
@@ -152,7 +170,9 @@
                 <i class="bi bi-key-fill" style="color: #3b82f6; font-size: 1.1rem;"></i>
                 <span>Nueva contraseña</span>
             </label>
-            <input type="password" name="password" placeholder="Déjalo vacío si no quieres cambiarla">
+            <input type="password" name="password" placeholder="Déjalo vacío si no quieres cambiarla (mín. 8 alfanuméricos)"
+                   pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+                   title="La contraseña debe ser alfanumérica (contener al menos una letra y un número, sin caracteres especiales o espacios) y tener al menos 8 caracteres.">
 
             <div class="profile-edit-actions">
                 <button class="btn-save-profile" type="submit">

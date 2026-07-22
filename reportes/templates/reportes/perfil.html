@@ -137,6 +137,35 @@
         background: linear-gradient(135deg, #ea650d 0%, #d84500 100%);
         box-shadow: 0 12px 24px rgba(255, 116, 23, 0.35);
     }
+
+    /* Ajustes responsivos para pantallas móviles */
+    @media (max-width: 480px) {
+        .profile-card {
+            padding: 30px 20px !important;
+            border-radius: 16px !important;
+        }
+        .info-row {
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
+            padding: 12px 0 !important;
+            text-align: left !important;
+        }
+        .info-value {
+            text-align: left !important;
+            font-size: 14.5px !important;
+            word-wrap: break-word !important;
+            word-break: break-all !important;
+        }
+        .profile-name {
+            font-size: 20px !important;
+            margin-bottom: 20px !important;
+        }
+        .profile-avatar {
+            width: 72px !important;
+            height: 72px !important;
+            font-size: 36px !important;
+        }
+    }
 </style>
 
 <div class="profile-page">

@@ -467,8 +467,36 @@ def editar_perfil(request):
         telefono = request.POST.get('telefono')
         password = request.POST.get('password')
 
+        # Validaciones de seguridad para la nueva contraseña (alfanumérica de mín. 8 caracteres)
+        if password:
+            error_msg = None
+            if len(password) < 8:
+                error_msg = 'La nueva contraseña debe tener al menos 8 caracteres.'
+            elif not password.isalnum():
+                error_msg = 'La nueva contraseña solo debe contener caracteres alfanuméricos (letras y números sin caracteres especiales o espacios).'
+            elif not (any(c.isalpha() for c in password) and any(c.isdigit() for c in password)):
+                error_msg = 'La nueva contraseña debe contener al menos una letra y un número.'
+
+            if error_msg:
+                messages.error(request, error_msg)
+                # Actualizamos temporalmente los objetos para conservar los datos ingresados
+                request.user.username = username
+                request.user.first_name = first_name
+                request.user.last_name = last_name
+                request.user.email = email
+                perfil.telefono = telefono
+                return render(request, 'reportes/editar_perfil.html', {
+                    'perfil': perfil
+                })
+
         if telefono and not telefono.isdigit():
             messages.error(request, 'El número de teléfono solo debe contener números.')
+            # Conservamos temporalmente los datos
+            request.user.username = username
+            request.user.first_name = first_name
+            request.user.last_name = last_name
+            request.user.email = email
+            perfil.telefono = telefono
             return render(request, 'reportes/editar_perfil.html', {
                 'perfil': perfil
             })
