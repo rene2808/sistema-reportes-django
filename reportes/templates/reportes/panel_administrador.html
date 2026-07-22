@@ -513,6 +513,75 @@
         text-decoration: line-through;
         color: #94a3b8;
     }
+
+    /* Estilos para el sistema de Pestañas (Tabs) */
+    .tabs-navigation {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        border-bottom: 2px solid var(--border-color);
+        margin-bottom: 24px;
+        padding-bottom: 0;
+    }
+    
+    .tab-btn {
+        border: none;
+        background: none;
+        font-weight: 700;
+        color: var(--text-slate-500);
+        padding: 12px 20px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        outline: none;
+    }
+    
+    .tab-btn:hover {
+        color: var(--text-slate-900);
+        background-color: rgba(15, 23, 42, 0.02);
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+    
+    .tab-btn.active {
+        color: #6366f1;
+        border-bottom-color: #6366f1;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .badge-prioridad-baja {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+    .badge-prioridad-media {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    .badge-prioridad-alta {
+        background: rgba(249, 115, 22, 0.1);
+        color: #f97316;
+    }
+    .badge-prioridad-urgente {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
 </style>
 
 <div class="mb-4">
@@ -834,53 +903,285 @@
         {% endif %}
     </form>
 
-    {% if reportes %}
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Folio</th>
-                    <th>Tipo de Incidencia</th>
-                    <th>Usuario Reportante</th>
-                    <th>Estado Actual</th>
-                    <th>Fecha y Hora</th>
-                    <th>Ver Ficha</th>
-                    <th style="text-align: right;">Eliminar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for reporte in reportes %}
-                <tr>
-                    <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
-                    <td>{{ reporte.categoria }}</td>
-                    <td>{{ reporte.usuario.username }}</td>
-                    <td>
-                        <span class="badge {% if reporte.estado == 'Pendiente' %}badge-pendiente{% elif reporte.estado == 'En proceso' %}badge-proceso{% elif reporte.estado == 'Resuelto' %}badge-resuelto{% else %}badge-default{% endif %}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
-                            {{ reporte.estado }}
-                        </span>
-                    </td>
-                    <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                    <td>
-                        <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
-                            style="padding: 6px 12px; font-size:12px;">
-                            <i class="bi bi-eye"></i> Examinar
-                        </a>
-                    </td>
-                    <td style="text-align: right;">
-                        <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
-                            style="padding: 6px 12px; font-size:12px;"
-                            onclick="return confirm('¿Seguro que deseas eliminar este reporte?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Menú de Pestañas -->
+    <div class="tabs-navigation">
+        <button type="button" class="tab-btn active" data-tab="pendientes">
+            <i class="bi bi-clock-history"></i> Recién Registrados
+            <span class="badge badge-pendiente" style="padding: 3px 8px; border-radius: 20px; font-size: 11px;">{{ reportes_pendientes }}</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="proceso">
+            <i class="bi bi-gear-wide-connected"></i> En Proceso / Revisión
+            <span class="badge badge-proceso" style="padding: 3px 8px; border-radius: 20px; font-size: 11px;">{{ reportes_proceso }}</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="resueltos">
+            <i class="bi bi-check-circle-fill"></i> Resueltos
+            <span class="badge badge-resuelto" style="padding: 3px 8px; border-radius: 20px; font-size: 11px;">{{ reportes_resueltos }}</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="cancelados">
+            <i class="bi bi-x-circle-fill"></i> Cancelados
+            <span class="badge badge-default" style="padding: 3px 8px; border-radius: 20px; font-size: 11px;">{{ reportes_cancelados }}</span>
+        </button>
     </div>
-    {% else %}
-    <p>No se encontraron reportes registrados bajo este criterio.</p>
-    {% endif %}
+
+    <!-- Pestaña: Recién Registrados (Pendientes) -->
+    <div class="tab-pane active" id="pendientes">
+        {% if reportes_pendientes_list %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Tipo de Incidencia</th>
+                        <th>Usuario Reportante</th>
+                        <th>Prioridad</th>
+                        <th>Fecha y Hora</th>
+                        <th style="text-align: right;">Acciones de Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes_pendientes_list %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td>{{ reporte.categoria }}</td>
+                        <td>{{ reporte.usuario.username }}</td>
+                        <td>
+                            <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                {{ reporte.prioridad }}
+                            </span>
+                        </td>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="acciones" style="justify-content: flex-end;">
+                                <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
+                                    style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
+                                    <i class="bi bi-eye"></i> Examinar
+                                </a>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas iniciar la revisión de este reporte?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="En proceso">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-green" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-play-fill"></i> Iniciar Revisión
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas cancelar este reporte?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="Cancelado">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-red" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-x-lg"></i> Cancelar
+                                    </button>
+                                </form>
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                    style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+            <i class="bi bi-clipboard-check" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
+            <span class="fw-semibold">No hay reportes pendientes. ¡Todo al día!</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pestaña: En Proceso / Revisión -->
+    <div class="tab-pane" id="proceso">
+        {% if reportes_proceso_list %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Tipo de Incidencia</th>
+                        <th>Usuario Reportante</th>
+                        <th>Prioridad</th>
+                        <th>Fecha y Hora</th>
+                        <th style="text-align: right;">Acciones de Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes_proceso_list %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td>{{ reporte.categoria }}</td>
+                        <td>{{ reporte.usuario.username }}</td>
+                        <td>
+                            <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                {{ reporte.prioridad }}
+                            </span>
+                        </td>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="acciones" style="justify-content: flex-end;">
+                                <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
+                                    style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
+                                    <i class="bi bi-eye"></i> Examinar
+                                </a>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas marcar este reporte como resuelto?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="Resuelto">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-green" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-check-lg"></i> Resolver
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas cancelar este reporte?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="Cancelado">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-red" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-x-lg"></i> Cancelar
+                                    </button>
+                                </form>
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                    style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+            <i class="bi bi-gear" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #f59e0b;"></i>
+            <span class="fw-semibold">No hay reportes en proceso de revisión.</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pestaña: Resueltos -->
+    <div class="tab-pane" id="resueltos">
+        {% if reportes_resueltos_list %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Tipo de Incidencia</th>
+                        <th>Usuario Reportante</th>
+                        <th>Prioridad</th>
+                        <th>Fecha y Hora</th>
+                        <th style="text-align: right;">Acciones de Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes_resueltos_list %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td>{{ reporte.categoria }}</td>
+                        <td>{{ reporte.usuario.username }}</td>
+                        <td>
+                            <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                {{ reporte.prioridad }}
+                            </span>
+                        </td>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="acciones" style="justify-content: flex-end;">
+                                <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
+                                    style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
+                                    <i class="bi bi-eye"></i> Examinar
+                                </a>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas reabrir este reporte en revisión?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="En proceso">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-orange" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                                    </button>
+                                </form>
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                    style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+            <i class="bi bi-check-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
+            <span class="fw-semibold">No se han registrado reportes resueltos aún.</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pestaña: Cancelados -->
+    <div class="tab-pane" id="cancelados">
+        {% if reportes_cancelados_list %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Tipo de Incidencia</th>
+                        <th>Usuario Reportante</th>
+                        <th>Prioridad</th>
+                        <th>Fecha y Hora</th>
+                        <th style="text-align: right;">Acciones de Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes_cancelados_list %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td>{{ reporte.categoria }}</td>
+                        <td>{{ reporte.usuario.username }}</td>
+                        <td>
+                            <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                {{ reporte.prioridad }}
+                            </span>
+                        </td>
+                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <div class="acciones" style="justify-content: flex-end;">
+                                <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
+                                    style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
+                                    <i class="bi bi-eye"></i> Examinar
+                                </a>
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas reabrir este reporte en estado Pendiente?')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="estado" value="Pendiente">
+                                    <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
+                                    <button type="submit" class="btn-admin btn-orange" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                                    </button>
+                                </form>
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                    style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+            <i class="bi bi-x-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #64748b;"></i>
+            <span class="fw-semibold">No hay reportes cancelados.</span>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 <!-- SECCIÓN: GALERÍA DE INCIDENCIAS RESUELTAS -->
@@ -1124,6 +1425,40 @@
 
         // Ejecutar la actualización periódicamente cada 3 segundos (tiempo real)
         setInterval(actualizarEstadosUsuarios, 3000);
+    });
+</script>
+
+<!-- Script para el control de Pestañas (Tabs) del Historial de Reportes -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        function switchTab(tabId) {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            const targetPane = document.getElementById(tabId);
+
+            if (targetBtn && targetPane) {
+                targetBtn.classList.add('active');
+                targetPane.classList.add('active');
+                localStorage.setItem('activeAdminTab', tabId);
+            }
+        }
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        });
+
+        const savedTab = localStorage.getItem('activeAdminTab');
+        if (savedTab && document.getElementById(savedTab)) {
+            switchTab(savedTab);
+        }
     });
 </script>
 

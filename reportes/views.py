@@ -808,6 +808,9 @@ def actualizar_reporte(request, id):
         if not modificado and not evidencia_creada:
             messages.info(request, 'No se detectaron cambios.')
 
+    next_url = request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('detalle_reporte', id=reporte.id)
 
 
@@ -858,6 +861,12 @@ def panel_administrador(request):
         'reportes_proceso': reportes.filter(estado='En proceso').count(),
         'reportes_resueltos': reportes.filter(estado='Resuelto').count(),
         'reportes_cancelados': reportes.filter(estado='Cancelado').count(),
+        
+        # Listas filtradas por estado para iteración en pestañas
+        'reportes_pendientes_list': reportes.filter(estado='Pendiente'),
+        'reportes_proceso_list': reportes.filter(estado='En proceso'),
+        'reportes_resueltos_list': reportes.filter(estado='Resuelto'),
+        'reportes_cancelados_list': reportes.filter(estado='Cancelado'),
 
         'total_baches': reportes.filter(categoria__nombre__icontains='Bache').count(),
         'total_basura': reportes.filter(categoria__nombre__icontains='Basura').count(),
