@@ -62,9 +62,9 @@ body {
    ========================================================================== */
 
 .custom-navbar {
-    background-color: #2d3748 !important; /* Gris oscuro principal */
+    background-color: #0B192C !important; /* Mismo color azul oscuro del footer */
     border-bottom: 3px solid #3b82f6; /* Azul medio de borde */
-    box-shadow: 0 4px 30px rgba(45, 55, 72, 0.15);
+    box-shadow: 0 4px 30px rgba(11, 25, 44, 0.15);
 }
 
 .custom-navbar .nav-link {
