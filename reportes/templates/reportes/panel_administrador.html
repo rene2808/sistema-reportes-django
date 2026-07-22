@@ -582,6 +582,115 @@
         background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
     }
+
+    /* Estilos del Modal de Confirmación Personalizado */
+    .confirm-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .confirm-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .confirm-modal-card {
+        background: white;
+        border-radius: 20px;
+        padding: 32px 28px;
+        width: 90%;
+        max-width: 420px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+        text-align: center;
+        border: 1px solid var(--border-color);
+        transform: scale(0.9);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .confirm-modal-overlay.active .confirm-modal-card {
+        transform: scale(1);
+    }
+
+    .confirm-modal-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin: 0 auto 20px auto;
+        animation: pulseIcon 2s infinite;
+    }
+
+    @keyframes pulseIcon {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+    }
+
+    .confirm-modal-card h3 {
+        margin: 0 0 10px 0;
+        color: var(--text-slate-900);
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .confirm-modal-card p {
+        color: var(--text-slate-500);
+        font-size: 0.95rem;
+        margin: 0 0 26px 0;
+        line-height: 1.5;
+    }
+
+    .confirm-modal-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-modal {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        flex: 1;
+    }
+
+    .btn-modal-cancel {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .btn-modal-cancel:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .btn-modal-ok {
+        background: #6366f1;
+        color: white;
+    }
+
+    .btn-modal-ok:hover {
+        background: #4f46e5;
+    }
 </style>
 
 <div class="mb-4">
@@ -925,8 +1034,7 @@
 
     <!-- Pestaña: Recién Registrados (Pendientes) -->
     <div class="tab-pane active" id="pendientes">
-        {% if reportes_pendientes_list %}
-        <div class="table-container">
+        <div class="table-container" id="container-pendientes" {% if not reportes_pendientes_list %}style="display: none;"{% endif %}>
             <table>
                 <thead>
                     <tr>
@@ -938,25 +1046,25 @@
                         <th style="text-align: right;">Acciones de Gestión</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-pendientes">
                     {% for reporte in reportes_pendientes_list %}
-                    <tr>
-                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
-                        <td>{{ reporte.categoria }}</td>
-                        <td>{{ reporte.usuario.username }}</td>
-                        <td>
+                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                        <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td class="cell-categoria">{{ reporte.categoria }}</td>
+                        <td class="cell-usuario">{{ reporte.usuario.username }}</td>
+                        <td class="cell-prioridad">
                             <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
                                 {{ reporte.prioridad }}
                             </span>
                         </td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                        <td>
+                        <td class="cell-fecha">{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td class="cell-acciones" style="text-align: right;">
                             <div class="acciones" style="justify-content: flex-end;">
                                 <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
                                     style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
                                     <i class="bi bi-eye"></i> Examinar
                                 </a>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas iniciar la revisión de este reporte?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="En proceso">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -964,7 +1072,7 @@
                                         <i class="bi bi-play-fill"></i> Iniciar Revisión
                                     </button>
                                 </form>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas cancelar este reporte?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="Cancelado">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -984,18 +1092,17 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
-            <i class="bi bi-clipboard-check" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
-            <span class="fw-semibold">No hay reportes pendientes. ¡Todo al día!</span>
+        <div class="no-items-placeholder" id="placeholder-pendientes" {% if reportes_pendientes_list %}style="display: none;"{% endif %}>
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+                <i class="bi bi-clipboard-check" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
+                <span class="fw-semibold">No hay reportes pendientes. ¡Todo al día!</span>
+            </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Pestaña: En Proceso / Revisión -->
     <div class="tab-pane" id="proceso">
-        {% if reportes_proceso_list %}
-        <div class="table-container">
+        <div class="table-container" id="container-proceso" {% if not reportes_proceso_list %}style="display: none;"{% endif %}>
             <table>
                 <thead>
                     <tr>
@@ -1007,25 +1114,25 @@
                         <th style="text-align: right;">Acciones de Gestión</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-proceso">
                     {% for reporte in reportes_proceso_list %}
-                    <tr>
-                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
-                        <td>{{ reporte.categoria }}</td>
-                        <td>{{ reporte.usuario.username }}</td>
-                        <td>
+                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                        <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td class="cell-categoria">{{ reporte.categoria }}</td>
+                        <td class="cell-usuario">{{ reporte.usuario.username }}</td>
+                        <td class="cell-prioridad">
                             <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
                                 {{ reporte.prioridad }}
                             </span>
                         </td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                        <td>
+                        <td class="cell-fecha">{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td class="cell-acciones" style="text-align: right;">
                             <div class="acciones" style="justify-content: flex-end;">
                                 <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
                                     style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
                                     <i class="bi bi-eye"></i> Examinar
                                 </a>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas marcar este reporte como resuelto?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="Resuelto">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -1033,7 +1140,7 @@
                                         <i class="bi bi-check-lg"></i> Resolver
                                     </button>
                                 </form>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas cancelar este reporte?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="Cancelado">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -1053,18 +1160,17 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
-            <i class="bi bi-gear" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #f59e0b;"></i>
-            <span class="fw-semibold">No hay reportes en proceso de revisión.</span>
+        <div class="no-items-placeholder" id="placeholder-proceso" {% if reportes_proceso_list %}style="display: none;"{% endif %}>
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+                <i class="bi bi-gear" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #f59e0b;"></i>
+                <span class="fw-semibold">No hay reportes en proceso de revisión.</span>
+            </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Pestaña: Resueltos -->
     <div class="tab-pane" id="resueltos">
-        {% if reportes_resueltos_list %}
-        <div class="table-container">
+        <div class="table-container" id="container-resueltos" {% if not reportes_resueltos_list %}style="display: none;"{% endif %}>
             <table>
                 <thead>
                     <tr>
@@ -1076,25 +1182,25 @@
                         <th style="text-align: right;">Acciones de Gestión</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-resueltos">
                     {% for reporte in reportes_resueltos_list %}
-                    <tr>
-                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
-                        <td>{{ reporte.categoria }}</td>
-                        <td>{{ reporte.usuario.username }}</td>
-                        <td>
+                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                        <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td class="cell-categoria">{{ reporte.categoria }}</td>
+                        <td class="cell-usuario">{{ reporte.usuario.username }}</td>
+                        <td class="cell-prioridad">
                             <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
                                 {{ reporte.prioridad }}
                             </span>
                         </td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                        <td>
+                        <td class="cell-fecha">{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td class="cell-acciones" style="text-align: right;">
                             <div class="acciones" style="justify-content: flex-end;">
                                 <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
                                     style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
                                     <i class="bi bi-eye"></i> Examinar
                                 </a>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas reabrir este reporte en revisión?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="En proceso">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -1114,18 +1220,17 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
-            <i class="bi bi-check-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
-            <span class="fw-semibold">No se han registrado reportes resueltos aún.</span>
+        <div class="no-items-placeholder" id="placeholder-resueltos" {% if reportes_resueltos_list %}style="display: none;"{% endif %}>
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+                <i class="bi bi-check-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #10b981;"></i>
+                <span class="fw-semibold">No se han registrado reportes resueltos aún.</span>
+            </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Pestaña: Cancelados -->
     <div class="tab-pane" id="cancelados">
-        {% if reportes_cancelados_list %}
-        <div class="table-container">
+        <div class="table-container" id="container-cancelados" {% if not reportes_cancelados_list %}style="display: none;"{% endif %}>
             <table>
                 <thead>
                     <tr>
@@ -1137,25 +1242,25 @@
                         <th style="text-align: right;">Acciones de Gestión</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody-cancelados">
                     {% for reporte in reportes_cancelados_list %}
-                    <tr>
-                        <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
-                        <td>{{ reporte.categoria }}</td>
-                        <td>{{ reporte.usuario.username }}</td>
-                        <td>
+                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                        <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
+                        <td class="cell-categoria">{{ reporte.categoria }}</td>
+                        <td class="cell-usuario">{{ reporte.usuario.username }}</td>
+                        <td class="cell-prioridad">
                             <span class="badge badge-prioridad-{{ reporte.prioridad|lower }}" style="padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
                                 {{ reporte.prioridad }}
                             </span>
                         </td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
-                        <td>
+                        <td class="cell-fecha">{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        <td class="cell-acciones" style="text-align: right;">
                             <div class="acciones" style="justify-content: flex-end;">
                                 <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-admin btn-blue"
                                     style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
                                     <i class="bi bi-eye"></i> Examinar
                                 </a>
-                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas reabrir este reporte en estado Pendiente?')">
+                                <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" class="ajax-status-form" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="estado" value="Pendiente">
                                     <input type="hidden" name="next" value="{% url 'panel_administrador' %}">
@@ -1175,12 +1280,27 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
-            <i class="bi bi-x-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #64748b;"></i>
-            <span class="fw-semibold">No hay reportes cancelados.</span>
+        <div class="no-items-placeholder" id="placeholder-cancelados" {% if reportes_cancelados_list %}style="display: none;"{% endif %}>
+            <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
+                <i class="bi bi-x-circle" style="font-size: 2.5rem; display: block; margin-bottom: 12px; color: #64748b;"></i>
+                <span class="fw-semibold">No hay reportes cancelados.</span>
+            </div>
         </div>
-        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Confirmación Personalizado -->
+<div id="customConfirmModal" class="confirm-modal-overlay">
+    <div class="confirm-modal-card">
+        <div class="confirm-modal-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <h3 id="confirmModalTitle">¿Confirmar Acción?</h3>
+        <p id="confirmModalMessage">¿Estás seguro de que deseas realizar esta acción?</p>
+        <div class="confirm-modal-actions">
+            <button type="button" id="confirmCancelBtn" class="btn-modal btn-modal-cancel">Cancelar</button>
+            <button type="button" id="confirmOkBtn" class="btn-modal btn-modal-ok">Confirmar</button>
+        </div>
     </div>
 </div>
 
@@ -1428,9 +1548,10 @@
     });
 </script>
 
-<!-- Script para el control de Pestañas (Tabs) del Historial de Reportes -->
+<!-- Script para el control de Pestañas (Tabs) del Historial de Reportes y Lógica AJAX/Modal -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Control de Pestañas ---
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -1458,6 +1579,284 @@
         const savedTab = localStorage.getItem('activeAdminTab');
         if (savedTab && document.getElementById(savedTab)) {
             switchTab(savedTab);
+        }
+
+        // --- 2. Lógica de Modal de Confirmación Personalizado ---
+        const customModal = document.getElementById('customConfirmModal');
+        const confirmTitle = document.getElementById('confirmModalTitle');
+        const confirmMessage = document.getElementById('confirmModalMessage');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        const okBtn = document.getElementById('confirmOkBtn');
+        
+        let activeConfirmPromise = null;
+
+        function showCustomConfirm(title, message) {
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            customModal.classList.add('active');
+            
+            return new Promise((resolve) => {
+                activeConfirmPromise = resolve;
+            });
+        }
+
+        function closeCustomConfirm(result) {
+            customModal.classList.remove('active');
+            if (activeConfirmPromise) {
+                activeConfirmPromise(result);
+                activeConfirmPromise = null;
+            }
+        }
+
+        cancelBtn.addEventListener('click', () => closeCustomConfirm(false));
+        okBtn.addEventListener('click', () => closeCustomConfirm(true));
+        
+        customModal.addEventListener('click', (e) => {
+            if (e.target === customModal) {
+                closeCustomConfirm(false);
+            }
+        });
+
+        // --- 3. Lógica AJAX para actualización de estados ---
+        function getTabIdFromEstado(estado) {
+            if (estado === 'Pendiente') return 'pendientes';
+            if (estado === 'En proceso') return 'proceso';
+            if (estado === 'Resuelto') return 'resueltos';
+            if (estado === 'Cancelado') return 'cancelados';
+            return 'pendientes';
+        }
+
+        function actualizarContadores(estadoOrigen, estadoDestino) {
+            const mapeoMétricas = {
+                'Pendiente': {
+                    badgeClass: '.badge-pendiente',
+                    cardClass: '.card-pendientes .number'
+                },
+                'En proceso': {
+                    badgeClass: '.badge-proceso',
+                    cardClass: '.card-proceso .number'
+                },
+                'Resuelto': {
+                    badgeClass: '.badge-resuelto',
+                    cardClass: '.card-resueltos .number'
+                },
+                'Cancelado': {
+                    badgeClass: '.badge-default',
+                    cardClass: '.card-cancelados .number'
+                }
+            };
+
+            if (mapeoMétricas[estadoOrigen]) {
+                const badges = document.querySelectorAll(mapeoMétricas[estadoOrigen].badgeClass);
+                badges.forEach(b => {
+                    let val = parseInt(b.textContent.trim()) || 0;
+                    b.textContent = Math.max(0, val - 1);
+                });
+                const cardNum = document.querySelector(mapeoMétricas[estadoOrigen].cardClass);
+                if (cardNum) {
+                    let val = parseInt(cardNum.textContent.trim()) || 0;
+                    cardNum.textContent = Math.max(0, val - 1);
+                }
+            }
+
+            if (mapeoMétricas[estadoDestino]) {
+                const badges = document.querySelectorAll(mapeoMétricas[estadoDestino].badgeClass);
+                badges.forEach(b => {
+                    let val = parseInt(b.textContent.trim()) || 0;
+                    b.textContent = val + 1;
+                });
+                const cardNum = document.querySelector(mapeoMétricas[estadoDestino].cardClass);
+                if (cardNum) {
+                    let val = parseInt(cardNum.textContent.trim()) || 0;
+                    cardNum.textContent = val + 1;
+                }
+            }
+        }
+
+        document.addEventListener('submit', async function(e) {
+            if (e.target && e.target.classList.contains('ajax-status-form')) {
+                e.preventDefault();
+                const form = e.target;
+                const row = form.closest('tr');
+                if (!row) return;
+
+                const targetEstado = form.querySelector('[name="estado"]').value;
+                const folio = row.getAttribute('data-folio') || 'Sin folio';
+                const reporteId = row.id.replace('reporte-row-', '');
+
+                const parentPane = row.closest('.tab-pane');
+                const sourceTabId = parentPane ? parentPane.id : 'pendientes';
+                let sourceEstado = 'Pendiente';
+                if (sourceTabId === 'proceso') sourceEstado = 'En proceso';
+                else if (sourceTabId === 'resueltos') sourceEstado = 'Resuelto';
+                else if (sourceTabId === 'cancelados') sourceEstado = 'Cancelado';
+
+                let title = '¿Confirmar Cambio de Estado?';
+                let message = `¿Seguro que deseas cambiar el estado del reporte ${folio} a "${targetEstado}"?`;
+                
+                if (targetEstado === 'En proceso') {
+                    title = '📂 Iniciar Revisión de Incidencia';
+                    message = `Se iniciará el proceso de revisión y atención para el reporte ${folio}. El ciudadano será notificado.`;
+                } else if (targetEstado === 'Resuelto') {
+                    title = '✅ Resolver Incidencia';
+                    message = `¿Confirmas que la incidencia del reporte ${folio} ha sido resuelta por completo?`;
+                } else if (targetEstado === 'Cancelado') {
+                    title = '❌ Cancelar Reporte';
+                    message = `El reporte ${folio} pasará a estado Cancelado y no se realizarán más acciones.`;
+                } else if (targetEstado === 'Pendiente') {
+                    title = '🔄 Reabrir Reporte';
+                    message = `El reporte ${folio} será marcado nuevamente como Pendiente para su revisión inicial.`;
+                }
+
+                const confirmed = await showCustomConfirm(title, message);
+                if (!confirmed) return;
+
+                const submitButtons = row.querySelectorAll('button[type="submit"]');
+                submitButtons.forEach(btn => btn.disabled = true);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const targetTabId = getTabIdFromEstado(targetEstado);
+                        const targetTbody = document.getElementById('tbody-' + targetTabId);
+                        const targetContainer = document.getElementById('container-' + targetTabId);
+                        const targetPlaceholder = document.getElementById('placeholder-' + targetTabId);
+
+                        if (targetTbody) {
+                            const cellAcciones = row.querySelector('.cell-acciones');
+                            if (cellAcciones) {
+                                cellAcciones.innerHTML = getActionsHtml(reporteId, targetEstado);
+                            }
+
+                            row.style.opacity = '0.3';
+                            row.style.transition = 'opacity 0.2s ease';
+                            
+                            setTimeout(() => {
+                                targetTbody.appendChild(row);
+                                row.style.opacity = '1';
+                                
+                                const sourceTbody = document.getElementById('tbody-' + sourceTabId);
+                                const sourceContainer = document.getElementById('container-' + sourceTabId);
+                                const sourcePlaceholder = document.getElementById('placeholder-' + sourceTabId);
+
+                                if (sourceTbody && sourceTbody.children.length === 0) {
+                                    if (sourceContainer) sourceContainer.style.display = 'none';
+                                    if (sourcePlaceholder) sourcePlaceholder.style.display = 'block';
+                                }
+
+                                if (targetContainer) targetContainer.style.display = 'block';
+                                if (targetPlaceholder) targetPlaceholder.style.display = 'none';
+                            }, 200);
+
+                            actualizarContadores(sourceEstado, targetEstado);
+                        }
+                    } else {
+                        alert('Ocurrió un error al actualizar el estado en el servidor.');
+                        submitButtons.forEach(btn => btn.disabled = false);
+                    }
+                } catch (err) {
+                    console.error("Error AJAX:", err);
+                    alert('No se pudo establecer conexión con el servidor.');
+                    submitButtons.forEach(btn => btn.disabled = false);
+                }
+            }
+        });
+
+        function getActionsHtml(reporteId, estado) {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const adminUrl = "{% url 'panel_administrador' %}";
+            
+            const updateUrlTemplate = "/reporte/999999/actualizar/";
+            const deleteUrlTemplate = "/reporte/999999/eliminar/";
+            
+            const updateUrl = updateUrlTemplate.replace('999999', reporteId);
+            const deleteUrl = deleteUrlTemplate.replace('999999', reporteId);
+            const detailUrl = "/reporte/" + reporteId + "/";
+            
+            let buttons = `
+                <a href="${detailUrl}" class="btn-admin btn-blue" style="padding: 6px 12px; font-size:12px;" title="Ver detalles e historial">
+                    <i class="bi bi-eye"></i> Examinar
+                </a>
+            `;
+            
+            if (estado === 'Pendiente') {
+                buttons += `
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="En proceso">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-green" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-play-fill"></i> Iniciar Revisión
+                        </button>
+                    </form>
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="Cancelado">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-red" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </button>
+                    </form>
+                `;
+            } else if (estado === 'En proceso') {
+                buttons += `
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="Resuelto">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-green" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-check-lg"></i> Resolver
+                        </button>
+                    </form>
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="Cancelado">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-red" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </button>
+                    </form>
+                `;
+            } else if (estado === 'Resuelto') {
+                buttons += `
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="En proceso">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-orange" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                        </button>
+                    </form>
+                `;
+            } else if (estado === 'Cancelado') {
+                buttons += `
+                    <form method="POST" action="${updateUrl}" class="ajax-status-form" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="estado" value="Pendiente">
+                        <input type="hidden" name="next" value="${adminUrl}">
+                        <button type="submit" class="btn-admin btn-orange" style="padding: 6px 12px; font-size: 12px;">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reabrir
+                        </button>
+                    </form>
+                `;
+            }
+            
+            buttons += `
+                <a href="${deleteUrl}" class="btn-admin btn-red"
+                    style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
+                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                    <i class="bi bi-trash"></i>
+                </a>
+            `;
+            
+            return `<div class="acciones" style="justify-content: flex-end;">${buttons}</div>`;
         }
     });
 </script>
