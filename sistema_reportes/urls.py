@@ -17,10 +17,10 @@ urlpatterns = [
     path('', include('reportes.urls')),
 ]
 
-# Servir archivos multimedia (media) subidos por los usuarios en entorno de desarrollo local (DEBUG = True)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+from django.views.static import serve
+from django.urls import re_path
 
-    # Añadir al final del archivo:
-if settings.DEBUG or not settings.DEBUG:  # Para asegurar que sirva media en Render sin S3/Cloudinary
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Servir archivos multimedia (media) subidos por los usuarios en desarrollo y producción
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
