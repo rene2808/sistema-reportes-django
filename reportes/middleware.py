@@ -15,9 +15,15 @@ class ActiveUserMiddleware:
     def __call__(self, request):
         if request.user.is_authenticated:
             try:
-                from reportes.models import PerfilUsuario
-                # Actualiza de forma directa y rápida el campo ultimo_acceso en la base de datos
-                PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=timezone.now())
+                # Verificar si el usuario está bloqueado temporal o permanentemente
+                perfil = request.user.perfilusuario
+                if not request.user.is_active or (perfil.bloqueado_hasta and perfil.bloqueado_hasta > timezone.now()):
+                    from django.contrib.auth import logout
+                    logout(request)
+                else:
+                    from reportes.models import PerfilUsuario
+                    # Actualiza de forma directa y rápida el campo ultimo_acceso en la base de datos
+                    PerfilUsuario.objects.filter(usuario=request.user).update(ultimo_acceso=timezone.now())
             except Exception as e:
                 # Registra el error pero permite que la petición continúe sin interrumpir al usuario
                 logger.error(f"Error al actualizar la actividad del usuario en base de datos: {e}")

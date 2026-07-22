@@ -54,6 +54,7 @@ urlpatterns = [
     path('reporte/<int:id>/estado/', views.cambiar_estado_reporte, name='cambiar_estado'),
     path('reporte/<int:id>/prioridad/', views.cambiar_prioridad_reporte, name='cambiar_prioridad'),
     path('reporte/<int:id>/actualizar/', views.actualizar_reporte, name='actualizar_reporte'),
+    path('reporte/<int:id>/reabrir-ciudadano/', views.reabrir_reporte_ciudadano, name='reabrir_reporte_ciudadano'),
     path('reporte/<int:id>/evidencia/', views.agregar_evidencia, name='agregar_evidencia'),
     path('reporte/<int:id>/eliminar/', views.eliminar_reporte, name='eliminar_reporte'),
 

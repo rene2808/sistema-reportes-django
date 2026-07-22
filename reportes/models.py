@@ -121,6 +121,9 @@ class PerfilUsuario(models.Model):
     # Fecha y hora de su última actividad en el sistema para determinar si está en línea
     ultimo_acceso = models.DateTimeField(null=True, blank=True)
 
+    # Almacena hasta cuándo la cuenta del usuario está bloqueada temporalmente
+    bloqueado_hasta = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         # Muestra el nombre de usuario de Django y su rol correspondiente
         return f'{self.usuario.username} - {self.get_rol_display()}'
@@ -246,6 +249,9 @@ class Reporte(models.Model):
 
     # Indica si el reporte resuelto debe mostrarse públicamente en la galería de la landing page
     mostrar_en_galeria = models.BooleanField(default=True)
+
+    # Contador de intentos de reapertura realizados por el ciudadano tras la cancelación (máximo 2)
+    intentos_reapertura = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         """

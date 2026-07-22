@@ -161,7 +161,28 @@ def login_usuario(request):
         try:
             usuario_db = User.objects.get(username=username)
             if not usuario_db.is_active and usuario_db.check_password(password):
-                mensaje = 'Tu cuenta ha sido suspendida.'
+                perfil = usuario_db.perfilusuario
+                if perfil.bloqueado_hasta and perfil.bloqueado_hasta <= timezone.now():
+                    perfil.bloqueado_hasta = None
+                    perfil.save()
+                    usuario_db.is_active = True
+                    usuario_db.save()
+                    usuario = authenticate(request, username=username, password=password)
+                    if usuario is not None:
+                        login(request, usuario)
+                        return redireccion_por_rol(usuario)
+
+                if perfil.bloqueado_hasta:
+                    diferencia = perfil.bloqueado_hasta - timezone.now()
+                    horas_restantes = int(diferencia.total_seconds() / 3600)
+                    if horas_restantes > 24:
+                        dias = int(horas_restantes / 24)
+                        mensaje = f'Tu cuenta está bloqueada temporalmente. Restan {dias} días.'
+                    else:
+                        horas = max(1, horas_restantes)
+                        mensaje = f'Tu cuenta está bloqueada temporalmente. Restan {horas} horas.'
+                else:
+                    mensaje = 'Tu cuenta ha sido suspendida.'
             else:
                 mensaje = 'Usuario o contraseña incorrectos'
         except User.DoesNotExist:
@@ -2571,20 +2592,95 @@ def eliminar_resena(request, id):
     return redirect('inicio')
 
 
-@rol_requerido('administrador')
+@rol_requerido('administrador', 'moderador')
 def toggle_bloqueo_usuario(request, id):
     """
-    Permite al administrador activar/desactivar (bloquear/desbloquear) la cuenta de un usuario.
+    Permite al administrador o moderador activar/desactivar (bloquear/desbloquear) la cuenta de un usuario.
+    Permite el bloqueo temporal con duraciones específicas (1 día, 1 semana, 15 días, permanente).
     """
     usuario = get_object_or_404(User, id=id)
     if usuario == request.user:
         messages.error(request, 'No puedes bloquear o desbloquear tu propia cuenta.')
     else:
-        usuario.is_active = not usuario.is_active
-        usuario.save()
-        estado = 'bloqueado' if not usuario.is_active else 'activado'
-        messages.success(request, f'El usuario {usuario.username} ha sido {estado} correctamente.')
+        duracion = 'toggle'
+        if request.method == 'POST':
+            duracion = request.POST.get('duracion', 'toggle')
+        
+        if duracion == 'desbloquear':
+            usuario.is_active = True
+            usuario.save()
+            perfil = usuario.perfilusuario
+            perfil.bloqueado_hasta = None
+            perfil.save()
+            messages.success(request, f'El usuario {usuario.username} ha sido desbloqueado y activado.')
+        elif duracion == 'toggle':
+            usuario.is_active = not usuario.is_active
+            usuario.save()
+            perfil = usuario.perfilusuario
+            perfil.bloqueado_hasta = None
+            perfil.save()
+            estado = 'bloqueado' if not usuario.is_active else 'activado'
+            messages.success(request, f'El usuario {usuario.username} ha sido {estado} correctamente.')
+        else:
+            perfil = usuario.perfilusuario
+            if duracion == 'permanente':
+                usuario.is_active = False
+                usuario.save()
+                perfil.bloqueado_hasta = None
+                perfil.save()
+                messages.success(request, f'El usuario {usuario.username} ha sido bloqueado de forma permanente.')
+            else:
+                try:
+                    dias = int(duracion)
+                except ValueError:
+                    dias = 1
+                from datetime import timedelta
+                from django.utils import timezone
+                perfil.bloqueado_hasta = timezone.now() + timedelta(days=dias)
+                perfil.save()
+                usuario.is_active = False
+                usuario.save()
+                
+                lapso = 'un día' if dias == 1 else ('una semana' if dias == 7 else '15 días')
+                messages.success(request, f'El usuario {usuario.username} ha sido bloqueado temporalmente por {lapso}.')
+                
     return redirect('panel_administrador')
+
+
+@login_required
+def reabrir_reporte_ciudadano(request, id):
+    """
+    Permite al ciudadano creador reabrir un reporte que fue previamente cancelado.
+    Permite un máximo de 2 intentos de reapertura.
+    """
+    reporte = get_object_or_404(Reporte, id=id)
+    rol = obtener_rol(request.user)
+    
+    if rol != 'ciudadano' or reporte.usuario != request.user:
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('panel_ciudadano')
+        
+    if reporte.estado != 'Cancelado':
+        messages.error(request, 'Solo puedes solicitar revisión de reportes que hayan sido cancelados.')
+        return redirect('detalle_reporte', id=reporte.id)
+        
+    if reporte.intentos_reapertura >= 2:
+        messages.error(request, 'Has alcanzado el límite máximo (2) de intentos de reapertura para este reporte.')
+        return redirect('detalle_reporte', id=reporte.id)
+        
+    reporte.estado = 'Pendiente'
+    reporte.intentos_reapertura += 1
+    reporte.save()
+    
+    registrar_historial(
+        reporte=reporte,
+        usuario=request.user,
+        accion='Reporte reabierto por ciudadano',
+        descripcion=f'El ciudadano solicitó una nueva revisión. Intento de reapertura {reporte.intentos_reapertura} de 2.'
+    )
+    
+    messages.success(request, 'Se ha solicitado una nueva revisión para tu reporte. Ahora se encuentra en estado Pendiente.')
+    return redirect('detalle_reporte', id=reporte.id)
 
 
 @rol_requerido('administrador', 'moderador')

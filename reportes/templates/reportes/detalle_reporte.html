@@ -645,6 +645,31 @@
                 </div>
             {% endif %}
 
+            {% if rol == 'ciudadano' and reporte.estado == 'Cancelado' %}
+                <div class="accion-box text-center" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px dashed #f87171; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.05);">
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 2.2rem; display: block; margin-bottom: 8px;"></i>
+                    <h4 class="fw-bold text-dark" style="margin-bottom: 6px; font-size: 16px;">Reporte Cancelado</h4>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 15px;">
+                        Este reporte fue cancelado por el personal de gestión. Cuentas con un máximo de <strong>2 intentos</strong> adicionales para solicitar una nueva revisión del mismo reporte.
+                    </p>
+                    <div style="font-size: 12.5px; font-weight: 800; color: #7f1d1d; margin-bottom: 12px;">
+                        Intentos utilizados: {{ reporte.intentos_reapertura }} / 2
+                    </div>
+                    {% if reporte.intentos_reapertura < 2 %}
+                        <form method="POST" action="{% url 'reabrir_reporte_ciudadano' reporte.id %}" onsubmit="return confirm('¿Seguro que deseas solicitar que tu reporte vuelva a ser revisado?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-blue" style="width: 100%; font-weight: bold; background: #2563eb; border: none; padding: 10px 14px; border-radius: 10px; color: white;">
+                                <i class="bi bi-arrow-counterclockwise"></i> Solicitar Nueva Revisión
+                            </button>
+                        </form>
+                    {% else %}
+                        <div style="font-size: 12px; font-weight: bold; padding: 10px; border-radius: 8px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5;">
+                            Has alcanzado el límite máximo de reaperturas para este reporte.
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
             <a href="{% url 'reporte_individual_pdf' reporte.id %}" class="btn btn-print">
     📄 Descargar informe
 </a>

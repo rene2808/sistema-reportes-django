@@ -886,12 +886,13 @@
     }
 </script>
 
-{% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' %}
+{% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' or request.user.perfilusuario.rol == 'moderador' %}
 <!-- SECCIÓN: CONTROL DE USUARIOS -->
 <div class="admin-section section-usuarios">
     <h2><i class="bi bi-person-gear me-2 text-info"></i>Usuarios registrados</h2>
     <p>Alta, edición de roles y administración de accesos del personal municipal y la ciudadanía.</p>
 
+    {% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' %}
     <form method="POST" action="{% url 'agregar_usuario' %}" style="margin-bottom: 25px;">
         {% csrf_token %}
         <div class="form-grid">
@@ -909,6 +910,7 @@
             </button>
         </div>
     </form>
+    {% endif %}
 
     {% if usuarios %}
     <div class="table-container">
@@ -932,9 +934,15 @@
                             {% csrf_token %}
                         </form>
                         <input form="editar-usuario-form-{{ usuario.id }}" type="text" name="username"
-                            value="{{ usuario.username }}" required style="padding:6px 10px;" class="{% if not usuario.is_active %}usuario-bloqueado{% endif %}">
+                            value="{{ usuario.username }}" required style="padding:6px 10px;" class="{% if not usuario.is_active %}usuario-bloqueado{% endif %}" {% if request.user.perfilusuario.rol == 'moderador' %}disabled{% endif %}>
                         {% if not usuario.is_active %}
-                        <span class="badge bg-danger text-white ms-1" style="font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; background-color: #ef4444;">Bloqueado</span>
+                        <span class="badge bg-danger text-white ms-1" style="font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; background-color: #ef4444;">
+                            {% if usuario.perfilusuario.bloqueado_hasta %}
+                                Bloqueado temporal
+                            {% else %}
+                                Bloqueado
+                            {% endif %}
+                        </span>
                         {% endif %}
                     </td>
                     <td id="user-status-cell-{{ usuario.id }}">
@@ -949,9 +957,9 @@
                         {% endif %}
                     </td>
                     <td><input form="editar-usuario-form-{{ usuario.id }}" type="email" name="email"
-                            value="{{ usuario.email }}" style="padding:6px 10px;"></td>
+                            value="{{ usuario.email }}" style="padding:6px 10px;" {% if request.user.perfilusuario.rol == 'moderador' %}disabled{% endif %}></td>
                     <td>
-                        <select form="editar-usuario-form-{{ usuario.id }}" name="rol" style="padding:6px 10px;">
+                        <select form="editar-usuario-form-{{ usuario.id }}" name="rol" style="padding:6px 10px;" {% if request.user.perfilusuario.rol == 'moderador' %}disabled{% endif %}>
                             <option value="ciudadano" {% if usuario.perfilusuario.rol == 'ciudadano' %}selected{% endif %}>Ciudadano</option>
                             <option value="moderador" {% if usuario.perfilusuario.rol == 'moderador' %}selected{% endif %}>Moderador de Contenido</option>
                             <option value="supervisor" {% if usuario.perfilusuario.rol == 'supervisor' %}selected{% endif %}>Supervisor</option>
@@ -959,30 +967,43 @@
                         </select>
                     </td>
                     <td><input form="editar-usuario-form-{{ usuario.id }}" type="password" name="password"
-                            placeholder="Opcional" style="padding:6px 10px;"></td>
+                            placeholder="Opcional" style="padding:6px 10px;" {% if request.user.perfilusuario.rol == 'moderador' %}disabled{% endif %}></td>
                     <td>
-                        <div class="acciones" style="justify-content: flex-end;">
+                        <div class="acciones" style="justify-content: flex-end; align-items: center; gap: 6px;">
+                            {% if request.user.perfilusuario.rol != 'moderador' %}
                             <button form="editar-usuario-form-{{ usuario.id }}" type="submit" class="btn-admin btn-blue"
                                 style="padding: 6px 12px; font-size:12px;">
                                 Guardar
                             </button>
+                            {% endif %}
                             {% if usuario != request.user %}
                                 {% if usuario.is_active %}
-                                <a href="{% url 'toggle_bloqueo_usuario' usuario.id %}" class="btn-admin btn-orange"
-                                    style="padding: 6px 12px; font-size:12px; text-decoration: none;" title="Bloquear Usuario">
-                                    Bloquear
-                                </a>
+                                <form method="POST" action="{% url 'toggle_bloqueo_usuario' usuario.id %}" style="display:inline; margin:0;">
+                                    {% csrf_token %}
+                                    <select name="duracion" onchange="if(this.value) { this.form.submit(); }" style="padding: 6px 8px; font-size: 11.5px; border-radius: 6px; border: 1px solid #f97316; background: #ffedd5; color: #ea580c; font-weight: 700; cursor:pointer;" title="Bloquear Usuario">
+                                        <option value="" selected disabled>Bloquear</option>
+                                        <option value="1">1 día</option>
+                                        <option value="7">1 semana</option>
+                                        <option value="15">15 días</option>
+                                        <option value="permanente">Permanente</option>
+                                    </select>
+                                </form>
                                 {% else %}
-                                <a href="{% url 'toggle_bloqueo_usuario' usuario.id %}" class="btn-admin btn-green"
-                                    style="padding: 6px 12px; font-size:12px; text-decoration: none;" title="Desbloquear Usuario">
-                                    Desbloquear
-                                </a>
+                                <form method="POST" action="{% url 'toggle_bloqueo_usuario' usuario.id %}" style="display:inline; margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="duracion" value="desbloquear">
+                                    <button type="submit" class="btn-admin btn-green" style="padding: 6px 12px; font-size: 12px; font-weight: 700;">
+                                        Desbloquear
+                                    </button>
+                                </form>
                                 {% endif %}
+                                {% if request.user.perfilusuario.rol != 'moderador' %}
                                 <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn-admin btn-red"
                                     style="padding: 6px 12px; font-size:12px; text-decoration: none;"
                                     onclick="return confirm('¿Seguro que deseas eliminar al usuario {{ usuario.username }}?')">
                                     Eliminar
                                 </a>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </td>
