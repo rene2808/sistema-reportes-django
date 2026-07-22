@@ -1,0 +1,877 @@
+<!-- 
+  Plantilla: editar_reporte.html
+  Descripción: Formulario interactivo para editar y reenviar un reporte ciudadano cancelado.
+  Permite cambiar detalles, ubicación en mapa Leaflet y opcionalmente subir nuevas fotos.
+-->
+{% extends 'reportes/base.html' %}
+
+{% block title %}Editar y Reenviar Reporte{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+    .report-wrapper {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+
+    .report-header {
+        background: linear-gradient(135deg, #0f172a, #1e40af);
+        color: white;
+        padding: 28px;
+        border-radius: 22px;
+        margin-bottom: 25px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15);
+    }
+
+    .report-header h1 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 800;
+    }
+
+    .report-header p {
+        margin: 8px 0 0 0;
+        color: #dbeafe;
+        font-size: 14.5px;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+        margin-bottom: 28px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .form-card:hover {
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    .card-incidente {
+        border: 2px solid #93c5fd;
+        border-left: 8px solid #2563eb;
+        background: linear-gradient(180deg, #eff6ff 0%, #ffffff 90px);
+    }
+
+    .card-ubicacion {
+        border: 2px solid #a7f3d0;
+        border-left: 8px solid #10b981;
+        background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 90px);
+    }
+
+    .card-evidencia {
+        border: 2px solid #fed7aa;
+        border-left: 8px solid #ff7417;
+        background: linear-gradient(180deg, #fff7ed 0%, #ffffff 90px);
+    }
+
+    .card-section-title {
+        margin: 0 0 20px 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1.5px solid rgba(226, 232, 240, 0.8);
+        padding-bottom: 12px;
+    }
+
+    label {
+        display: block;
+        color: #475569;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-control,
+    select,
+    textarea,
+    input {
+        width: 100%;
+        padding: 13px 15px;
+        border-radius: 12px;
+        border: 1.5px solid #cbd5e1;
+        font-size: 15px;
+        background: white;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-control:focus,
+    select:focus,
+    textarea:focus,
+    input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    #mapaReporte {
+        width: 100%;
+        height: 380px;
+        border-radius: 16px;
+        border: 1.5px solid #cbd5e1;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .location-box {
+        background: #ffffff;
+        border: 1.5px solid #a7f3d0;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-top: 14px;
+        color: #334155;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08);
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 8px;
+        line-height: 1.5;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .btn-save {
+        background: #ff7417;
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 15px;
+        box-shadow: 0 8px 18px rgba(255, 116, 23, 0.25);
+        transition: all 0.2s ease;
+    }
+
+    .btn-save:hover {
+        background: #e6620f;
+        box-shadow: 0 12px 24px rgba(255, 116, 23, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .btn-cancel {
+        background: white;
+        color: #334155;
+        border: 1.5px solid #cbd5e1;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .error-box {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1.5px solid #fca5a5;
+        padding: 14px 18px;
+        border-radius: 14px;
+        margin-bottom: 25px;
+        font-weight: 700;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);
+    }
+
+    .error-box ul {
+        margin: 5px 0 0 0;
+        padding-left: 20px;
+        font-weight: 600;
+        font-size: 13.5px;
+    }
+
+    .address-fields-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .address-field-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (max-width: 600px) {
+        .address-fields-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .modal-overlay-verificar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+    }
+
+    .modal-box-verificar {
+        background: white;
+        padding: 30px;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        animation: slideInBox 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .modal-icon-verificar {
+        font-size: 54px;
+        color: #2563eb;
+        line-height: 1;
+        margin-bottom: 12px;
+    }
+
+    .modal-icon-advertencia {
+        font-size: 54px;
+        color: #f59e0b;
+        line-height: 1;
+        margin-bottom: 12px;
+    }
+
+    .modal-box-verificar h3 {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+
+    .modal-box-verificar p {
+        color: #64748b;
+        font-size: 14.5px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .modal-details-verificar {
+        text-align: left;
+        background: #f1f5f9;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 22px;
+        border: 1px solid #e2e8f0;
+        font-size: 13.5px;
+        color: #334155;
+    }
+
+    .modal-details-verificar div {
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .modal-details-verificar div:last-child {
+        margin-bottom: 0;
+    }
+
+    .modal-buttons-verificar {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 12px;
+    }
+
+    .btn-verificar-editar {
+        background: white;
+        color: #475569;
+        border: 1.5px solid #cbd5e1;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-verificar-editar:hover {
+        background: #f8fafc;
+    }
+
+    .btn-verificar-confirmar {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 13.5px;
+        cursor: pointer;
+        transition: background 0.15s, box-shadow 0.15s;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-verificar-confirmar:hover {
+        background: #1d4ed8;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    @keyframes slideInBox {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .evidence-rules-box {
+        background: #fff7ed;
+        border: 1.5px solid #ffedd5;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+    .evidence-rules-list {
+        margin: 10px 0 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .evidence-rules-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .evidence-rules-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .file-status-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-top: 8px;
+        font-weight: bold;
+    }
+
+    .file-success {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .file-error {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+    }
+</style>
+
+<div class="report-wrapper">
+    <div class="report-header">
+        <h1>Editar y Reenviar Reporte</h1>
+        <p>Corrige o actualiza los datos antes de solicitar una nueva revisión del reporte <strong>{{ reporte.folio }}</strong>.</p>
+    </div>
+
+    <form id="formularioReporte" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="error-box p-3">
+                <div class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Por favor corrige los siguientes errores:</div>
+                <ul class="mt-2">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>
+                                {% if field != '__all__' and field != 'foto' and field != 'categoria' %}
+                                    <strong>{{ field.label }}:</strong>
+                                {% endif %}
+                                {{ error }}
+                            </li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- SECCIÓN 1: TIPO Y DESCRIPCIÓN -->
+        <div class="form-card card-incidente">
+            <h2 class="card-section-title">
+                <i class="bi bi-list-task text-primary"></i> Categoría y Descripción
+            </h2>
+
+            <div class="form-group">
+                <label>Tipo de incidente *</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}
+                    <div class="text-danger small fw-bold mt-1">{{ form.categoria.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Campo dinámico para 'Otro' -->
+            <div class="form-group" id="containerOtroNombre" style="display: none;">
+                <label for="inputNombreOtro" style="color: #2563eb; font-weight: 800;">
+                    <i class="bi bi-pencil-square me-1"></i> Especifica el nombre de tu incidencia *
+                </label>
+                <input type="text" name="nombre_incidencia_otro" id="inputNombreOtro" class="form-control" placeholder="Ej. Árbol caído, Alcantarilla abierta, Cable suelto..." value="{% if reporte.categoria and 'otro' not in reporte.categoria.nombre.lower %}{{ reporte.categoria.nombre }}{% endif %}" style="border: 2px solid #93c5fd; background-color: #f8fafc; font-weight: 600;">
+                <div class="help-text">Ingresa el nombre del tipo de incidencia que deseas reportar.</div>
+            </div>
+
+            <div class="form-group mb-0">
+                <label>Descripción opcional</label>
+                {{ form.descripcion }}
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: UBICACIÓN -->
+        <div class="form-card card-ubicacion">
+            <h2 class="card-section-title">
+                <i class="bi bi-geo-alt-fill text-success"></i> Ubicación del Incidente
+            </h2>
+
+            <div class="form-group mb-0">
+                <label>Marca la ubicación en el mapa *</label>
+
+                {{ form.latitud }}
+                {{ form.longitud }}
+
+                <div id="mapaReporte"></div>
+
+                <div class="location-box" id="ubicacionTexto">
+                    Cargando ubicación actual en el mapa...
+                </div>
+
+                <div class="address-fields-grid">
+                    <div class="address-field-group">
+                        <label>Calle y Número</label>
+                        {{ form.calle }}
+                    </div>
+                    <div class="address-field-group">
+                        <label>Colonia / Fraccionamiento</label>
+                        {{ form.colonia }}
+                    </div>
+                    <div class="address-field-group">
+                        <label>Código Postal</label>
+                        {{ form.codigo_postal }}
+                    </div>
+                </div>
+
+                <p class="help-text" style="margin-top: 10px; margin-bottom: 15px;">
+                    Puedes hacer clic en el mapa para ajustar la ubicación del reporte. Los campos de texto se rellenarán automáticamente con los datos del mapa.
+                </p>
+
+                <div class="form-group" style="margin-top: 0; margin-bottom: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: none; letter-spacing: normal; display: block;">
+                        Referencias de la ubicación (opcional)
+                    </label>
+                    {{ form.referencia }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: EVIDENCIA FOTOGRÁFICA -->
+        <div class="form-card card-evidencia">
+            <h2 class="card-section-title">
+                <i class="bi bi-camera-fill text-warning"></i> Evidencias Fotográficas
+                <span style="font-size: 12px; color: #475569; font-weight: 800; margin-left: auto;">(Opcional)</span>
+            </h2>
+
+            <div class="evidence-rules-box">
+                <div style="font-weight: 800; color: #0f172a; font-size: 14px;">
+                    <i class="bi bi-info-circle-fill text-warning me-1"></i> Evidencias actuales:
+                </div>
+                <p class="help-text" style="margin-top: 5px; margin-bottom: 10px;">
+                    El reporte ya tiene fotografías cargadas. Si seleccionas nuevas imágenes abajo, estas <strong>reemplazarán por completo</strong> a las anteriores.
+                </p>
+            </div>
+
+            <div class="form-group mb-0">
+                <label>Subir nuevas fotografías (Opcional, 1 a 3 fotos JPG)</label>
+                <input type="file" name="foto" id="id_foto" class="form-control" accept=".jpg, .jpeg, image/jpeg" multiple onchange="validarEvidencias(this)">
+                
+                {% if form.foto.errors %}
+                    <div class="file-status-info file-error" style="margin-top: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ form.foto.errors.0 }}
+                    </div>
+                {% endif %}
+
+                <div id="fileStatusMessage" class="file-status-info" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <a href="{% url 'detalle_reporte' reporte.id %}" class="btn-cancel">
+                Cancelar
+            </a>
+
+            <button type="submit" class="btn-save" style="background: #2563eb; box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);">
+                Guardar y Reenviar
+            </button>
+        </div>
+    </form>
+
+    <!-- Modal de Verificación de Dirección / Reenvío -->
+    <div id="modalConfirmarDireccion" class="modal-overlay-verificar" style="display: none;">
+        <div class="modal-box-verificar">
+            <div class="modal-icon-verificar">
+                <i class="bi bi-arrow-counterclockwise" style="color: #2563eb; font-size: 54px; line-height: 1; display: inline-block; animation: status-pulse 1.8s infinite;"></i>
+            </div>
+            <h3>¿Confirmar y Reenviar Reporte?</h3>
+            <p>Por favor, confirma que la información de tu reporte es correcta antes de reenviarlo para una nueva revisión:</p>
+            
+            <div class="modal-details-verificar">
+                <div><strong>Calle:</strong> <span id="confirmarCalle"></span></div>
+                <div><strong>Colonia:</strong> <span id="confirmarColonia"></span></div>
+                <div><strong>Código Postal:</strong> <span id="confirmarCP"></span></div>
+                <div><strong>Referencia:</strong> <span id="confirmarReferencia"></span></div>
+                <div><strong>Evidencias:</strong> <span id="confirmarEvidencias"></span></div>
+            </div>
+
+            <div class="modal-buttons-verificar">
+                <button type="button" onclick="cerrarModalVerificar()" class="btn-verificar-editar">Modificar datos</button>
+                <button type="button" onclick="confirmarYEnviar()" class="btn-verificar-confirmar">Confirmar y Reenviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Advertencia (Sin ubicación seleccionada) -->
+    <div id="modalAdvertenciaUbicacion" class="modal-overlay-verificar" style="display: none;">
+        <div class="modal-box-verificar">
+            <div class="modal-icon-advertencia">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h3>Sin Ubicación en el Mapa</h3>
+            <p>Es obligatorio seleccionar un punto en el mapa interactivo haciendo clic sobre él antes de continuar.</p>
+            <div class="modal-buttons-verificar" style="grid-template-columns: 1fr;">
+                <button type="button" onclick="cerrarModalAdvertencia()" class="btn-verificar-confirmar" style="background: #f59e0b; box-shadow: none;">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    function validarEvidencias(input) {
+        const statusBox = document.getElementById('fileStatusMessage');
+        if (!input || !input.files) return true;
+        const files = Array.from(input.files);
+
+        if (files.length === 0) {
+            statusBox.style.display = 'none';
+            return true;
+        }
+
+        if (files.length > 3) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-error';
+            statusBox.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Solo puedes adjuntar como máximo 3 fotografías. Has seleccionado ${files.length} imágenes.`;
+            input.value = '';
+            return false;
+        }
+
+        let invalidFormat = false;
+        let fileNames = [];
+        files.forEach(file => {
+            const parts = file.name.split('.');
+            const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+            fileNames.push(file.name);
+            if (ext !== 'jpg' && ext !== 'jpeg') {
+                invalidFormat = true;
+            }
+        });
+
+        if (invalidFormat) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-error';
+            statusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Formato no permitido. Todas las imágenes deben ser archivos .jpg o .jpeg.';
+            input.value = '';
+            return false;
+        }
+
+        statusBox.style.display = 'flex';
+        statusBox.className = 'file-status-info file-success';
+        statusBox.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${files.length} fotografía(s) JPG nueva(s) seleccionada(s): ${fileNames.join(', ')}`;
+        return true;
+    }
+
+    const defaultLat = {% if reporte.latitud %}{{ reporte.latitud }}{% else %}16.8531{% endif %};
+    const defaultLng = {% if reporte.longitud %}{{ reporte.longitud }}{% else %}-99.8237{% endif %};
+
+    const mapa = L.map('mapaReporte', {
+        center: [defaultLat, defaultLng],
+        zoom: 15,
+        minZoom: 12,
+        maxBounds: [
+            [16.73, -100.00],
+            [16.97, -99.70]
+        ],
+        maxBoundsViscosity: 1.0
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(mapa);
+
+    let marcador = null;
+
+    const inputLat = document.getElementById('id_latitud');
+    const inputLng = document.getElementById('id_longitud');
+    const inputCalle = document.getElementById('id_calle');
+    const inputColonia = document.getElementById('id_colonia');
+    const inputCP = document.getElementById('id_codigo_postal');
+    const inputReferencia = document.getElementById('id_referencia');
+    const ubicacionTexto = document.getElementById('ubicacionTexto');
+
+    function colocarMarcador(lat, lng, buscarDireccion = false) {
+        if (marcador) {
+            mapa.removeLayer(marcador);
+        }
+
+        marcador = L.marker([lat, lng]).addTo(mapa);
+
+        inputLat.value = lat.toFixed(7);
+        inputLng.value = lng.toFixed(7);
+
+        if (!buscarDireccion) {
+            ubicacionTexto.innerHTML = `
+                <strong>Ubicación actual del reporte seleccionada.</strong><br>
+                <span style="font-size: 13px; color: #64748b;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</span>
+            `;
+            return;
+        }
+
+        ubicacionTexto.innerHTML = `
+            <strong>Buscando dirección...</strong><br>
+            <span style="font-size: 13px; color: #64748b;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</span>
+        `;
+
+        const mapboxToken = "{{ mapbox_access_token|escapejs }}";
+
+        if (mapboxToken && mapboxToken !== 'TU_MAPBOX_ACCESS_TOKEN_AQUI' && mapboxToken.trim() !== '') {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&language=es&limit=1`;
+            
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+                    
+                    let calle = feature.text || 'No detectada';
+                    if (feature.address) {
+                        calle = `${calle} ${feature.address}`;
+                    }
+                    
+                    let colonia = 'No registrada';
+                    let cp = '';
+                    
+                    if (feature.context) {
+                        feature.context.forEach(item => {
+                            if (item.id.includes('neighborhood') || item.id.includes('locality')) {
+                                colonia = item.text;
+                            } else if (item.id.includes('postcode')) {
+                                cp = item.text;
+                            }
+                        });
+                    }
+
+                    inputCalle.value = calle;
+                    inputColonia.value = colonia;
+                    if (cp) inputCP.value = cp;
+
+                    ubicacionTexto.innerHTML = `
+                        <strong>Dirección detectada:</strong> ${calle}, Col. ${colonia}${cp ? ', CP ' + cp : ''}<br>
+                        <span style="font-size: 13px; color: #2563eb; font-weight: bold;"><i class="bi bi-geo-alt-fill"></i> Ubicación vinculada al mapa</span>
+                    `;
+                } else {
+                    ubicacionTexto.innerHTML = `
+                        <strong>Dirección no detectada.</strong> Ingresa los datos manualmente.<br>
+                        <span style="font-size: 13px; color: #f59e0b; font-weight: bold;"><i class="bi bi-exclamation-triangle-fill"></i> No se encontró dirección textual</span>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error("Error Geocoding Mapbox:", err);
+                ubicacionTexto.innerHTML = `
+                    <strong>Error al buscar dirección.</strong> Ingresa los datos manualmente.<br>
+                    <span style="font-size: 13px; color: #dc2626;">Coordenadas fijadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</span>
+                `;
+            });
+        } else {
+            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+            
+            fetch(nominatimUrl, {
+                headers: {
+                    'Accept-Language': 'es'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.address) {
+                    const road = data.address.road || data.address.suburb || '';
+                    const house_number = data.address.house_number || '';
+                    const calle = house_number ? `${road} ${house_number}` : road;
+                    
+                    const colonia = data.address.neighbourhood || data.address.suburb || data.address.village || 'No registrada';
+                    const cp = data.address.postcode || '';
+
+                    inputCalle.value = calle || 'No detectada';
+                    inputColonia.value = colonia;
+                    if (cp) inputCP.value = cp;
+
+                    ubicacionTexto.innerHTML = `
+                        <strong>Dirección detectada (OpenStreetMap):</strong> ${calle || 'No detectada'}, Col. ${colonia}${cp ? ', CP ' + cp : ''}<br>
+                        <span style="font-size: 13px; color: #2563eb; font-weight: bold;"><i class="bi bi-geo-alt-fill"></i> Ubicación vinculada al mapa</span>
+                    `;
+                } else {
+                    ubicacionTexto.innerHTML = `
+                        <strong>Dirección no detectada.</strong> Ingresa los datos manualmente.<br>
+                        <span style="font-size: 13px; color: #f59e0b; font-weight: bold;"><i class="bi bi-exclamation-triangle-fill"></i> No se encontró dirección</span>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error("Error reverse geocoding Nominatim:", err);
+                ubicacionTexto.innerHTML = `
+                    <strong>Error al conectar con geocodificador.</strong> Rellena los datos manualmente.<br>
+                    <span style="font-size: 13px; color: #dc2626;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</span>
+                `;
+            });
+        }
+    }
+
+    if (defaultLat && defaultLng) {
+        colocarMarcador(defaultLat, defaultLng, false);
+    }
+
+    mapa.on('click', function(e) {
+        colocarMarcador(e.latlng.lat, e.latlng.lng, true);
+    });
+
+    const selectCategoria = document.querySelector('select[name="categoria"]');
+    const containerOtro = document.getElementById('containerOtroNombre');
+    const inputOtro = document.getElementById('inputNombreOtro');
+
+    function checkCategoria() {
+        if (selectCategoria && selectCategoria.options[selectCategoria.selectedIndex]) {
+            const val = selectCategoria.options[selectCategoria.selectedIndex].text.trim().toLowerCase();
+            if (val.includes('otro')) {
+                containerOtro.style.display = 'block';
+            } else {
+                containerOtro.style.display = 'none';
+            }
+        }
+    }
+
+    if (selectCategoria) {
+        selectCategoria.addEventListener('change', checkCategoria);
+        checkCategoria();
+    }
+
+    const formReporte = document.getElementById('formularioReporte');
+    if (formReporte) {
+        formReporte.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (selectCategoria && selectCategoria.options[selectCategoria.selectedIndex]) {
+                const txt = selectCategoria.options[selectCategoria.selectedIndex].text.trim().toLowerCase();
+                if (txt.includes('otro')) {
+                    if (!inputOtro || !inputOtro.value.trim()) {
+                        alert('Por favor especifica el nombre de tu incidencia en el campo de texto.');
+                        inputOtro.focus();
+                        return;
+                    }
+                }
+            }
+
+            if (!inputLat.value || !inputLng.value) {
+                mostrarModalAdvertencia();
+                return;
+            }
+
+            const fileInput = document.getElementById('id_foto');
+            if (!validarEvidencias(fileInput)) {
+                return;
+            }
+
+            mostrarModalConfirmar();
+        });
+    }
+
+    function mostrarModalAdvertencia() {
+        document.getElementById('modalAdvertenciaUbicacion').style.display = 'flex';
+    }
+
+    function cerrarModalAdvertencia() {
+        document.getElementById('modalAdvertenciaUbicacion').style.display = 'none';
+    }
+
+    function mostrarModalConfirmar() {
+        document.getElementById('confirmarCalle').textContent = inputCalle.value || 'No detectada';
+        document.getElementById('confirmarColonia').textContent = inputColonia.value || 'No registrada';
+        document.getElementById('confirmarCP').textContent = inputCP.value || 'No registrado';
+        document.getElementById('confirmarReferencia').textContent = inputReferencia.value || 'No registrada';
+
+        const fileInput = document.getElementById('id_foto');
+        const numNewFiles = fileInput && fileInput.files ? fileInput.files.length : 0;
+        
+        if (numNewFiles > 0) {
+            document.getElementById('confirmarEvidencias').innerHTML = `<span style="color: #ea580c; font-weight: bold;">Sí, ${numNewFiles} fotos nuevas (reemplazarán anteriores)</span>`;
+        } else {
+            document.getElementById('confirmarEvidencias').innerHTML = '<span style="color: #16a34a; font-weight: bold;">No, mantener fotos actuales</span>';
+        }
+
+        document.getElementById('modalConfirmarDireccion').style.display = 'flex';
+    }
+
+    function cerrarModalVerificar() {
+        document.getElementById('modalConfirmarDireccion').style.display = 'none';
+    }
+
+    function confirmarYEnviar() {
+        cerrarModalVerificar();
+        formReporte.submit();
+    }
+</script>
+
+{% endblock %}

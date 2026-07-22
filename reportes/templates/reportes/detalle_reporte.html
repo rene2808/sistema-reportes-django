@@ -656,12 +656,9 @@
                         Intentos utilizados: {{ reporte.intentos_reapertura }} / 2
                     </div>
                     {% if reporte.intentos_reapertura < 2 %}
-                        <form method="POST" action="{% url 'reabrir_reporte_ciudadano' reporte.id %}" onsubmit="return confirm('¿Seguro que deseas solicitar que tu reporte vuelva a ser revisado?')">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-blue" style="width: 100%; font-weight: bold; background: #2563eb; border: none; padding: 10px 14px; border-radius: 10px; color: white;">
-                                <i class="bi bi-arrow-counterclockwise"></i> Solicitar Nueva Revisión
-                            </button>
-                        </form>
+                        <a href="{% url 'editar_reporte_ciudadano' reporte.id %}" class="btn btn-blue" style="display: block; text-decoration: none; text-align: center; width: 100%; font-weight: bold; background: #2563eb; border: none; padding: 10px 14px; border-radius: 10px; color: white;">
+                            <i class="bi bi-pencil-square"></i> Editar y Solicitar Revisión
+                        </a>
                     {% else %}
                         <div style="font-size: 12px; font-weight: bold; padding: 10px; border-radius: 8px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5;">
                             Has alcanzado el límite máximo de reaperturas para este reporte.

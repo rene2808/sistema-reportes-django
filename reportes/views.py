@@ -2683,6 +2683,119 @@ def reabrir_reporte_ciudadano(request, id):
     return redirect('detalle_reporte', id=reporte.id)
 
 
+@login_required
+def editar_reporte_ciudadano(request, id):
+    """
+    Permite al ciudadano editar los datos de su reporte cancelado y reenviarlo para una nueva revisión.
+    Controla el límite máximo de 2 intentos de reapertura.
+    """
+    reporte = get_object_or_404(Reporte, id=id)
+    rol = obtener_rol(request.user)
+    
+    if rol != 'ciudadano' or reporte.usuario != request.user:
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('panel_ciudadano')
+        
+    if reporte.estado != 'Cancelado':
+        messages.error(request, 'Solo puedes editar y reenviar reportes que hayan sido cancelados.')
+        return redirect('detalle_reporte', id=reporte.id)
+        
+    if reporte.intentos_reapertura >= 2:
+        messages.error(request, 'Has alcanzado el límite máximo (2) de intentos de reapertura para este reporte.')
+        return redirect('detalle_reporte', id=reporte.id)
+
+    if request.method == 'POST':
+        form = ReporteForm(request.POST, request.FILES, instance=reporte)
+        
+        # En la edición las fotos nuevas son opcionales
+        fotos = [f for f in request.FILES.getlist('foto') if f.name]
+        
+        errores_foto = []
+        if fotos:
+            if len(fotos) > 3:
+                errores_foto.append('Únicamente se permite adjuntar un máximo de 3 fotografías.')
+            for f in fotos:
+                ext = f.name.split('.')[-1].lower() if '.' in f.name else ''
+                if ext not in ['jpg', 'jpeg']:
+                    errores_foto.append(f'El archivo "{f.name}" no está en formato JPG (.jpg / .jpeg).')
+                    
+        nombre_incidencia_otro = request.POST.get('nombre_incidencia_otro', '').strip()
+        
+        if 'foto' in form.errors:
+            del form.errors['foto']
+            
+        if errores_foto:
+            for err in errores_foto:
+                form.add_error('foto', err)
+                
+        if form.is_valid():
+            cat_seleccionada = form.cleaned_data.get('categoria')
+            if cat_seleccionada and 'otro' in cat_seleccionada.nombre.lower() and not nombre_incidencia_otro:
+                form.add_error('categoria', 'Por favor especifica el nombre de tu incidencia en el campo de texto.')
+                
+        if form.is_valid() and not errores_foto:
+            try:
+                reporte_editado = form.save(commit=False)
+                reporte_editado.estado = 'Pendiente'
+                reporte_editado.intentos_reapertura += 1
+                
+                if fotos:
+                    reporte_editado.foto = fotos[0]
+                    
+                if reporte_editado.categoria and 'otro' in reporte_editado.categoria.nombre.lower() and nombre_incidencia_otro:
+                    nombre_custom = nombre_incidencia_otro.strip().capitalize()
+                    cat_custom = Categoria.objects.filter(nombre__iexact=nombre_custom).first()
+                    if not cat_custom:
+                        idx = 1
+                        new_code = f"O{idx:02d}"
+                        while Categoria.objects.filter(codigo=new_code).exists():
+                            idx += 1
+                            new_code = f"O{idx:02d}"
+                        cat_custom = Categoria.objects.create(
+                            nombre=nombre_custom,
+                            codigo=new_code
+                        )
+                    reporte_editado.categoria = cat_custom
+                    reporte_editado.titulo = f'Reporte de {cat_custom.nombre}'
+                elif reporte_editado.categoria:
+                    reporte_editado.titulo = f'Reporte de {reporte_editado.categoria.nombre}'
+                else:
+                    reporte_editado.titulo = 'Reporte ciudadano'
+                    
+                reporte_editado.save()
+                
+                # Si subió nuevas fotos, reemplazamos las evidencias
+                if fotos:
+                    reporte_editado.evidencias.all().delete()
+                    for foto_extra in fotos[1:3]:
+                        Evidencia.objects.create(
+                            reporte=reporte_editado,
+                            archivo=foto_extra,
+                            descripcion="Fotografía de evidencia adicional cargada por el ciudadano durante la edición."
+                        )
+                        
+                registrar_historial(
+                    reporte=reporte_editado,
+                    usuario=request.user,
+                    accion='Reporte editado y reenviado por ciudadano',
+                    descripcion=f'El ciudadano editó los datos y solicitó una nueva revisión. Intento de reapertura {reporte_editado.intentos_reapertura} de 2.'
+                )
+                
+                messages.success(request, 'El reporte ha sido editado y reenviado para una nueva revisión.')
+                return redirect('detalle_reporte', id=reporte_editado.id)
+            except Exception as e:
+                form.add_error(None, f'Ocurrió un error al guardar el reporte: {e}')
+    else:
+        form = ReporteForm(instance=reporte)
+        
+    return render(request, 'reportes/editar_reporte.html', {
+        'form': form,
+        'reporte': reporte,
+        'rol': rol,
+        'mapbox_access_token': getattr(settings, 'MAPBOX_ACCESS_TOKEN', '')
+    })
+
+
 @rol_requerido('administrador', 'moderador')
 def toggle_mostrar_galeria(request, id):
     """

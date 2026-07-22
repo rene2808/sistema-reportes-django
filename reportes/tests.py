@@ -390,3 +390,76 @@ class CrearReporteTests(TestCase):
         self.assertIsNotNone(cat_cable)
         self.assertNotEqual(cat_botes.codigo, cat_cable.codigo)
 
+
+class ReabrirEditarReporteTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.ciudadano = User.objects.create_user(
+            username='citizen_test',
+            password='password123',
+            email='citizen@example.com'
+        )
+        # Obtener o actualizar perfil auto-creado por la señal
+        self.perfil = self.ciudadano.perfilusuario
+        self.perfil.rol = 'ciudadano'
+        self.perfil.save()
+        self.categoria = Categoria.objects.create(nombre='Alumbrado público', codigo='AP')
+        self.reporte = Reporte.objects.create(
+            usuario=self.ciudadano,
+            categoria=self.categoria,
+            titulo='Reporte Alumbrado',
+            descripcion='Calle oscura',
+            estado='Cancelado',
+            latitud=16.8531,
+            longitud=-99.8236,
+            calle='Costera',
+            colonia='Centro',
+            codigo_postal='39300'
+        )
+
+    def test_editar_reporte_ciudadano_exito(self):
+        self.client.login(username='citizen_test', password='password123')
+        url = reverse('editar_reporte_ciudadano', kwargs={'id': self.reporte.id})
+        
+        # Enviar formulario POST modificando la descripción
+        response = self.client.post(url, {
+            'categoria': self.categoria.id,
+            'descripcion': 'Calle muy oscura y peligrosa',
+            'latitud': 16.8531,
+            'longitud': -99.8236,
+            'calle': 'Costera Modificada',
+            'colonia': 'Centro',
+            'codigo_postal': '39300'
+        })
+        
+        self.assertEqual(response.status_code, 302)
+        self.reporte.refresh_from_db()
+        self.assertEqual(self.reporte.descripcion, 'Calle muy oscura y peligrosa')
+        self.assertEqual(self.reporte.calle, 'Costera Modificada')
+        self.assertEqual(self.reporte.estado, 'Pendiente')
+        self.assertEqual(self.reporte.intentos_reapertura, 1)
+
+    def test_editar_reporte_ciudadano_limite_intentos(self):
+        self.reporte.intentos_reapertura = 2
+        self.reporte.save()
+        
+        self.client.login(username='citizen_test', password='password123')
+        url = reverse('editar_reporte_ciudadano', kwargs={'id': self.reporte.id})
+        
+        response = self.client.post(url, {
+            'categoria': self.categoria.id,
+            'descripcion': 'Intento fallido',
+            'latitud': 16.8531,
+            'longitud': -99.8236,
+            'calle': 'Costera',
+            'colonia': 'Centro',
+            'codigo_postal': '39300'
+        })
+        
+        self.assertEqual(response.status_code, 302)
+        self.reporte.refresh_from_db()
+        # No debió alterarse el estado ni la descripción
+        self.assertEqual(self.reporte.estado, 'Cancelado')
+        self.assertEqual(self.reporte.intentos_reapertura, 2)
+
+
