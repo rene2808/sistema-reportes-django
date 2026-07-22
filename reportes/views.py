@@ -765,6 +765,10 @@ def actualizar_reporte(request, id):
 
             # Enviar una sola notificación al ciudadano (usuario creador del reporte)
             mensaje_notif = f"Tu reporte {reporte.folio} se actualizó: " + " y ".join(cambios_msg) + "."
+            comentario = request.POST.get('comentario')
+            if nuevo_estado == 'Cancelado' and comentario:
+                mensaje_notif += f" Motivo de la cancelación: {comentario}."
+
             crear_notificacion(
                 usuario=reporte.usuario,
                 reporte=reporte,
@@ -774,11 +778,15 @@ def actualizar_reporte(request, id):
 
             # Registrar entradas en el historial
             for h_msg in historial_msg:
+                desc_historial = h_msg
+                if "El estado cambió" in h_msg and nuevo_estado == 'Cancelado' and comentario:
+                    desc_historial += f". Motivo: {comentario}"
+
                 registrar_historial(
                     reporte=reporte,
                     usuario=request.user,
                     accion='Reporte actualizado',
-                    descripcion=h_msg
+                    descripcion=desc_historial
                 )
 
             messages.success(request, 'Estado o prioridad actualizados correctamente.')

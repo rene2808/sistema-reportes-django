@@ -1297,6 +1297,14 @@
         </div>
         <h3 id="confirmModalTitle">¿Confirmar Acción?</h3>
         <p id="confirmModalMessage">¿Estás seguro de que deseas realizar esta acción?</p>
+        
+        <!-- Contenedor para el comentario de cancelación -->
+        <div id="cancelCommentContainer" style="display: none; margin-top: 15px; margin-bottom: 20px; text-align: left;">
+            <label for="cancelComment" class="small text-secondary fw-bold" style="font-size: 12.5px; display: block; margin-bottom: 6px; color: #475569;">Motivo de la cancelación (Obligatorio):</label>
+            <textarea id="cancelComment" placeholder="Escribe una pequeña descripción del porqué se cancela este reporte..." rows="3" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13.5px; outline: none; box-sizing: border-box; resize: none; font-family: inherit; transition: border-color 0.15s ease;" onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.15)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';"></textarea>
+            <span id="cancelCommentError" style="color: #ef4444; font-size: 11.5px; font-weight: 700; display: none; margin-top: 6px;"><i class="bi bi-exclamation-circle-fill"></i> Por favor, ingresa el motivo de la cancelación.</span>
+        </div>
+
         <div class="confirm-modal-actions">
             <button type="button" id="confirmCancelBtn" class="btn-modal btn-modal-cancel">Cancelar</button>
             <button type="button" id="confirmOkBtn" class="btn-modal btn-modal-ok">Confirmar</button>
@@ -1588,11 +1596,28 @@
         const cancelBtn = document.getElementById('confirmCancelBtn');
         const okBtn = document.getElementById('confirmOkBtn');
         
+        // Elementos para el comentario de cancelación
+        const cancelCommentContainer = document.getElementById('cancelCommentContainer');
+        const cancelCommentInput = document.getElementById('cancelComment');
+        const cancelCommentError = document.getElementById('cancelCommentError');
+        
         let activeConfirmPromise = null;
+        let isCancellation = false;
 
-        function showCustomConfirm(title, message) {
+        function showCustomConfirm(title, message, isCancelAction = false) {
             confirmTitle.textContent = title;
             confirmMessage.textContent = message;
+            
+            isCancellation = isCancelAction;
+            if (isCancellation) {
+                cancelCommentContainer.style.display = 'block';
+                cancelCommentInput.value = '';
+                cancelCommentError.style.display = 'none';
+                setTimeout(() => cancelCommentInput.focus(), 150);
+            } else {
+                cancelCommentContainer.style.display = 'none';
+            }
+            
             customModal.classList.add('active');
             
             return new Promise((resolve) => {
@@ -1601,10 +1626,26 @@
         }
 
         function closeCustomConfirm(result) {
-            customModal.classList.remove('active');
-            if (activeConfirmPromise) {
-                activeConfirmPromise(result);
-                activeConfirmPromise = null;
+            if (result && isCancellation) {
+                const commentValue = cancelCommentInput.value.trim();
+                if (!commentValue) {
+                    cancelCommentError.style.display = 'block';
+                    cancelCommentInput.focus();
+                    return; // Detener cierre
+                }
+                cancelCommentError.style.display = 'none';
+                
+                customModal.classList.remove('active');
+                if (activeConfirmPromise) {
+                    activeConfirmPromise({ confirmed: true, comentario: commentValue });
+                    activeConfirmPromise = null;
+                }
+            } else {
+                customModal.classList.remove('active');
+                if (activeConfirmPromise) {
+                    activeConfirmPromise({ confirmed: result });
+                    activeConfirmPromise = null;
+                }
             }
         }
 
@@ -1708,16 +1749,22 @@
                     message = `El reporte ${folio} será marcado nuevamente como Pendiente para su revisión inicial.`;
                 }
 
-                const confirmed = await showCustomConfirm(title, message);
-                if (!confirmed) return;
+                const isCancelAction = (targetEstado === 'Cancelado');
+                const result = await showCustomConfirm(title, message, isCancelAction);
+                if (!result.confirmed) return;
 
                 const submitButtons = row.querySelectorAll('button[type="submit"]');
                 submitButtons.forEach(btn => btn.disabled = true);
 
                 try {
+                    const formData = new FormData(form);
+                    if (isCancelAction && result.comentario) {
+                        formData.append('comentario', result.comentario);
+                    }
+
                     const response = await fetch(form.action, {
                         method: 'POST',
-                        body: new FormData(form),
+                        body: formData,
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
