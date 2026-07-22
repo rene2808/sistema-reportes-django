@@ -465,8 +465,8 @@ class Resena(models.Model):
     puntuacion = models.IntegerField(default=5)
 
     # Evidencias fotográficas adjuntas por el ciudadano en su reseña (máximo 2)
-    foto1 = models.ImageField(upload_to='reseñas/', blank=True, null=True)
-    foto2 = models.ImageField(upload_to='reseñas/', blank=True, null=True)
+    foto1 = models.ImageField(upload_to='resenas/', blank=True, null=True)
+    foto2 = models.ImageField(upload_to='resenas/', blank=True, null=True)
     
     # Fecha de emisión de la reseña
     fecha = models.DateTimeField(auto_now_add=True)
