@@ -462,4 +462,72 @@ class ReabrirEditarReporteTests(TestCase):
         self.assertEqual(self.reporte.estado, 'Cancelado')
         self.assertEqual(self.reporte.intentos_reapertura, 2)
 
+    def test_crear_moderador_rol_inmediato(self):
+        admin = User.objects.create_superuser(
+            username='admin_creator',
+            password='password123',
+            email='admin_creator@example.com'
+        )
+        # Asegurar perfil admin
+        admin.perfilusuario.rol = 'administrador'
+        admin.perfilusuario.save()
+
+        self.client.login(username='admin_creator', password='password123')
+        url = reverse('agregar_usuario')
+        
+        # Intentar crear un moderador
+        response = self.client.post(url, {
+            'username': 'nuevo_moderador_test',
+            'email': 'mod@example.com',
+            'password': 'password123',
+            'rol': 'moderador'
+        })
+        
+        self.assertEqual(response.status_code, 302)
+        
+        # Verificar que el rol sea moderador de forma inmediata en la base de datos
+        nuevo_user = User.objects.get(username='nuevo_moderador_test')
+        self.assertEqual(nuevo_user.perfilusuario.rol, 'moderador')
+
+    def test_bloqueo_admin_por_moderador_rebotado(self):
+        # Crear un moderador y un administrador
+        moderador = User.objects.create_user(username='mod_test', password='password123')
+        moderador.perfilusuario.rol = 'moderador'
+        moderador.perfilusuario.save()
+
+        admin_target = User.objects.create_user(username='admin_target', password='password123')
+        admin_target.perfilusuario.rol = 'administrador'
+        admin_target.perfilusuario.save()
+
+        self.client.login(username='mod_test', password='password123')
+        url = reverse('toggle_bloqueo_usuario', kwargs={'id': admin_target.id})
+        
+        response = self.client.post(url, {'duracion': 'permanente'})
+        self.assertEqual(response.status_code, 302)
+        
+        admin_target.refresh_from_db()
+        # No debió ser bloqueado
+        self.assertTrue(admin_target.is_active)
+
+    def test_bloqueo_admin_por_otro_admin_rebotado(self):
+        # Crear dos administradores
+        admin_req = User.objects.create_user(username='admin_req', password='password123')
+        admin_req.perfilusuario.rol = 'administrador'
+        admin_req.perfilusuario.save()
+
+        admin_target = User.objects.create_user(username='admin_target2', password='password123')
+        admin_target.perfilusuario.rol = 'administrador'
+        admin_target.perfilusuario.save()
+
+        self.client.login(username='admin_req', password='password123')
+        url = reverse('toggle_bloqueo_usuario', kwargs={'id': admin_target.id})
+        
+        response = self.client.post(url, {'duracion': '1'})
+        self.assertEqual(response.status_code, 302)
+        
+        admin_target.refresh_from_db()
+        # No debió ser bloqueado
+        self.assertTrue(admin_target.is_active)
+
+
 

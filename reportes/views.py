@@ -919,21 +919,19 @@ def agregar_usuario(request):
             messages.error(request, 'Ese nombre de usuario ya existe.')
             return redirect('panel_administrador')
 
-        usuario = User.objects.create(
+        usuario = User(
             username=username,
             email=email,
-            password=make_password(password)
         )
+        usuario.set_password(password)
+        if rol == 'administrador':
+            usuario.is_staff = True
+            usuario.is_superuser = True
+        usuario.save()
 
         perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
         perfil.rol = rol
         perfil.save()
-
-        if rol == 'administrador':
-            usuario.is_staff = True
-            usuario.is_superuser = True
-
-        usuario.save()
 
         messages.success(request, 'Usuario agregado correctamente.')
 
@@ -954,16 +952,16 @@ def editar_usuario(request, id):
 
         rol = request.POST.get('rol')
 
-        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
-        perfil.rol = rol
-        perfil.save()
-
         if 'activo' in request.POST:
             usuario.is_active = request.POST.get('activo') == 'on'
 
         usuario.is_staff = rol in ['administrador', 'supervisor']
         usuario.is_superuser = rol == 'administrador'
         usuario.save()
+
+        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
+        perfil.rol = rol
+        perfil.save()
 
         messages.success(request, 'Usuario actualizado correctamente.')
 
@@ -2599,8 +2597,18 @@ def toggle_bloqueo_usuario(request, id):
     Permite el bloqueo temporal con duraciones específicas (1 día, 1 semana, 15 días, permanente).
     """
     usuario = get_object_or_404(User, id=id)
+    
+    # Restricción: No se pueden bloquear cuentas de administradores
+    target_is_admin = usuario.is_superuser or (hasattr(usuario, 'perfilusuario') and usuario.perfilusuario.rol == 'administrador')
+    
     if usuario == request.user:
         messages.error(request, 'No puedes bloquear o desbloquear tu propia cuenta.')
+    elif target_is_admin:
+        requester_is_moderator = hasattr(request.user, 'perfilusuario') and request.user.perfilusuario.rol == 'moderador'
+        if requester_is_moderator:
+            messages.error(request, 'Un moderador no tiene permisos para bloquear o desbloquear a un administrador.')
+        else:
+            messages.error(request, 'Los administradores no pueden bloquear o desbloquear a otros administradores.')
     else:
         duracion = 'toggle'
         if request.method == 'POST':
