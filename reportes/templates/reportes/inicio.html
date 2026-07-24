@@ -839,22 +839,22 @@
                                     {% endif %}
                                 </span>
                             </div>
-                            <p class="text-dark mb-3"
-                                style="font-style: italic; font-size: 0.92rem; color: #1e293b !important; line-height: 1.5;">
+                            <p class="text-dark mb-3 review-comment-text"
+                                style="font-style: italic; font-size: 0.92rem; line-height: 1.5;">
                                 "{{ resena.comentario }}"</p>
 
                             <!-- Galería visual de evidencias de la reseña -->
                             {% if resena.foto1 or resena.foto2 %}
                             <div class="d-flex gap-2 mb-3">
                                 {% if resena.foto1 %}
-                                <a href="{{ resena.foto1.url }}" target="_blank" title="Ver evidencia fotográfica de la reseña">
+                                <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto1.url }}')" title="Ver evidencia fotográfica de la reseña">
                                     <img src="{{ resena.foto1.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                                </a>
+                                </div>
                                 {% endif %}
                                 {% if resena.foto2 %}
-                                <a href="{{ resena.foto2.url }}" target="_blank" title="Ver evidencia fotográfica de la reseña">
+                                <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto2.url }}')" title="Ver evidencia fotográfica de la reseña">
                                     <img src="{{ resena.foto2.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                                </a>
+                                </div>
                                 {% endif %}
                             </div>
                             {% endif %}
