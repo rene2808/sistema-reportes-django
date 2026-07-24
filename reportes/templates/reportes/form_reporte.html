@@ -637,7 +637,7 @@
                         <i class="bi bi-images" style="font-size: 1.2rem; color: #ff8c32;"></i>
                         <span>Galería</span>
                     </button>
-                    <button type="button" class="btn-upload-option btn-camera" onclick="document.getElementById('input-camera').click()" style="
+                    <button type="button" class="btn-upload-option btn-camera" onclick="openLiveWebcam()" style="
                         flex: 1;
                         display: flex;
                         align-items: center;
@@ -1251,6 +1251,119 @@
             e.target.value = ''; // Limpiar selección
         });
     }
+
+    // --- CÁMARA EN VIVO WEBCAM (Para Laptops y Navegadores con Permisos) ---
+    let webcamStream = null;
+
+    window.openLiveWebcam = function() {
+        const modal = document.getElementById('liveCameraModal');
+        const video = document.getElementById('live-webcam-stream');
+        
+        // Solicitar permisos de cámara al navegador
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(stream) {
+                webcamStream = stream;
+                video.srcObject = stream;
+                modal.style.display = 'flex';
+            })
+            .catch(function(err) {
+                console.log("Acceso a cámara en vivo no disponible, usando cargador nativo del dispositivo móvil: ", err);
+                // Si la cámara en vivo falla (o no hay permisos/cámara en la laptop), abrir el selector nativo
+                const cameraInput = document.getElementById('input-camera');
+                if (cameraInput) cameraInput.click();
+            });
+    };
+
+    window.closeLiveWebcam = function() {
+        const modal = document.getElementById('liveCameraModal');
+        const video = document.getElementById('live-webcam-stream');
+        
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(track => track.stop());
+            webcamStream = null;
+        }
+        if (video) video.srcObject = null;
+        modal.style.display = 'none';
+    };
+
+    const btnSnap = document.getElementById('btn-snap-photo');
+    if (btnSnap) {
+        btnSnap.addEventListener('click', function() {
+            const video = document.getElementById('live-webcam-stream');
+            if (!video || !webcamStream) return;
+
+            // Crear canvas para capturar el fotograma
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(function(blob) {
+                const capturedFile = new File([blob], `evidencia_camara_${Date.now()}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                });
+
+                if (selectedFiles.length < 3) {
+                    compressAndAddFile(capturedFile);
+                } else {
+                    alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+                }
+                closeLiveWebcam();
+            }, 'image/jpeg', 0.8);
+        });
+    }
+
+    const btnCancelCam = document.getElementById('btn-cancel-camera');
+    if (btnCancelCam) {
+        btnCancelCam.addEventListener('click', closeLiveWebcam);
+    }
 </script>
+
+<!-- Modal de Cámara en Vivo flotante (Para Laptops y Dispositivos con Webcam) -->
+<div id="liveCameraModal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+">
+    <div style="
+        background-color: #1e293b;
+        border: 2px solid #374151;
+        border-radius: 24px;
+        max-width: 500px;
+        width: 100%;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    ">
+        <h4 style="color: #ffffff; margin-bottom: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="bi bi-camera-fill text-warning"></i> Cámara en Vivo
+        </h4>
+        <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 20px;">Permite el acceso a tu cámara para capturar la evidencia fotográfica.</p>
+        
+        <div style="position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 14px; overflow: hidden; margin-bottom: 20px; border: 2px solid #4b5563;">
+            <video id="live-webcam-stream" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        </div>
+        
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button type="button" id="btn-snap-photo" class="btn btn-warning text-dark fw-bold rounded-pill px-4" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="bi bi-camera-fill"></i> Capturar Foto
+            </button>
+            <button type="button" id="btn-cancel-camera" class="btn btn-outline-light rounded-pill px-4">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
