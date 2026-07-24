@@ -110,6 +110,7 @@
         body.dark-mode .mini-card,
         body.dark-mode .stat-card,
         body.dark-mode .card,
+        body.dark-mode .filter-card,
         body.dark-mode .custom-confirm-modal > div {
             background-color: #111827 !important;
             background: #111827 !important;
@@ -514,6 +515,31 @@
             font-size: 30px;
             font-weight: 800;
             color: #111827;
+        }
+
+        /* Enlaces interactivos de filtro para mini-tarjetas */
+        .mini-card-link {
+            text-decoration: none !important;
+            color: inherit !important;
+            display: block;
+            transition: all 0.2s ease;
+        }
+        .mini-card-link:hover .mini-card {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(15, 23, 42, 0.1) !important;
+            border-color: #2563eb !important;
+        }
+        body.dark-mode .mini-card-link:hover .mini-card {
+            border-color: #ff8c32 !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
+        }
+        .active-filter-card {
+            border: 2px solid #2563eb !important;
+            background-color: #f0f6ff !important;
+        }
+        body.dark-mode .active-filter-card {
+            border-color: #ff8c32 !important;
+            background-color: rgba(255, 140, 50, 0.1) !important;
         }
 
         .table-card {

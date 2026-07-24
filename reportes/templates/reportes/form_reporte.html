@@ -637,7 +637,7 @@
                         <i class="bi bi-images" style="font-size: 1.2rem; color: #ff8c32;"></i>
                         <span>Galería</span>
                     </button>
-                    <button type="button" class="btn-upload-option btn-camera" onclick="openLiveWebcam()" style="
+                    <button type="button" id="btn-camera-trigger" class="btn-upload-option btn-camera" onclick="openLiveWebcam()" style="
                         flex: 1;
                         display: flex;
                         align-items: center;
@@ -1319,6 +1319,19 @@
     if (btnCancelCam) {
         btnCancelCam.addEventListener('click', closeLiveWebcam);
     }
+
+    // Ocultar el botón de tomar foto si se ingresa desde laptop/desktop
+    document.addEventListener("DOMContentLoaded", function() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+            || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        
+        if (!isMobile) {
+            const btnCam = document.getElementById('btn-camera-trigger');
+            if (btnCam) {
+                btnCam.style.display = 'none'; // Ocultar botón de cámara en laptops/desktops
+            }
+        }
+    });
 </script>
 
 <!-- Modal de Cámara en Vivo flotante (Para Laptops y Dispositivos con Webcam) -->

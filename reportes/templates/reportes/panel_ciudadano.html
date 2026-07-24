@@ -291,30 +291,36 @@
 </div>
 
 <div class="cards-grid">
-    <div class="mini-card">
-        <h3>Total de reportes</h3>
-        <div class="number">{{ total_reportes }}</div>
-    </div>
-
-    <div class="mini-card">
-        <h3>Pendientes</h3>
-        <div class="number">{{ pendientes }}</div>
-    </div>
-
-    <div class="mini-card">
-        <h3>En proceso</h3>
-        <div class="number">{{ en_proceso }}</div>
-    </div>
-
-    <div class="mini-card">
-        <h3>Resueltos</h3>
-        <div class="number">{{ resueltos }}</div>
-    </div>
-
-    <div class="mini-card">
-        <h3>Cancelados</h3>
-        <div class="number">{{ cancelados }}</div>
-    </div>
+    <a href="?estado=Todos" class="mini-card-link">
+        <div class="mini-card {% if estado_actual == 'Todos' %}active-filter-card{% endif %}">
+            <h3>Total de reportes</h3>
+            <div class="number">{{ total_reportes }}</div>
+        </div>
+    </a>
+    <a href="?estado=Pendiente" class="mini-card-link">
+        <div class="mini-card {% if estado_actual == 'Pendiente' %}active-filter-card{% endif %}">
+            <h3>Pendientes</h3>
+            <div class="number">{{ pendientes }}</div>
+        </div>
+    </a>
+    <a href="?estado=En proceso" class="mini-card-link">
+        <div class="mini-card {% if estado_actual == 'En proceso' %}active-filter-card{% endif %}">
+            <h3>En proceso</h3>
+            <div class="number">{{ en_proceso }}</div>
+        </div>
+    </a>
+    <a href="?estado=Resuelto" class="mini-card-link">
+        <div class="mini-card {% if estado_actual == 'Resuelto' %}active-filter-card{% endif %}">
+            <h3>Resueltos</h3>
+            <div class="number">{{ resueltos }}</div>
+        </div>
+    </a>
+    <a href="?estado=Cancelado" class="mini-card-link">
+        <div class="mini-card {% if estado_actual == 'Cancelado' %}active-filter-card{% endif %}">
+            <h3>Cancelados</h3>
+            <div class="number">{{ cancelados }}</div>
+        </div>
+    </a>
 </div>
 
 <div class="map-card">
@@ -498,7 +504,7 @@
                 <div class="popup-reporte">
                     <h3>${reporte.titulo}</h3>
                     <p class="popup-folio">${reporte.folio}</p>
-                    <p><strong>Distrito:</strong> ${reporte.distrito}</p>
+                    <p><strong>Colonia:</strong> ${reporte.colonia}</p>
                     <p><strong>Categoría:</strong> ${reporte.categoria}</p>
                     <p><strong>Prioridad:</strong> ${reporte.prioridad}</p>
                     <p><strong>Estado:</strong> ${estadoTexto}</p>
