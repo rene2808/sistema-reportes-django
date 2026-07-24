@@ -108,6 +108,7 @@
         body.dark-mode .register-card,
         body.dark-mode .reset-card,
         body.dark-mode .mini-card,
+        body.dark-mode .stat-card,
         body.dark-mode .card,
         body.dark-mode .custom-confirm-modal > div {
             background-color: #111827 !important;
@@ -115,6 +116,16 @@
             color: #f3f4f6 !important;
             border: 2px solid #1f2937 !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Soporte para mini-tarjetas y tarjetas de estadísticas */
+        body.dark-mode .stat-card h3,
+        body.dark-mode .mini-card h3 {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .stat-card .number,
+        body.dark-mode .mini-card .number {
+            color: #ffffff !important;
         }
 
         /* Ajustes específicos de bordes laterales de las tarjetas del formulario */
@@ -157,7 +168,6 @@
         body.dark-mode .reporte-title p,
         body.dark-mode label,
         body.dark-mode .help-text,
-        body.dark-mode .mini-card h3,
         body.dark-mode .map-legend,
         body.dark-mode .page-subtitle,
         body.dark-mode .info-label,
@@ -202,11 +212,6 @@
         body.dark-mode .timeline-item::before {
             background: #111827 !important;
             border: 2px solid #ff8c32 !important;
-        }
-
-        /* Mini cards dashboard */
-        body.dark-mode .mini-card .number {
-            color: #ffffff !important;
         }
 
         /* Entradas de texto, selectores y textareas */
