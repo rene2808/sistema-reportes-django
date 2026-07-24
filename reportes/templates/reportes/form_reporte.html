@@ -540,6 +540,26 @@
                 {{ form.latitud }}
                 {{ form.longitud }}
 
+                <!-- Botón de Ubicación Actual -->
+                <button type="button" id="btn-mi-ubicacion" style="
+                    margin-bottom: 12px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    background-color: #10b981;
+                    color: white;
+                    border: none;
+                    padding: 10px 18px;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+                " onmouseover="this.style.backgroundColor='#059669'; this.style.transform='translateY(-1px)';" onmouseout="this.style.backgroundColor='#10b981'; this.style.transform='none';">
+                    <i class="bi bi-crosshair"></i> Usar mi ubicación actual
+                </button>
+
                 <div id="mapaReporte"></div>
 
                 <div class="location-box" id="ubicacionTexto">
@@ -595,9 +615,58 @@
             </div>
 
             <div class="form-group mb-0">
-                <label>Adjuntar imágenes (Selecciona de 1 a 3 fotos en formato JPG) *</label>
-                <input type="file" name="foto" id="id_foto" class="form-control" accept=".jpg, .jpeg, image/jpeg" multiple required onchange="validarEvidencias(this)">
+                <label>Adjuntar imágenes (Máximo 3 fotos en formato JPG) *</label>
                 
+                <!-- Opciones de Carga: Galería y Cámara -->
+                <div class="evidence-upload-options" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <button type="button" class="btn-upload-option btn-gallery" onclick="document.getElementById('input-gallery').click()" style="
+                        flex: 1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        padding: 12px;
+                        background-color: #f1f5f9;
+                        border: 2px dashed #cbd5e1;
+                        border-radius: 12px;
+                        color: #334155;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.borderColor='#94a3b8';" onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.borderColor='#cbd5e1';">
+                        <i class="bi bi-images" style="font-size: 1.2rem; color: #ff8c32;"></i>
+                        <span>Galería</span>
+                    </button>
+                    <button type="button" class="btn-upload-option btn-camera" onclick="document.getElementById('input-camera').click()" style="
+                        flex: 1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        padding: 12px;
+                        background-color: #f1f5f9;
+                        border: 2px dashed #cbd5e1;
+                        border-radius: 12px;
+                        color: #334155;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.backgroundColor='#e2e8f0'; this.style.borderColor='#94a3b8';" onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.borderColor='#cbd5e1';">
+                        <i class="bi bi-camera-fill" style="font-size: 1.2rem; color: #ff8c32;"></i>
+                        <span>Tomar Foto</span>
+                    </button>
+                </div>
+
+                <!-- Input real (oculto, pero sincronizado por JS) -->
+                <input type="file" name="foto" id="id_foto" class="d-none" multiple required>
+                
+                <!-- Inputs auxiliares ocultos para los desencadenadores -->
+                <input type="file" id="input-gallery" accept=".jpg, .jpeg, image/jpeg" multiple style="display: none;">
+                <input type="file" id="input-camera" accept="image/*" capture="environment" style="display: none;">
+
+                <!-- Previsualización de imágenes seleccionadas -->
+                <div id="selected-images-preview" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;"></div>
+
                 {% if form.foto.errors %}
                     <div class="file-status-info file-error" style="margin-top: 8px;">
                         <i class="bi bi-exclamation-triangle-fill"></i> {{ form.foto.errors.0 }}
@@ -936,6 +1005,186 @@
     function confirmarYEnviar() {
         verificado = true;
         form.submit();
+    }
+
+    // ==========================================
+    // LÓGICA PARA UBICACIÓN ACTUAL (GPS)
+    // ==========================================
+    const btnMiUbicacion = document.getElementById('btn-mi-ubicacion');
+    if (btnMiUbicacion) {
+        btnMiUbicacion.addEventListener('click', function () {
+            if (!navigator.geolocation) {
+                alert('Tu navegador no soporta la geolocalización.');
+                return;
+            }
+
+            btnMiUbicacion.disabled = true;
+            btnMiUbicacion.innerHTML = '🔍 Obteniendo ubicación...';
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    // Centrar mapa
+                    mapa.setView([lat, lng], 17);
+
+                    // Colocar el marcador y rellenar campos
+                    colocarMarcador(lat, lng);
+
+                    btnMiUbicacion.disabled = false;
+                    btnMiUbicacion.innerHTML = '<i class="bi bi-crosshair"></i> Usar mi ubicación actual';
+                },
+                function (error) {
+                    console.error('Error al geolocalizar:', error);
+                    let msg = 'No se pudo obtener tu ubicación.';
+                    if (error.code === error.PERMISSION_DENIED) {
+                        msg = 'Permiso de geolocalización denegado. Por favor activa los permisos en tu navegador/dispositivo.';
+                    } else if (error.code === error.POSITION_UNAVAILABLE) {
+                        msg = 'La ubicación no está disponible actualmente.';
+                    } else if (error.code === error.TIMEOUT) {
+                        msg = 'Se agotó el tiempo para obtener la ubicación.';
+                    }
+                    alert(msg);
+                    btnMiUbicacion.disabled = false;
+                    btnMiUbicacion.innerHTML = '<i class="bi bi-crosshair"></i> Usar mi ubicación actual';
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
+    // ==========================================
+    // LÓGICA PARA SELECCIÓN Y CAPTURA DE FOTOS
+    // ==========================================
+    let selectedFiles = [];
+
+    function updateFilesAndUI() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        
+        const realInput = document.getElementById('id_foto');
+        if (realInput) {
+            realInput.files = dt.files;
+            // Disparar la validación visual
+            validarEvidencias(realInput);
+        }
+
+        // Renderizar previsualizaciones
+        const previewContainer = document.getElementById('selected-images-preview');
+        if (previewContainer) {
+            previewContainer.innerHTML = '';
+            
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const item = document.createElement('div');
+                    item.style.position = 'relative';
+                    item.style.width = '90px';
+                    item.style.height = '90px';
+                    item.style.borderRadius = '10px';
+                    item.style.overflow = 'hidden';
+                    item.style.border = '2px solid #ff8c32';
+                    item.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                    item.style.animation = 'scaleUpConfirm 0.2s ease';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.innerHTML = '×';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '4px';
+                    removeBtn.style.right = '4px';
+                    removeBtn.style.background = 'rgba(239, 68, 68, 0.9)';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.width = '22px';
+                    removeBtn.style.height = '22px';
+                    removeBtn.style.fontSize = '14px';
+                    removeBtn.style.fontWeight = 'bold';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.display = 'flex';
+                    removeBtn.style.alignItems = 'center';
+                    removeBtn.style.justifyContent = 'center';
+                    removeBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    
+                    removeBtn.onclick = function() {
+                        selectedFiles.splice(index, 1);
+                        updateFilesAndUI();
+                    };
+
+                    item.appendChild(img);
+                    item.appendChild(removeBtn);
+                    previewContainer.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+
+    // Manejar selección desde Galería
+    const inputGallery = document.getElementById('input-gallery');
+    if (inputGallery) {
+        inputGallery.addEventListener('change', function(e) {
+            if (!e.target.files) return;
+            const files = Array.from(e.target.files);
+            
+            // Validar JPG / JPEG
+            const validFiles = files.filter(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                return ext === 'jpg' || ext === 'jpeg';
+            });
+
+            if (validFiles.length !== files.length) {
+                alert('Solo se admiten imágenes en formato JPG / JPEG.');
+            }
+
+            validFiles.forEach(file => {
+                if (selectedFiles.length < 3) {
+                    selectedFiles.push(file);
+                } else {
+                    alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+                }
+            });
+
+            e.target.value = ''; // Limpiar selección para permitir elegir el mismo archivo
+            updateFilesAndUI();
+        });
+    }
+
+    // Manejar captura desde la Cámara
+    const inputCamera = document.getElementById('input-camera');
+    if (inputCamera) {
+        inputCamera.addEventListener('change', function(e) {
+            if (!e.target.files || e.target.files.length === 0) return;
+            const file = e.target.files[0];
+            
+            // Renombrar la extensión a .jpg por si el teléfono lo devuelve como .png u otro formato
+            const ext = file.name.split('.').pop().toLowerCase();
+            let finalFile = file;
+            if (ext !== 'jpg' && ext !== 'jpeg') {
+                finalFile = new File([file], `evidencia_camara_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            }
+
+            if (selectedFiles.length < 3) {
+                selectedFiles.push(finalFile);
+            } else {
+                alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+            }
+
+            e.target.value = ''; // Limpiar selección
+            updateFilesAndUI();
+        });
     }
 </script>
 
