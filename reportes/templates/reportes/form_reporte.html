@@ -246,6 +246,10 @@
         color: #334155;
     }
 
+    .evidence-rules-title {
+        color: #0f172a;
+    }
+
     .evidence-rules-list li {
         display: flex;
         align-items: flex-start;
@@ -605,7 +609,7 @@
             </h2>
 
             <div class="evidence-rules-box">
-                <div style="font-weight: 800; color: #0f172a; font-size: 14px;">
+                <div class="evidence-rules-title" style="font-weight: 800; font-size: 14px;">
                     <i class="bi bi-info-circle-fill text-warning me-1"></i> Requisitos de la evidencia:
                 </div>
                 <ul class="evidence-rules-list">
@@ -854,7 +858,7 @@
 
                     ubicacionTexto.innerHTML = `
                         <strong>Ubicación seleccionada (Mapbox):</strong><br>
-                        <span style="color: #0f172a;">${calle}, ${colonia}, CP ${cp}</span><br>
+                        <span class="selected-location-text">${calle}, ${colonia}, CP ${cp}</span><br>
                         <small style="color: #64748b; font-size: 12px;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</small>
                     `;
                 } else {
@@ -888,7 +892,7 @@
 
                     ubicacionTexto.innerHTML = `
                         <strong>Ubicación seleccionada:</strong><br>
-                        <span style="color: #0f172a;">${calle}, ${colonia}, CP ${cp}</span><br>
+                        <span class="selected-location-text">${calle}, ${colonia}, CP ${cp}</span><br>
                         <small style="color: #64748b; font-size: 12px;">Coordenadas: ${lat.toFixed(7)}, ${lng.toFixed(7)}</small>
                     `;
                 } else {

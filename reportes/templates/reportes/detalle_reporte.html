@@ -316,35 +316,70 @@
     }
 
     .btn-blue {
-        background: #2563eb;
-        color: white;
-        width: 100%;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white !important;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-blue:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
     }
 
     .btn-orange {
-        background: #ff7417;
-        color: white;
-        width: 100%;
+        background: linear-gradient(135deg, #ff8c32 0%, #ff7417 100%);
+        color: white !important;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(255, 116, 23, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-orange:hover {
+        background: linear-gradient(135deg, #ff7417 0%, #ea580c 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(255, 116, 23, 0.3);
     }
 
     .btn-green {
-        background: #16a34a;
-        color: white;
-        width: 100%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white !important;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-green:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
     }
 
     .btn-outline {
-        background: white;
-        color: #1f2937;
+        background: #f1f5f9;
+        color: #334155;
         border: 1px solid #cbd5e1;
         white-space: nowrap;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+    .btn-outline:hover {
+        background: #e2e8f0;
+        transform: translateY(-1px);
     }
 
     .btn-print {
-        background: white;
-        color: #2563eb;
-        border: 1px solid #93c5fd;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white !important;
+        border: none;
         white-space: nowrap;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s ease;
+    }
+    .btn-print:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
     }
 
     .upload-box {
@@ -442,6 +477,29 @@
         #mapaDetalle {
             height: 260px !important;
         }
+    }
+
+    /* Ajustes modo oscuro para acciones-card y botones */
+    body.dark-mode .acciones-card {
+        background: #111827 !important;
+        border: 2px solid #1f2937 !important;
+        border-top: 6px solid #2563eb !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        color: #f3f4f6 !important;
+    }
+    body.dark-mode .btn-outline {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #e2e8f0 !important;
+    }
+    body.dark-mode .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+    body.dark-mode .btn-print {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+    }
+    body.dark-mode .accion-box {
+        border-right-color: #1f2937 !important;
     }
 </style>
 
