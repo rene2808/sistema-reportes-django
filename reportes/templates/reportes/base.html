@@ -42,21 +42,21 @@
         }
 
         body.dark-mode {
-            --bg-color: #0b132b;
-            --text-color: #f1f5f9;
-            --card-bg: rgba(28, 37, 65, 0.95);
-            --card-border: rgba(59, 130, 246, 0.4);
-            --card-text-muted: #94a3b8;
+            --bg-color: #0b0f19;
+            --text-color: #f3f4f6;
+            --card-bg: #111827;
+            --card-border: #1f2937;
+            --card-text-muted: #9ca3af;
             --card-text-bold: #ffffff;
-            --table-header-bg: #1e293b;
-            --table-border: #475569;
-            --table-text: #cbd5e1;
-            --modal-bg: #1c2541;
-            --modal-border: #334155;
+            --table-header-bg: #1f2937;
+            --table-border: #1f2937;
+            --table-text: #e5e7eb;
+            --modal-bg: #111827;
+            --modal-border: #1f2937;
             --modal-text-title: #ffffff;
-            --modal-text-msg: #94a3b8;
+            --modal-text-msg: #9ca3af;
             
-            background: linear-gradient(135deg, #0b132b 0%, #152238 50%, #020d1e 100%) !important;
+            background: linear-gradient(135deg, #090d16 0%, #111827 50%, #070a10 100%) !important;
         }
 
         body.layout-compact .main-content {
@@ -89,58 +89,62 @@
             font-size: 19px !important;
         }
 
-        /* Overrides globales para modo oscuro */
-        body.dark-mode .mini-card,
+        /* ==========================================
+           MODO OSCURO PREMIUM (ESTILOS GLOBALES)
+           ========================================== */
+        body.dark-mode .reporte-card,
+        body.dark-mode .panel-box,
+        body.dark-mode .tabla-info-container,
+        body.dark-mode .form-card,
+        body.dark-mode .admin-section,
+        body.dark-mode .details-card,
+        body.dark-mode .profile-card,
         body.dark-mode .table-card,
         body.dark-mode .map-card,
-        body.dark-mode .profile-card,
-        body.dark-mode .details-card,
-        body.dark-mode .admin-section,
-        body.dark-mode .catalogo-card,
-        body.dark-mode .card,
         body.dark-mode .accion-box,
         body.dark-mode .notif-card,
-        body.dark-mode .report-card,
-        body.dark-mode .evidence-card,
-        body.dark-mode .resena-card,
+        body.dark-mode .catalogo-card,
         body.dark-mode .login-card,
         body.dark-mode .register-card,
         body.dark-mode .reset-card,
-        body.dark-mode .verification-card,
-        body.dark-mode .privacy-card,
-        body.dark-mode .info-box,
+        body.dark-mode .mini-card,
+        body.dark-mode .card,
         body.dark-mode .custom-confirm-modal > div {
-            background: #1c2541 !important;
-            color: #f1f5f9 !important;
-            border-color: #334155 !important;
+            background-color: #111827 !important;
+            background: #111827 !important;
+            color: #f3f4f6 !important;
+            border: 2px solid #1f2937 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
         }
 
-        body.dark-mode .mini-card h3,
-        body.dark-mode .map-legend,
-        body.dark-mode .page-subtitle,
-        body.dark-mode .info-label,
-        body.dark-mode label,
-        body.dark-mode .text-muted,
-        body.dark-mode .reset-subtitle,
-        body.dark-mode .done-subtitle,
-        body.dark-mode .confirm-subtitle,
-        body.dark-mode .complete-subtitle {
-            color: #94a3b8 !important;
+        /* Ajustes específicos de bordes laterales de las tarjetas del formulario */
+        body.dark-mode .card-incidente {
+            border-left: 8px solid #2563eb !important;
+            border-color: #1e3a8a !important;
+        }
+        body.dark-mode .card-ubicacion {
+            border-left: 8px solid #10b981 !important;
+            border-color: #064e3b !important;
+        }
+        body.dark-mode .card-evidencia {
+            border-left: 8px solid #ff7417 !important;
+            border-color: #7c2d12 !important;
         }
 
-        body.dark-mode .mini-card .number,
-        body.dark-mode .table-card h2,
-        body.dark-mode .map-header h2,
-        body.dark-mode .profile-name,
-        body.dark-mode .info-value,
-        body.dark-mode th,
-        body.dark-mode td,
+        /* Títulos en modo oscuro */
         body.dark-mode h1,
         body.dark-mode h2,
         body.dark-mode h3,
         body.dark-mode h4,
         body.dark-mode h5,
         body.dark-mode h6,
+        body.dark-mode .reporte-title h1,
+        body.dark-mode .panel-title,
+        body.dark-mode .card-section-title,
+        body.dark-mode .table-card h2,
+        body.dark-mode .map-header h2,
+        body.dark-mode .profile-name,
+        body.dark-mode .info-value,
         body.dark-mode .reset-title,
         body.dark-mode .done-title,
         body.dark-mode .confirm-title,
@@ -148,14 +152,64 @@
             color: #ffffff !important;
         }
 
-        body.dark-mode td {
-            border-bottom: 1px solid #334155 !important;
+        /* Textos mudos, etiquetas y descripciones */
+        body.dark-mode p,
+        body.dark-mode .reporte-title p,
+        body.dark-mode label,
+        body.dark-mode .help-text,
+        body.dark-mode .mini-card h3,
+        body.dark-mode .map-legend,
+        body.dark-mode .page-subtitle,
+        body.dark-mode .info-label,
+        body.dark-mode .text-muted,
+        body.dark-mode .reset-subtitle,
+        body.dark-mode .done-subtitle,
+        body.dark-mode .confirm-subtitle,
+        body.dark-mode .complete-subtitle {
+            color: #9ca3af !important;
         }
 
-        body.dark-mode th {
-            background: #1e293b !important;
+        /* Píldora de Folio */
+        body.dark-mode .folio-pill {
+            background: #1e3a8a !important;
+            color: #93c5fd !important;
+            border: 1px solid #2563eb !important;
         }
 
+        /* Estructuras de tablas en modo oscuro */
+        body.dark-mode th,
+        body.dark-mode .tabla-info th {
+            background: #1f2937 !important;
+            color: #e5e7eb !important;
+            border-bottom: 1px solid #111827 !important;
+        }
+
+        body.dark-mode td,
+        body.dark-mode .tabla-info td {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-bottom: 1px solid #1f2937 !important;
+        }
+
+        body.dark-mode .reporte-header {
+            border-bottom: 1px solid #1f2937 !important;
+        }
+
+        /* Línea de tiempo */
+        body.dark-mode .timeline-item {
+            border-left: 2px solid #1f2937 !important;
+        }
+        body.dark-mode .timeline-item::before {
+            background: #111827 !important;
+            border: 2px solid #ff8c32 !important;
+        }
+
+        /* Mini cards dashboard */
+        body.dark-mode .mini-card .number {
+            color: #ffffff !important;
+        }
+
+        /* Entradas de texto, selectores y textareas */
         body.dark-mode input[type="text"],
         body.dark-mode input[type="email"],
         body.dark-mode input[type="password"],
@@ -163,30 +217,73 @@
         body.dark-mode input[type="tel"],
         body.dark-mode textarea,
         body.dark-mode select {
-            background-color: #1e293b !important;
-            color: #f1f5f9 !important;
-            border: 1px solid #475569 !important;
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #374151 !important;
         }
 
         body.dark-mode .profile-info-box {
-            background: rgba(30, 41, 59, 0.5) !important;
-            border: 1.5px solid #475569 !important;
+            background: rgba(31, 41, 55, 0.5) !important;
+            border: 1.5px solid #374151 !important;
         }
 
         body.dark-mode .info-row {
-            border-bottom: 1px solid #475569 !important;
+            border-bottom: 1px solid #374151 !important;
         }
 
+        /* Botones especiales */
         body.dark-mode .soft-btn {
-            background: #1e293b !important;
-            border: 1px solid #475569 !important;
-            color: #f1f5f9 !important;
+            background: #1f2937 !important;
+            border: 1px solid #374151 !important;
+            color: #f3f4f6 !important;
         }
 
         body.dark-mode .soft-btn:hover {
-            background: #334155 !important;
+            background: #374151 !important;
         }
 
+        body.dark-mode .btn-outline {
+            border-color: #374151 !important;
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .btn-outline:hover {
+            background-color: #1f2937 !important;
+        }
+
+        /* Botones de carga en formulario */
+        body.dark-mode .btn-upload-option {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+            color: #f3f4f6 !important;
+        }
+        body.dark-mode .btn-upload-option:hover {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+        }
+
+        /* Caja de ubicación texto */
+        body.dark-mode .location-box {
+            background-color: #1f2937 !important;
+            border: 1px solid #374151 !important;
+            color: #f3f4f6 !important;
+        }
+
+        /* Reglas de evidencias */
+        body.dark-mode .evidence-rules-box {
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+        }
+        body.dark-mode .evidence-rules-box div {
+            color: #ffffff !important;
+        }
+
+        /* Sidebar izquierda */
+        body.dark-mode .sidebar {
+            background: #070a13 !important;
+            border-right: 1px solid #111827 !important;
+        }
+
+        /* Inversión de colores de mapas de Leaflet */
         body.dark-mode .leaflet-container {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
