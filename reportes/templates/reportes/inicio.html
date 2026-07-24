@@ -20,6 +20,19 @@
     <meta name="apple-mobile-web-app-title" content="Reportes Acapulco">
     <link rel="apple-touch-icon" href="{% static 'reportes/img/logo_hd.png' %}">
 
+    <!-- Script para cargar tema guardado en localStorage y evitar flash de color -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('visual-theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.body.classList.add('dark-mode');
+                });
+            }
+        })();
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -285,6 +298,139 @@
             background-color: #ff8c32;
             width: 24px;
             border-radius: 5px;
+        }
+
+        /* ==========================================
+           MODO OSCURO PREMIUM PARA INICIO (LANDING)
+           ========================================== */
+        body.dark-mode {
+            background-color: #0b0f19 !important;
+            color: #f3f4f6 !important;
+        }
+
+        body.dark-mode .bg-light-gray {
+            background-image: linear-gradient(rgba(11, 15, 25, 0.85), rgba(11, 15, 25, 0.85)), url("{% static 'fondo_principal.jpg.jpeg' %}") !important;
+        }
+
+        /* Navbar */
+        body.dark-mode .navbar {
+            background-color: #070a13 !important;
+            border-bottom: 1px solid #1f2937 !important;
+        }
+        body.dark-mode .navbar .nav-link {
+            color: #e5e7eb !important;
+        }
+        body.dark-mode .navbar .nav-link.active,
+        body.dark-mode .navbar .nav-link:hover {
+            color: #ff8c32 !important;
+        }
+
+        /* Hero block */
+        body.dark-mode .hero-section {
+            background: rgba(17, 24, 39, 0.85) !important;
+            border: 2px solid #1f2937 !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+        }
+        body.dark-mode .hero-section h1,
+        body.dark-mode .hero-section strong {
+            color: #ffffff !important;
+        }
+        body.dark-mode .hero-desc {
+            color: #9ca3af !important;
+        }
+
+        /* Botón outline del hero */
+        body.dark-mode .hero-btn-sub {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+            color: #f3f4f6 !important;
+        }
+        body.dark-mode .hero-btn-sub:hover {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #ffffff !important;
+        }
+
+        /* Títulos de secciones */
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode .section-title {
+            color: #ffffff !important;
+        }
+        body.dark-mode .section-desc,
+        body.dark-mode .lead {
+            color: #9ca3af !important;
+        }
+
+        /* Unified containers and cards */
+        body.dark-mode .section-unified-container,
+        body.dark-mode .card,
+        body.dark-mode .gallery-card,
+        body.dark-mode .review-item {
+            background-color: #111827 !important;
+            background: #111827 !important;
+            border: 2px solid #1f2937 !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Review details */
+        body.dark-mode .bg-light-card,
+        body.dark-mode .border-top {
+            background-color: #1f2937 !important;
+            border-color: #1f2937 !important;
+        }
+        body.dark-mode .text-dark {
+            color: #ffffff !important;
+        }
+        body.dark-mode .text-muted {
+            color: #9ca3af !important;
+        }
+
+        /* Leaflet map colors inside dark mode */
+        body.dark-mode .leaflet-container {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        /* Formulario de Evaluaciones en la parte inferior */
+        body.dark-mode .form-label {
+            color: #9ca3af !important;
+        }
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #374151 !important;
+        }
+        body.dark-mode .form-control:focus,
+        body.dark-mode .form-select:focus {
+            background-color: #1f2937 !important;
+            color: #ffffff !important;
+            border-color: #ff8c32 !important;
+        }
+
+        /* Estrellas y evaluación */
+        body.dark-mode .star-rating-box {
+            background-color: #1f2937 !important;
+            border-color: #374151 !important;
+        }
+
+        /* Footer */
+        body.dark-mode footer {
+            background-color: #070a13 !important;
+            border-top: 1px solid #1f2937 !important;
+            color: #9ca3af !important;
+        }
+        body.dark-mode footer h5,
+        body.dark-mode footer strong {
+            color: #ffffff !important;
+        }
+        body.dark-mode footer a {
+            color: #9ca3af !important;
+        }
+        body.dark-mode footer a:hover {
+            color: #ff8c32 !important;
         }
     </style>
 </head>
