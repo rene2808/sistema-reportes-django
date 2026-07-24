@@ -902,7 +902,6 @@
             <select name="rol" required>
                 <option value="ciudadano">Ciudadano</option>
                 <option value="moderador">Moderador de Contenido</option>
-                <option value="supervisor">Supervisor</option>
                 <option value="administrador">Administrador</option>
             </select>
             <button type="submit" class="btn-admin btn-green">
@@ -962,7 +961,6 @@
                         <select form="editar-usuario-form-{{ usuario.id }}" name="rol" style="padding:6px 10px;" {% if request.user.perfilusuario.rol == 'moderador' %}disabled{% endif %}>
                             <option value="ciudadano" {% if usuario.perfilusuario.rol == 'ciudadano' %}selected{% endif %}>Ciudadano</option>
                             <option value="moderador" {% if usuario.perfilusuario.rol == 'moderador' %}selected{% endif %}>Moderador de Contenido</option>
-                            <option value="supervisor" {% if usuario.perfilusuario.rol == 'supervisor' %}selected{% endif %}>Supervisor</option>
                             <option value="administrador" {% if usuario.perfilusuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>
                         </select>
                     </td>

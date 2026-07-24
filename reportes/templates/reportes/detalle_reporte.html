@@ -609,7 +609,7 @@
         </div>
 
         <div class="acciones-card">
-            {% if rol == 'administrador' or rol == 'moderador' or rol == 'supervisor' or user.is_superuser %}
+            {% if rol == 'administrador' or rol == 'moderador' or user.is_superuser %}
                 <div class="accion-box">
                     <form method="POST" action="{% url 'actualizar_reporte' reporte.id %}" enctype="multipart/form-data">
                         {% csrf_token %}

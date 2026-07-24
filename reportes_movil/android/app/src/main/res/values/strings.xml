@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Reportes Acapulco</string>
+    <string name="title_activity_main">Reportes Acapulco</string>
+    <string name="package_name">com.sistemareportes.acapulco</string>
+    <string name="custom_url_scheme">com.sistemareportes.acapulco</string>
+</resources>

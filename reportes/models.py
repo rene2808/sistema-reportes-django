@@ -156,13 +156,14 @@ def crear_perfil_usuario(sender, instance, created, **kwargs):
         PerfilUsuario.objects.get_or_create(usuario=instance)
 
 
-@receiver(post_save, sender=User)
-def guardar_perfil_usuario(sender, instance, **kwargs):
-    """
-    Señal que guarda el PerfilUsuario asociado cada vez que el objeto de Usuario se actualice.
-    """
-    if hasattr(instance, 'perfilusuario'):
-        instance.perfilusuario.save()
+# @receiver(post_save, sender=User)
+# def guardar_perfil_usuario(sender, instance, **kwargs):
+#     """
+#     Señal que guarda el PerfilUsuario asociado cada vez que el objeto de Usuario se actualice.
+#     """
+#     if hasattr(instance, 'perfilusuario'):
+#         instance.perfilusuario.save()
+
 
 
 class Reporte(models.Model):

@@ -92,7 +92,7 @@ def redireccion_por_rol(usuario):
     """
     rol = obtener_rol(usuario)
 
-    if rol in ['administrador', 'moderador', 'supervisor']:
+    if rol in ['administrador', 'moderador']:
         return redirect('panel_administrador')
 
     return redirect('panel_ciudadano')
@@ -691,7 +691,7 @@ def detalle_reporte(request, id):
     })
 
 
-@rol_requerido('administrador', 'moderador', 'supervisor')
+@rol_requerido('administrador', 'moderador')
 def cambiar_estado_reporte(request, id):
     reporte = get_object_or_404(Reporte, id=id)
 
@@ -721,7 +721,7 @@ def cambiar_estado_reporte(request, id):
     return redirect('detalle_reporte', id=reporte.id)
 
 
-@rol_requerido('administrador', 'moderador', 'supervisor')
+@rol_requerido('administrador', 'moderador')
 def cambiar_prioridad_reporte(request, id):
     reporte = get_object_or_404(Reporte, id=id)
 
@@ -751,7 +751,7 @@ def cambiar_prioridad_reporte(request, id):
     return redirect('detalle_reporte', id=reporte.id)
 
 
-@rol_requerido('administrador', 'moderador', 'supervisor')
+@rol_requerido('administrador', 'moderador')
 def actualizar_reporte(request, id):
     """
     Vista unificada para actualizar el estado, la prioridad y la evidencia de un reporte,
@@ -929,7 +929,7 @@ def agregar_usuario(request):
             usuario.is_superuser = True
         usuario.save()
 
-        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
+        perfil = usuario.perfilusuario
         perfil.rol = rol
         perfil.save()
 
@@ -955,11 +955,11 @@ def editar_usuario(request, id):
         if 'activo' in request.POST:
             usuario.is_active = request.POST.get('activo') == 'on'
 
-        usuario.is_staff = rol in ['administrador', 'supervisor']
+        usuario.is_staff = rol == 'administrador'
         usuario.is_superuser = rol == 'administrador'
         usuario.save()
 
-        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
+        perfil = usuario.perfilusuario
         perfil.rol = rol
         perfil.save()
 
@@ -2421,7 +2421,7 @@ def inicio(request):
                 'estado': rep.estado,
             })
 
-    resenas = Resena.objects.all().order_by('-fecha')[:6]
+    resenas = Resena.objects.all().order_by('-fecha')[:20]
 
     reportes_resueltos_usuario = []
     has_resueltos_evaluados = False

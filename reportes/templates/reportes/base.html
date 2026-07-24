@@ -16,7 +16,181 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="icon" type="image/png" href="{% static 'reportes/img/logo_hd.png' %}">
 
+    <!-- Soporte PWA para iOS (Permite instalar en iPhone como App sin Mac ni Xcode) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Reportes Acapulco">
+    <link rel="apple-touch-icon" href="{% static 'reportes/img/logo_hd.png' %}">
+
     <style>
+        :root {
+            --bg-color: #eef2f6;
+            --text-color: #14213d;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(59, 130, 246, 0.25);
+            --card-text-muted: #7b8794;
+            --card-text-bold: #111827;
+            --table-header-bg: #0f172a;
+            --table-border: #cbd5e1;
+            --table-text: #334155;
+            --modal-bg: #ffffff;
+            --modal-border: #e2e8f0;
+            --modal-text-title: #0f172a;
+            --modal-text-msg: #64748b;
+            
+            --font-size-base: 15px;
+        }
+
+        body.dark-mode {
+            --bg-color: #0b132b;
+            --text-color: #f1f5f9;
+            --card-bg: rgba(28, 37, 65, 0.95);
+            --card-border: rgba(59, 130, 246, 0.4);
+            --card-text-muted: #94a3b8;
+            --card-text-bold: #ffffff;
+            --table-header-bg: #1e293b;
+            --table-border: #475569;
+            --table-text: #cbd5e1;
+            --modal-bg: #1c2541;
+            --modal-border: #334155;
+            --modal-text-title: #ffffff;
+            --modal-text-msg: #94a3b8;
+            
+            background: linear-gradient(135deg, #0b132b 0%, #152238 50%, #020d1e 100%) !important;
+        }
+
+        body.layout-compact .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        body.font-large {
+            --font-size-base: 17px;
+        }
+        body.font-xlarge {
+            --font-size-base: 19px;
+        }
+        body.font-large .menu a,
+        body.font-large td,
+        body.font-large p,
+        body.font-large label,
+        body.font-large input,
+        body.font-large select,
+        body.font-large textarea {
+            font-size: 17px !important;
+        }
+        body.font-xlarge .menu a,
+        body.font-xlarge td,
+        body.font-xlarge p,
+        body.font-xlarge label,
+        body.font-xlarge input,
+        body.font-xlarge select,
+        body.font-xlarge textarea {
+            font-size: 19px !important;
+        }
+
+        /* Overrides globales para modo oscuro */
+        body.dark-mode .mini-card,
+        body.dark-mode .table-card,
+        body.dark-mode .map-card,
+        body.dark-mode .profile-card,
+        body.dark-mode .details-card,
+        body.dark-mode .admin-section,
+        body.dark-mode .catalogo-card,
+        body.dark-mode .card,
+        body.dark-mode .accion-box,
+        body.dark-mode .notif-card,
+        body.dark-mode .report-card,
+        body.dark-mode .evidence-card,
+        body.dark-mode .resena-card,
+        body.dark-mode .login-card,
+        body.dark-mode .register-card,
+        body.dark-mode .reset-card,
+        body.dark-mode .verification-card,
+        body.dark-mode .privacy-card,
+        body.dark-mode .info-box,
+        body.dark-mode .custom-confirm-modal > div {
+            background: #1c2541 !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode .mini-card h3,
+        body.dark-mode .map-legend,
+        body.dark-mode .page-subtitle,
+        body.dark-mode .info-label,
+        body.dark-mode label,
+        body.dark-mode .text-muted,
+        body.dark-mode .reset-subtitle,
+        body.dark-mode .done-subtitle,
+        body.dark-mode .confirm-subtitle,
+        body.dark-mode .complete-subtitle {
+            color: #94a3b8 !important;
+        }
+
+        body.dark-mode .mini-card .number,
+        body.dark-mode .table-card h2,
+        body.dark-mode .map-header h2,
+        body.dark-mode .profile-name,
+        body.dark-mode .info-value,
+        body.dark-mode th,
+        body.dark-mode td,
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode h5,
+        body.dark-mode h6,
+        body.dark-mode .reset-title,
+        body.dark-mode .done-title,
+        body.dark-mode .confirm-title,
+        body.dark-mode .complete-title {
+            color: #ffffff !important;
+        }
+
+        body.dark-mode td {
+            border-bottom: 1px solid #334155 !important;
+        }
+
+        body.dark-mode th {
+            background: #1e293b !important;
+        }
+
+        body.dark-mode input[type="text"],
+        body.dark-mode input[type="email"],
+        body.dark-mode input[type="password"],
+        body.dark-mode input[type="number"],
+        body.dark-mode input[type="tel"],
+        body.dark-mode textarea,
+        body.dark-mode select {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 1px solid #475569 !important;
+        }
+
+        body.dark-mode .profile-info-box {
+            background: rgba(30, 41, 59, 0.5) !important;
+            border: 1.5px solid #475569 !important;
+        }
+
+        body.dark-mode .info-row {
+            border-bottom: 1px solid #475569 !important;
+        }
+
+        body.dark-mode .soft-btn {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            color: #f1f5f9 !important;
+        }
+
+        body.dark-mode .soft-btn:hover {
+            background: #334155 !important;
+        }
+
+        body.dark-mode .leaflet-container {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
         * {
             box-sizing: border-box;
             font-family: Arial, Helvetica, sans-serif;
@@ -24,8 +198,10 @@
 
         body {
             margin: 0;
-            background: #eef2f6;
-            color: #14213d;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: var(--font-size-base);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .layout {
@@ -416,10 +592,129 @@
                 margin-bottom: 18px;
             }
         }
+
+        /* ==============================
+           INTERRUPTOR DE TEMA PREMIUM
+           ============================== */
+        .theme-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin: 10px 14px 20px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .theme-toggle-wrapper:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle-label {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #c7d0df;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .theme-toggle-label i {
+            font-size: 16px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s ease;
+        }
+
+        body.dark-mode .theme-toggle-label {
+            color: #ffffff;
+        }
+
+        body.dark-mode .theme-toggle-label i {
+            color: #ff8c32;
+            transform: rotate(360deg);
+        }
+
+        /* Interruptor base */
+        .premium-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .premium-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .premium-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #475569;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .premium-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 2.5px;
+            background-color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Cambios al activar */
+        .premium-switch input:checked + .premium-slider {
+            background-color: #ff8c32;
+            border-color: rgba(255, 140, 50, 0.2);
+        }
+
+        .premium-switch input:checked + .premium-slider:before {
+            transform: translateX(22px);
+            background-color: #ffffff;
+        }
+
+        /* Enfoque accesible */
+        .premium-switch input:focus + .premium-slider {
+            outline: 2px solid rgba(255, 140, 50, 0.5);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 
-<body>
+<body class="theme-placeholder">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('visual-theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+            const savedFontSize = localStorage.getItem('visual-font-size');
+            if (savedFontSize && savedFontSize !== 'normal') {
+                document.body.classList.add('font-' + savedFontSize);
+            }
+            const savedLayout = localStorage.getItem('visual-layout-width');
+            if (savedLayout === 'compact') {
+                document.body.classList.add('layout-compact');
+            }
+        })();
+    </script>
 
     {% if user.is_authenticated %}
     <script>
@@ -511,6 +806,18 @@
                 </div>
 
                 <div class="sidebar-bottom">
+                    <!-- Interruptor de Tema Global -->
+                    <div class="theme-toggle-wrapper">
+                        <div class="theme-toggle-label">
+                            <i class="bi bi-sun-fill" id="sidebar-theme-icon"></i>
+                            <span>Modo Oscuro</span>
+                        </div>
+                        <label class="premium-switch" for="sidebar-theme-toggle">
+                            <input type="checkbox" id="sidebar-theme-toggle" class="theme-toggle-checkbox" aria-label="Cambiar tema">
+                            <span class="premium-slider"></span>
+                        </label>
+                    </div>
+
                     {% if user.is_authenticated %}
                     <div class="user-mini">
                         <div class="mini-avatar">{{ user.username|first|upper }}</div>
@@ -753,6 +1060,39 @@
             // Ejecutar cada 10 segundos
             setInterval(verificarNuevasNotificaciones, 10000);
             {% endif %}
+
+            // Manejo del cambio de tema (Sidebar Switch)
+            const sidebarThemeToggle = document.getElementById('sidebar-theme-toggle');
+            const sidebarThemeIcon = document.getElementById('sidebar-theme-icon');
+            if (sidebarThemeToggle) {
+                // Sincronizar el checkbox con el estado actual del body
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                sidebarThemeToggle.checked = isDarkMode;
+                
+                if (sidebarThemeIcon) {
+                    sidebarThemeIcon.className = isDarkMode ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+                }
+
+                // Escuchar cambios del interruptor
+                sidebarThemeToggle.addEventListener('change', function () {
+                    const shouldBeDark = sidebarThemeToggle.checked;
+                    if (shouldBeDark) {
+                        document.body.classList.add('dark-mode');
+                        localStorage.setItem('visual-theme', 'dark');
+                        if (sidebarThemeIcon) sidebarThemeIcon.className = 'bi bi-moon-stars-fill';
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                        localStorage.setItem('visual-theme', 'light');
+                        if (sidebarThemeIcon) sidebarThemeIcon.className = 'bi bi-sun-fill';
+                    }
+
+                    // Sincronizar con el switch de perfil si está presente
+                    const profileToggle = document.getElementById('profile-theme-toggle');
+                    if (profileToggle) {
+                        profileToggle.checked = shouldBeDark;
+                    }
+                });
+            }
         });
     </script>
 

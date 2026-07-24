@@ -1,0 +1,9 @@
+{
+  "appId": "com.sistemareportes.acapulco",
+  "appName": "Reportes Acapulco",
+  "webDir": "www",
+  "server": {
+    "url": "https://renesalas.com",
+    "cleartext": true
+  }
+}
