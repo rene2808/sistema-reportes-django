@@ -1132,6 +1132,70 @@
         }
     }
 
+    // ==========================================
+    // LÓGICA DE COMPRESIÓN DE IMÁGENES (CLIENT-SIDE)
+    // ==========================================
+    function compressAndAddFile(file) {
+        const statusBox = document.getElementById('fileStatusMessage');
+        if (statusBox) {
+            statusBox.style.display = 'flex';
+            statusBox.className = 'file-status-info file-success';
+            statusBox.innerHTML = '⚙️ Optimizando tamaño de la imagen...';
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Redimensionar a un tamaño óptimo (máximo 1600px en el lado más largo)
+                const MAX_WIDTH = 1600;
+                const MAX_HEIGHT = 1600;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Comprimir a JPEG con calidad 0.75 (reduce el peso de ~5MB a ~300KB de forma imperceptible)
+                canvas.toBlob(function (blob) {
+                    let baseName = file.name.split('.').slice(0, -1).join('.') || 'evidencia_foto';
+                    baseName = baseName.replace(/[^a-zA-Z0-9_\-]/g, '_');
+                    const compressedFile = new File([blob], `${baseName}_opt_${Date.now()}.jpg`, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+
+                    if (selectedFiles.length < 3) {
+                        selectedFiles.push(compressedFile);
+                        updateFilesAndUI();
+                    } else {
+                        alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+                        updateFilesAndUI();
+                    }
+                }, 'image/jpeg', 0.75);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     // Manejar selección desde Galería
     const inputGallery = document.getElementById('input-gallery');
     if (inputGallery) {
@@ -1139,26 +1203,35 @@
             if (!e.target.files) return;
             const files = Array.from(e.target.files);
             
-            // Validar JPG / JPEG
-            const validFiles = files.filter(file => {
+            // Validar extensiones permitidas
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            const invalidFiles = files.filter(file => {
                 const ext = file.name.split('.').pop().toLowerCase();
-                return ext === 'jpg' || ext === 'jpeg';
+                return !allowedExtensions.includes(ext);
             });
 
-            if (validFiles.length !== files.length) {
-                alert('Solo se admiten imágenes en formato JPG / JPEG.');
+            if (invalidFiles.length > 0) {
+                alert('Solo se admiten imágenes en formato JPG, JPEG, PNG o WEBP.');
+                e.target.value = '';
+                return;
             }
 
-            validFiles.forEach(file => {
-                if (selectedFiles.length < 3) {
-                    selectedFiles.push(file);
-                } else {
-                    alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+            // Procesar las imágenes de forma asíncrona una a la vez
+            let index = 0;
+            function processNext() {
+                if (index < files.length) {
+                    if (selectedFiles.length < 3) {
+                        compressAndAddFile(files[index]);
+                        index++;
+                        setTimeout(processNext, 150);
+                    } else {
+                        alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+                    }
                 }
-            });
+            }
+            processNext();
 
-            e.target.value = ''; // Limpiar selección para permitir elegir el mismo archivo
-            updateFilesAndUI();
+            e.target.value = ''; // Limpiar selección
         });
     }
 
@@ -1168,22 +1241,14 @@
         inputCamera.addEventListener('change', function(e) {
             if (!e.target.files || e.target.files.length === 0) return;
             const file = e.target.files[0];
-            
-            // Renombrar la extensión a .jpg por si el teléfono lo devuelve como .png u otro formato
-            const ext = file.name.split('.').pop().toLowerCase();
-            let finalFile = file;
-            if (ext !== 'jpg' && ext !== 'jpeg') {
-                finalFile = new File([file], `evidencia_camara_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            }
 
             if (selectedFiles.length < 3) {
-                selectedFiles.push(finalFile);
+                compressAndAddFile(file);
             } else {
                 alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
             }
 
             e.target.value = ''; // Limpiar selección
-            updateFilesAndUI();
         });
     }
 </script>
