@@ -2036,6 +2036,7 @@ def reporte_mensual_incidentes_excel(request):
     import openpyxl
     from openpyxl.chart import PieChart, Reference
     from openpyxl.chart.series import DataPoint
+    from openpyxl.chart.layout import Layout, ManualLayout
     from openpyxl.chart.label import DataLabelList
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -2277,6 +2278,20 @@ def reporte_mensual_incidentes_excel(request):
         pie_cat.add_data(data_cat, titles_from_data=True)
         pie_cat.set_categories(labels_cat)
 
+        # Ajustar posición y tamaño para evitar encimados de leyenda y título
+        pie_cat.legend.legendPos = "r"
+        pie_cat.legend.overlay = False
+        pie_cat.layout = Layout(
+            manualLayout=ManualLayout(
+                x=0.05,
+                y=0.15,
+                w=0.55,
+                h=0.7,
+                xMode="factor",
+                yMode="factor"
+            )
+        )
+
         if pie_cat.series:
             series = pie_cat.series[0]
             for idx, color in enumerate(cat_slice_colors):
@@ -2352,6 +2367,20 @@ def reporte_mensual_incidentes_excel(request):
     pie_est.add_data(data_est, titles_from_data=True)
     pie_est.set_categories(labels_est)
 
+    # Ajustar posición y tamaño para evitar encimados de leyenda y título
+    pie_est.legend.legendPos = "r"
+    pie_est.legend.overlay = False
+    pie_est.layout = Layout(
+        manualLayout=ManualLayout(
+            x=0.05,
+            y=0.15,
+            w=0.65,
+            h=0.7,
+            xMode="factor",
+            yMode="factor"
+        )
+    )
+
     if pie_est.series:
         series2 = pie_est.series[0]
         for idx, color in enumerate(estado_slice_colors):
@@ -2426,6 +2455,20 @@ def reporte_mensual_incidentes_excel(request):
     data_prio = Reference(ws1, min_col=2, min_row=start_prioridad_row, max_row=p_data_end_row)
     pie_prio.add_data(data_prio, titles_from_data=True)
     pie_prio.set_categories(labels_prio)
+
+    # Ajustar posición y tamaño para evitar encimados de leyenda y título
+    pie_prio.legend.legendPos = "r"
+    pie_prio.legend.overlay = False
+    pie_prio.layout = Layout(
+        manualLayout=ManualLayout(
+            x=0.05,
+            y=0.15,
+            w=0.65,
+            h=0.7,
+            xMode="factor",
+            yMode="factor"
+        )
+    )
 
     if pie_prio.series:
         series3 = pie_prio.series[0]
