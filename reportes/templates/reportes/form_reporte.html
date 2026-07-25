@@ -1260,6 +1260,11 @@
     let webcamStream = null;
 
     window.openLiveWebcam = function() {
+        if (selectedFiles.length >= 3) {
+            alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+            return;
+        }
+
         const modal = document.getElementById('liveCameraModal');
         const video = document.getElementById('live-webcam-stream');
         
