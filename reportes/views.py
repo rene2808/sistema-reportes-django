@@ -2270,8 +2270,11 @@ def reporte_mensual_incidentes_excel(request):
         pie_cat = PieChart()
         pie_cat.title = "Porcentaje por Tipo de Incidencia"
         pie_cat.title.text.font = Font(name="Arial", size=10, bold=True)
-        pie_cat.width = 16
-        pie_cat.height = 9.5
+        pie_cat.width = 19
+        pie_cat.height = 11
+        if pie_cat.legend:
+            pie_cat.legend.overlay = False
+            pie_cat.legend.position = "r"
         labels_cat = Reference(ws1, min_col=1, min_row=start_cat_row + 1, max_row=cat_data_end_row)
         data_cat = Reference(ws1, min_col=2, min_row=start_cat_row, max_row=cat_data_end_row)
         pie_cat.add_data(data_cat, titles_from_data=True)
@@ -2345,8 +2348,11 @@ def reporte_mensual_incidentes_excel(request):
     pie_est = PieChart()
     pie_est.title = "Porcentaje por Estado del Reporte"
     pie_est.title.text.font = Font(name="Arial", size=10, bold=True)
-    pie_est.width = 16
-    pie_est.height = 9.5
+    pie_est.width = 19
+    pie_est.height = 11
+    if pie_est.legend:
+        pie_est.legend.overlay = False
+        pie_est.legend.position = "r"
     labels_est = Reference(ws1, min_col=1, min_row=start_estado_row + 1, max_row=e_data_end_row)
     data_est = Reference(ws1, min_col=2, min_row=start_estado_row, max_row=e_data_end_row)
     pie_est.add_data(data_est, titles_from_data=True)
@@ -2420,8 +2426,11 @@ def reporte_mensual_incidentes_excel(request):
     pie_prio = PieChart()
     pie_prio.title = "Porcentaje por Prioridad del Reporte"
     pie_prio.title.text.font = Font(name="Arial", size=10, bold=True)
-    pie_prio.width = 16
-    pie_prio.height = 9.5
+    pie_prio.width = 19
+    pie_prio.height = 11
+    if pie_prio.legend:
+        pie_prio.legend.overlay = False
+        pie_prio.legend.position = "r"
     labels_prio = Reference(ws1, min_col=1, min_row=start_prioridad_row + 1, max_row=p_data_end_row)
     data_prio = Reference(ws1, min_col=2, min_row=start_prioridad_row, max_row=p_data_end_row)
     pie_prio.add_data(data_prio, titles_from_data=True)
