@@ -1050,9 +1050,24 @@ def reporte_general(request):
     basura_proceso = reportes_basura.filter(estado='En proceso').count()
     basura_resueltos = reportes_basura.filter(estado='Resuelto').count()
 
-    # Agrupación dinámica por categorías para todas las incidencias
+    # Agrupación dinámica por categorías para todas las incidencias (posponiendo "Otro" al final)
     reportes_por_categoria = []
-    for cat in Categoria.objects.all().order_by('nombre'):
+    categorias = Categoria.objects.all().order_by('nombre')
+    
+    # Procesar primero categorías que no se llamen "Otro"
+    for cat in categorias.exclude(nombre__iexact="otro"):
+        cat_reportes = reportes.filter(categoria=cat)
+        reportes_por_categoria.append({
+            'categoria': cat,
+            'reportes': cat_reportes,
+            'total': cat_reportes.count(),
+            'pendientes': cat_reportes.filter(estado='Pendiente').count(),
+            'en_proceso': cat_reportes.filter(estado='En proceso').count(),
+            'resueltos': cat_reportes.filter(estado='Resuelto').count(),
+        })
+        
+    # Procesar al final la categoría "Otro"
+    for cat in categorias.filter(nombre__iexact="otro"):
         cat_reportes = reportes.filter(categoria=cat)
         reportes_por_categoria.append({
             'categoria': cat,
