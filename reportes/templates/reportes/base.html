@@ -983,7 +983,7 @@
     </div>
 
     <!-- Modal de Confirmación Personalizado -->
-    <div id="custom-confirm-modal" style="
+    <div id="custom-confirm-modal" class="custom-confirm-modal" style="
     display: none; 
     position: fixed; 
     top: 0; 
@@ -1070,6 +1070,80 @@
         </div>
     </div>
 
+    <!-- Modal de Alerta Personalizado (Override de alert) -->
+    <div id="custom-alert-modal" class="custom-confirm-modal" style="
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(15, 23, 42, 0.6); 
+    backdrop-filter: blur(5px); 
+    z-index: 9999999; 
+    justify-content: center; 
+    align-items: center;
+">
+        <div style="
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 20px;
+        width: 420px;
+        max-width: 90%;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        animation: scaleUpConfirm 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    ">
+            <!-- Icono de advertencia premium -->
+            <div style="
+            width: 60px;
+            height: 60px;
+            background: #fef3c7;
+            color: #d97706;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px auto;
+        ">⚠️</div>
+
+            <h3 id="custom-alert-title" style="
+            margin: 0 0 10px 0;
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 700;
+        ">Atención</h3>
+
+            <p id="custom-alert-message" style="
+            margin: 0 0 25px 0;
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        ">Mensaje de alerta</p>
+
+            <div style="
+            display: flex;
+            justify-content: center;
+        ">
+                <button id="custom-alert-ok-btn" style="
+                border: none;
+                background: #f59e0b;
+                color: #ffffff;
+                font-weight: 600;
+                padding: 10px 30px;
+                border-radius: 10px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <style>
         @keyframes scaleUpConfirm {
             0% {
@@ -1103,6 +1177,29 @@
                     }
                 });
             }
+
+            // --- Sistema de Alerta Personalizado (Reemplazo de window.alert) ---
+            const alertModal = document.getElementById('custom-alert-modal');
+            const alertTitleEl = document.getElementById('custom-alert-title');
+            const alertMessageEl = document.getElementById('custom-alert-message');
+            const alertOkBtn = document.getElementById('custom-alert-ok-btn');
+
+            window.mostrarAlerta = function(mensaje, titulo = "Atención") {
+                if (alertTitleEl) alertTitleEl.textContent = titulo;
+                if (alertMessageEl) alertMessageEl.textContent = mensaje;
+                if (alertModal) alertModal.style.display = 'flex';
+            };
+
+            if (alertOkBtn) {
+                alertOkBtn.addEventListener('click', function() {
+                    if (alertModal) alertModal.style.display = 'none';
+                });
+            }
+
+            // Redefinir la función alert nativa del navegador
+            window.alert = function(mensaje) {
+                window.mostrarAlerta(mensaje);
+            };
 
             let confirmacionCallback = null;
 
