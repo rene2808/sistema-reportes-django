@@ -265,9 +265,21 @@
 
     .pdf-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 16px;
         margin-bottom: 22px;
+    }
+
+    @media (max-width: 992px) {
+        .pdf-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .pdf-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     .pdf-grid label {
@@ -907,7 +919,7 @@
             </thead>
             <tbody>
                 {% for usuario in usuarios %}
-                <tr>
+                <tr {% if not forloop.first %}class="extra-user-row" style="display: none;"{% endif %}>
                     <td>
                         <form id="editar-usuario-form-{{ usuario.id }}" method="POST"
                             action="{% url 'editar_usuario' usuario.id %}">
@@ -1000,6 +1012,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if usuarios|length > 1 %}
+        <button type="button" id="btn-toggle-usuarios" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+            <i class="bi bi-chevron-down" id="icon-toggle-usuarios"></i>
+            <span id="text-toggle-usuarios">Mostrar todos los usuarios registrados ({{ usuarios|length|add:"-1" }} más)</span>
+        </button>
+        {% endif %}
     </div>
     {% else %}
     <p>No hay usuarios registrados en el sistema.</p>
@@ -1058,7 +1076,7 @@
                 </thead>
                 <tbody id="tbody-pendientes">
                     {% for reporte in reportes_pendientes_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-pendientes" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1101,6 +1119,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if reportes_pendientes_list|length > 1 %}
+            <button type="button" id="btn-toggle-reportes-pendientes" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+                <i class="bi bi-chevron-down" id="icon-toggle-reportes-pendientes"></i>
+                <span id="text-toggle-reportes-pendientes">Mostrar todos los reportes recién registrados ({{ reportes_pendientes_list|length|add:"-1" }} más)</span>
+            </button>
+            {% endif %}
         </div>
         <div class="no-items-placeholder" id="placeholder-pendientes" {% if reportes_pendientes_list %}style="display: none;"{% endif %}>
             <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
@@ -1126,7 +1150,7 @@
                 </thead>
                 <tbody id="tbody-proceso">
                     {% for reporte in reportes_proceso_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-proceso" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1169,6 +1193,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if reportes_proceso_list|length > 1 %}
+            <button type="button" id="btn-toggle-reportes-proceso" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+                <i class="bi bi-chevron-down" id="icon-toggle-reportes-proceso"></i>
+                <span id="text-toggle-reportes-proceso">Mostrar todos los reportes en proceso ({{ reportes_proceso_list|length|add:"-1" }} más)</span>
+            </button>
+            {% endif %}
         </div>
         <div class="no-items-placeholder" id="placeholder-proceso" {% if reportes_proceso_list %}style="display: none;"{% endif %}>
             <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
@@ -1194,7 +1224,7 @@
                 </thead>
                 <tbody id="tbody-resueltos">
                     {% for reporte in reportes_resueltos_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-resueltos" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1229,6 +1259,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if reportes_resueltos_list|length > 1 %}
+            <button type="button" id="btn-toggle-reportes-resueltos" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+                <i class="bi bi-chevron-down" id="icon-toggle-reportes-resueltos"></i>
+                <span id="text-toggle-reportes-resueltos">Mostrar todos los reportes resueltos ({{ reportes_resueltos_list|length|add:"-1" }} más)</span>
+            </button>
+            {% endif %}
         </div>
         <div class="no-items-placeholder" id="placeholder-resueltos" {% if reportes_resueltos_list %}style="display: none;"{% endif %}>
             <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
@@ -1254,7 +1290,7 @@
                 </thead>
                 <tbody id="tbody-cancelados">
                     {% for reporte in reportes_cancelados_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-cancelados" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1289,6 +1325,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if reportes_cancelados_list|length > 1 %}
+            <button type="button" id="btn-toggle-reportes-cancelados" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+                <i class="bi bi-chevron-down" id="icon-toggle-reportes-cancelados"></i>
+                <span id="text-toggle-reportes-cancelados">Mostrar todos los reportes cancelados ({{ reportes_cancelados_list|length|add:"-1" }} más)</span>
+            </button>
+            {% endif %}
         </div>
         <div class="no-items-placeholder" id="placeholder-cancelados" {% if reportes_cancelados_list %}style="display: none;"{% endif %}>
             <div style="text-align: center; padding: 40px 20px; color: var(--text-slate-500);">
@@ -1915,6 +1957,38 @@
             
             return `<div class="acciones" style="justify-content: flex-end;">${buttons}</div>`;
         }
+
+        // --- Lógica de Colapsar/Expandir Tablas ---
+        function setupCollapsibleTable(btnId, rowClass, defaultText) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            
+            btn.addEventListener('click', function() {
+                const rows = document.querySelectorAll('.' + rowClass);
+                const isHidden = rows.length > 0 && rows[0].style.display === 'none';
+                
+                rows.forEach(row => {
+                    row.style.display = isHidden ? '' : 'none';
+                });
+                
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                
+                if (isHidden) {
+                    if (icon) icon.className = 'bi bi-chevron-up';
+                    if (text) text.textContent = 'Ocultar extras';
+                } else {
+                    if (icon) icon.className = 'bi bi-chevron-down';
+                    if (text) text.textContent = defaultText;
+                }
+            });
+        }
+
+        setupCollapsibleTable('btn-toggle-usuarios', 'extra-user-row', 'Mostrar todos los usuarios registrados');
+        setupCollapsibleTable('btn-toggle-reportes-pendientes', 'extra-report-row-pendientes', 'Mostrar todos los reportes recién registrados');
+        setupCollapsibleTable('btn-toggle-reportes-proceso', 'extra-report-row-proceso', 'Mostrar todos los reportes en proceso');
+        setupCollapsibleTable('btn-toggle-reportes-resueltos', 'extra-report-row-resueltos', 'Mostrar todos los reportes resueltos');
+        setupCollapsibleTable('btn-toggle-reportes-cancelados', 'extra-report-row-cancelados', 'Mostrar todos los reportes cancelados');
     });
 </script>
 
