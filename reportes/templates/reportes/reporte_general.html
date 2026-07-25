@@ -34,6 +34,93 @@
         box-shadow: 0 12px 25px rgba(15, 23, 42, 0.06);
     }
 
+    body.dark-mode .section-card {
+        background: #111c44;
+        border-color: #1b2559;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .report-selector-card {
+        border-top: 4px solid #ff7417 !important;
+        background: linear-gradient(to right, #f8fafc, #ffffff);
+        position: relative;
+        overflow: hidden;
+        margin-top: 15px;
+    }
+
+    body.dark-mode .report-selector-card {
+        background: linear-gradient(to right, #111c44, #1b254b);
+    }
+
+    .report-selector-desc {
+        text-align: left;
+        color: #475569;
+        margin: 0 0 20px 0;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    body.dark-mode .report-selector-desc {
+        color: #a3b1cc;
+    }
+
+    .report-selector-label {
+        font-weight: bold;
+        color: #334155;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    body.dark-mode .report-selector-label {
+        color: #cbd5e1;
+    }
+
+    .report-selector-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1.5px solid #94a3b8;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        background: white;
+        color: #0f172a;
+    }
+
+    body.dark-mode .report-selector-input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .report-selector-select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1.5px solid #94a3b8;
+        font-size: 14px;
+        outline: none;
+        background: white url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 class=%27lucide lucide-chevron-down%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E') no-repeat right 16px center;
+        background-size: 12px;
+        appearance: none;
+        -webkit-appearance: none;
+        transition: border-color 0.2s;
+        color: #0f172a;
+    }
+
+    body.dark-mode .report-selector-select {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+        background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27none%27 stroke=%27%23a3b1cc%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 class=%27lucide lucide-chevron-down%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E');
+    }
+
     .section-title {
         font-size: 24px;
         font-weight: 900;
@@ -41,6 +128,10 @@
         margin-bottom: 18px;
         border-left: 6px solid #ff7417;
         padding-left: 12px;
+    }
+
+    body.dark-mode .section-title {
+        color: #f8fafc;
     }
 
     .stats-row {
@@ -66,8 +157,18 @@
         border: 1.5px solid #cbd5e1;
         border-left: 5px solid #64748b;
     }
+
+    body.dark-mode .stat-box.stat-total {
+        background: #1e293b;
+        border-color: #334155;
+    }
+
     .stat-box.stat-total div {
         color: #334155;
+    }
+
+    body.dark-mode .stat-box.stat-total div {
+        color: #f8fafc;
     }
 
     .stat-box.stat-pendiente {
@@ -75,8 +176,18 @@
         border: 1.5px solid #fee2e2;
         border-left: 5px solid #ef4444;
     }
+
+    body.dark-mode .stat-box.stat-pendiente {
+        background: #451a1a;
+        border-color: #7f1d1d;
+    }
+
     .stat-box.stat-pendiente div {
         color: #b91c1c;
+    }
+
+    body.dark-mode .stat-box.stat-pendiente div {
+        color: #fecaca;
     }
 
     .stat-box.stat-proceso {
@@ -84,8 +195,18 @@
         border: 1.5px solid #dbeafe;
         border-left: 5px solid #3b82f6;
     }
+
+    body.dark-mode .stat-box.stat-proceso {
+        background: #172554;
+        border-color: #1e3a8a;
+    }
+
     .stat-box.stat-proceso div {
         color: #1d4ed8;
+    }
+
+    body.dark-mode .stat-box.stat-proceso div {
+        color: #dbeafe;
     }
 
     .stat-box.stat-resuelto {
@@ -93,14 +214,28 @@
         border: 1.5px solid #dcfce7;
         border-left: 5px solid #22c55e;
     }
+
+    body.dark-mode .stat-box.stat-resuelto {
+        background: #064e3b;
+        border-color: #065f46;
+    }
+
     .stat-box.stat-resuelto div {
         color: #15803d;
+    }
+
+    body.dark-mode .stat-box.stat-resuelto div {
+        color: #d1fae5;
     }
 
     .stat-box h3 {
         margin: 0 0 8px 0;
         color: #64748b;
         font-size: 14px;
+    }
+
+    body.dark-mode .stat-box h3 {
+        color: #94a3b8;
     }
 
     .stat-box div {
@@ -134,6 +269,10 @@
         overflow: hidden;
     }
 
+    body.dark-mode table {
+        background: #0f172a;
+    }
+
     table th {
         background: #f1f5f9;
         color: #475569;
@@ -144,6 +283,12 @@
         border-bottom: 2px solid #cbd5e1;
     }
 
+    body.dark-mode table th {
+        background: #1e293b;
+        color: #94a3b8;
+        border-bottom-color: #334155;
+    }
+
     table td {
         padding: 12px 16px;
         border-bottom: 1px solid #e2e8f0;
@@ -151,8 +296,26 @@
         color: #334155;
     }
 
+    body.dark-mode table td {
+        color: #cbd5e1;
+        border-bottom-color: #1e293b;
+    }
+
     table tbody tr:hover {
         background-color: #f8fafc;
+    }
+
+    body.dark-mode table tbody tr:hover {
+        background-color: #1e293b;
+    }
+
+    .no-reports-msg {
+        color: #64748b;
+        font-style: italic;
+    }
+
+    body.dark-mode .no-reports-msg {
+        color: #94a3b8;
     }
 
     @media print {
@@ -183,34 +346,28 @@
 </div>
 
 <!-- Sección para Generar Reporte de una Incidencia Específica -->
-<div class="section-card report-selector-card" style="border: 1px solid #cbd5e1; border-top: 4px solid #ff7417 !important; background: linear-gradient(to right, #f8fafc, #ffffff); position: relative; overflow: hidden; margin-top: 15px;">
+<div class="section-card report-selector-card">
     <div style="position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,116,23,0.05) 0%, rgba(255,255,255,0) 70%); pointer-events: none;"></div>
     
     <div class="section-title" style="font-size: 20px; border-left: 6px solid #ff7417; padding-left: 12px; margin-bottom: 12px;">Generar Reporte de Incidencia Específica</div>
-    <p style="text-align: left; color: #475569; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5;">
+    <p class="report-selector-desc">
         Busca y selecciona una incidencia en particular por su folio o título para generar y descargar un documento oficial en PDF con todos sus detalles y evidencias.
     </p>
 
     <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
         <div style="flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px;">
-            <label for="incidencia-search" style="font-weight: bold; color: #334155; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <label for="incidencia-search" class="report-selector-label">
                 🔍 Buscar incidencia (Folio o Título):
             </label>
-            <input type="text" id="incidencia-search" placeholder="Escribe el folio o título..." 
-                   style="width: 100%; box-sizing: border-box; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #94a3b8; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);"
-                   oninput="filtrarIncidencias()"
-                   onfocus="this.style.borderColor='#ff7417'; this.style.boxShadow='0 0 0 3px rgba(255,116,23,0.15)';"
-                   onblur="this.style.borderColor='#94a3b8'; this.style.boxShadow='none';">
+            <input type="text" id="incidencia-search" class="report-selector-input" placeholder="Escribe el folio o título..." 
+                   oninput="filtrarIncidencias()">
         </div>
 
         <div style="flex: 1.5; min-width: 320px; display: flex; flex-direction: column; gap: 8px;">
-            <label for="incidencia-select" style="font-weight: bold; color: #334155; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <label for="incidencia-select" class="report-selector-label">
                 📋 Seleccionar Incidencia:
             </label>
-            <select id="incidencia-select" 
-                    style="width: 100%; box-sizing: border-box; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #94a3b8; font-size: 14px; outline: none; background: white url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 class=%27lucide lucide-chevron-down%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E') no-repeat right 16px center; background-size: 12px; appearance: none; -webkit-appearance: none; transition: border-color 0.2s;"
-                    onfocus="this.style.borderColor='#ff7417';"
-                    onblur="this.style.borderColor='#94a3b8';">
+            <select id="incidencia-select" class="report-selector-select">
                 <option value="">-- Selecciona una incidencia --</option>
                 {% for rep in todos_los_reportes %}
                     <option value="{{ rep.id }}" data-search="{{ rep.folio|lower }} {{ rep.titulo|lower }}">
@@ -341,12 +498,12 @@
             </table>
         </div>
     {% else %}
-        <p style="color: #64748b; font-style: italic;">No hay reportes de esta categoría registrados.</p>
+        <p class="no-reports-msg">No hay reportes de esta categoría registrados.</p>
     {% endif %}
 </div>
 {% empty %}
-<div class="section-card" style="text-align: center; padding: 40px; color: #64748b;">
-    <p>No hay categorías registradas en el sistema.</p>
+<div class="section-card" style="text-align: center; padding: 40px;">
+    <p class="no-reports-msg">No hay categorías registradas en el sistema.</p>
 </div>
 {% endfor %}
 
