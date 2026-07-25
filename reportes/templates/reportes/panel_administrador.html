@@ -703,6 +703,28 @@
     .btn-modal-ok:hover {
         background: #4f46e5;
     }
+
+    /* Estilos para modo oscuro y file inputs de galería */
+    .galeria-file-input {
+        font-size: 11px;
+        width: 220px;
+        max-width: 100%;
+        padding: 4px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: white;
+        color: #0f172a;
+    }
+
+    body.dark-mode .galeria-file-input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+    }
+
+    body.dark-mode .galeria-label {
+        color: #cbd5e1 !important;
+    }
 </style>
 
 <div class="mb-4">
@@ -1391,10 +1413,9 @@
                 </tr>
             </thead>
             <tbody>
-                {% for reporte in reportes %}
-                {% if reporte.estado == 'Resuelto' %}
-                <tr>
-                    <td class="fw-bold text-dark">{{ reporte.folio|default:"Sin folio" }}</td>
+                {% for reporte in reportes_resueltos_list %}
+                <tr {% if not forloop.first %}class="extra-report-row-galeria" style="display: none;"{% endif %}>
+                    <td class="fw-bold">{{ reporte.folio|default:"Sin folio" }}</td>
                     <td>
                         <strong>{{ reporte.titulo }}</strong><br>
                         <small class="text-muted"><i class="bi bi-geo-alt"></i> {{ reporte.colonia|default:"Acapulco" }}</small>
@@ -1424,16 +1445,14 @@
                             enctype="multipart/form-data" class="d-flex align-items-center flex-wrap gap-3">
                             {% csrf_token %}
                             <div class="d-flex flex-column gap-1">
-                                <label class="small text-secondary fw-bold"
+                                <label class="small galeria-label fw-bold"
                                     style="font-size: 11px; margin-bottom: 2px;">Foto Antes:</label>
-                                <input type="file" name="foto_antes" accept="image/*"
-                                    style="font-size: 11px; width: 220px; max-width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <input type="file" name="foto_antes" accept="image/*" class="galeria-file-input">
                             </div>
                             <div class="d-flex flex-column gap-1">
-                                <label class="small text-secondary fw-bold"
+                                <label class="small galeria-label fw-bold"
                                     style="font-size: 11px; margin-bottom: 2px;">Foto Después:</label>
-                                <input type="file" name="foto_despues" accept="image/*"
-                                    style="font-size: 11px; width: 220px; max-width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <input type="file" name="foto_despues" accept="image/*" class="galeria-file-input">
                             </div>
                             <button type="submit" class="btn-admin btn-blue"
                                 style="padding: 8px 14px; font-size:12px; height: fit-content; align-self: flex-end; margin-bottom: 2px;">
@@ -1471,10 +1490,15 @@
                         </div>
                     </td>
                 </tr>
-                {% endif %}
                 {% endfor %}
             </tbody>
         </table>
+        {% if reportes_resueltos_list|length > 1 %}
+        <button type="button" id="btn-toggle-reportes-galeria" class="btn-admin btn-blue w-100 mt-3 fw-bold" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; margin-top: 15px;">
+            <i class="bi bi-chevron-down" id="icon-toggle-reportes-galeria"></i>
+            <span id="text-toggle-reportes-galeria">Mostrar todas las incidencias resueltas ({{ reportes_resueltos_list|length|add:"-1" }} más)</span>
+        </button>
+        {% endif %}
     </div>
     {% else %}
     <p>No hay reportes registrados para gestionar.</p>
@@ -1996,6 +2020,7 @@
         setupCollapsibleTable('btn-toggle-reportes-proceso', 'extra-report-row-proceso', 'Mostrar todos los reportes en proceso');
         setupCollapsibleTable('btn-toggle-reportes-resueltos', 'extra-report-row-resueltos', 'Mostrar todos los reportes resueltos');
         setupCollapsibleTable('btn-toggle-reportes-cancelados', 'extra-report-row-cancelados', 'Mostrar todos los reportes cancelados');
+        setupCollapsibleTable('btn-toggle-reportes-galeria', 'extra-report-row-galeria', 'Mostrar todas las incidencias resueltas');
     });
 </script>
 

@@ -249,7 +249,7 @@ class Reporte(models.Model):
     fecha_reporte = models.DateTimeField(auto_now_add=True)
 
     # Indica si el reporte resuelto debe mostrarse públicamente en la galería de la landing page
-    mostrar_en_galeria = models.BooleanField(default=True)
+    mostrar_en_galeria = models.BooleanField(default=False)
 
     # Contador de intentos de reapertura realizados por el ciudadano tras la cancelación (máximo 2)
     intentos_reapertura = models.IntegerField(default=0)
