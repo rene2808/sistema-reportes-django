@@ -812,7 +812,14 @@
                     <option value="bache">Solo Baches (Agrupado)</option>
                     <option value="basura">Solo Basura (Agrupado)</option>
                     {% for cat in categorias %}
-                        <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                        {% if cat.nombre|lower != "otro" %}
+                            <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                        {% endif %}
+                    {% endfor %}
+                    {% for cat in categorias %}
+                        {% if cat.nombre|lower == "otro" %}
+                            <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>
