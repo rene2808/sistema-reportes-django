@@ -2124,9 +2124,9 @@ def reporte_mensual_incidentes_excel(request):
         bottom=Side(style='double', color='0F172A')
     )
 
-    # Banner de Encabezado ampliado (A1:L2)
-    ws1.merge_cells("A1:L1")
-    ws1.merge_cells("A2:L2")
+    # Banner de Encabezado ampliado (A1:N2)
+    ws1.merge_cells("A1:N1")
+    ws1.merge_cells("A2:N2")
     ws1.row_dimensions[1].height = 22
     ws1.row_dimensions[2].height = 20
     ws1.row_dimensions[3].height = 20
@@ -2141,8 +2141,8 @@ def reporte_mensual_incidentes_excel(request):
     ws1["A2"].fill = header_fill
     ws1["A2"].alignment = Alignment(horizontal="center", vertical="center")
 
-    # Fila de metadatos (A3:L3)
-    ws1.merge_cells("A3:L3")
+    # Fila de metadatos (A3:N3)
+    ws1.merge_cells("A3:N3")
     ws1["A3"] = f"Generado el: {timezone.now().strftime('%d/%m/%Y %H:%M')} | Total reportes analizados: {reportes.count()} | Operador: {request.user.username}"
     ws1["A3"].font = font_subtitle
     ws1["A3"].fill = sub_fill
@@ -2151,22 +2151,67 @@ def reporte_mensual_incidentes_excel(request):
     # Separador
     ws1.row_dimensions[4].height = 12
 
+    # --- 1. SECCIÓN DE TARJETAS KPI (DASHBOARD) ---
+    total_reps = reportes.count()
+    pendientes_count = reportes.filter(estado='Pendiente').count()
+    proceso_count = reportes.filter(estado='En proceso').count()
+    resueltos_count = reportes.filter(estado='Resuelto').count()
+    eficiencia = resueltos_count / total_reps if total_reps > 0 else 0.0
+
+    def create_kpi_card(ws, start_col, start_row, label, value, bg_color, text_color, is_percentage=False):
+        col1 = get_column_letter(start_col)
+        col2 = get_column_letter(start_col + 1)
+        ws.merge_cells(f"{col1}{start_row}:{col2}{start_row}")
+        ws.merge_cells(f"{col1}{start_row+1}:{col2}{start_row+2}")
+        
+        lbl_cell = ws[f"{col1}{start_row}"]
+        lbl_cell.value = label
+        lbl_cell.font = Font(name="Arial", size=8.5, bold=True, color=text_color)
+        lbl_cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        val_cell = ws[f"{col1}{start_row+1}"]
+        val_cell.value = value
+        val_cell.font = Font(name="Arial", size=16, bold=True, color=text_color)
+        val_cell.alignment = Alignment(horizontal="center", vertical="center")
+        if is_percentage:
+            val_cell.number_format = '0.0%'
+
+        card_fill = PatternFill(start_color=bg_color, end_color=bg_color, fill_type="solid")
+        for r in range(start_row, start_row + 3):
+            for c in range(start_col, start_col + 2):
+                cell = ws.cell(row=r, column=c)
+                cell.fill = card_fill
+                cell.border = thin_border
+
+    ws1.row_dimensions[5].height = 18
+    ws1.row_dimensions[6].height = 16
+    ws1.row_dimensions[7].height = 16
+    
+    create_kpi_card(ws1, 1, 5, "TOTAL REPORTES", total_reps, "F8FAFC", "0F172A")
+    create_kpi_card(ws1, 4, 5, "PENDIENTES", pendientes_count, "FEE2E2", "991B1B")
+    create_kpi_card(ws1, 7, 5, "EN PROCESO", proceso_count, "DBEAFE", "1E40AF")
+    create_kpi_card(ws1, 10, 5, "RESUELTOS", resueltos_count, "D1FAE5", "065F46")
+    create_kpi_card(ws1, 13, 5, "EFICIENCIA CIERRE", eficiencia, "ECFEFF", "0891B2", is_percentage=True)
+
+    ws1.row_dimensions[8].height = 15
+
     # -------------------------------------------------------------
     # TABLA 1: PORCENTAJE POR TIPO DE INCIDENCIA (CATEGORÍA)
     # -------------------------------------------------------------
-    ws1["A5"] = "Tipo de Incidencia (Categoría)"
-    ws1["B5"] = "Cantidad"
-    ws1["C5"] = "Porcentaje"
-    ws1.row_dimensions[5].height = 22
-    for col in ["A5", "B5", "C5"]:
-        ws1[col].font = font_header
-        ws1[col].fill = accent_orange
-        ws1[col].alignment = Alignment(horizontal="center", vertical="center")
+    start_cat_row = 10
+    ws1.cell(row=start_cat_row, column=1, value="Tipo de Incidencia (Categoría)").font = font_header
+    ws1.cell(row=start_cat_row, column=2, value="Cantidad").font = font_header
+    ws1.cell(row=start_cat_row, column=3, value="Porcentaje").font = font_header
+    ws1.row_dimensions[start_cat_row].height = 22
+    for col in [1, 2, 3]:
+        cell = ws1.cell(row=start_cat_row, column=col)
+        cell.fill = accent_orange
+        cell.alignment = Alignment(horizontal="center", vertical="center")
 
     categorias = Categoria.objects.all().order_by('nombre')
-    total_reps = reportes.count() or 1
+    total_reps_divisor = total_reps or 1
 
-    row_idx = 6
+    row_idx = start_cat_row + 1
     cat_colors = {
         'baches': 'F59E0B',      # Naranja vial
         'basura': '10B981',      # Verde esmeralda
@@ -2184,7 +2229,8 @@ def reporte_mensual_incidentes_excel(request):
         if cant > 0:
             ws1.cell(row=row_idx, column=1, value=cat.nombre).font = font_regular
             ws1.cell(row=row_idx, column=2, value=cant).font = font_bold
-            ws1.cell(row=row_idx, column=3, value=cant / total_reps).number_format = '0.0%'
+            ws1.cell(row=row_idx, column=3, value=cant / total_reps_divisor).number_format = '0.0%'
+            ws1.cell(row=row_idx, column=3).font = font_bold
             
             ws1.cell(row=row_idx, column=1).alignment = Alignment(horizontal="left", vertical="center")
             ws1.cell(row=row_idx, column=2).alignment = Alignment(horizontal="center", vertical="center")
@@ -2200,12 +2246,11 @@ def reporte_mensual_incidentes_excel(request):
                     color = val
                     break
             cat_slice_colors.append(color)
-
             row_idx += 1
 
     # Fila de Total para Tabla 1
     ws1.cell(row=row_idx, column=1, value="TOTAL").font = font_bold
-    ws1.cell(row=row_idx, column=2, value=reportes.count()).font = font_bold
+    ws1.cell(row=row_idx, column=2, value=total_reps).font = font_bold
     ws1.cell(row=row_idx, column=3, value=1.0).number_format = '0.0%'
     ws1.cell(row=row_idx, column=3).font = font_bold
 
@@ -2220,20 +2265,15 @@ def reporte_mensual_incidentes_excel(request):
 
     cat_data_end_row = row_idx - 1
 
-    # Crear Gráfica de Pastel 1 (Categorías)
-    if cat_data_end_row >= 6:
+    # Gráfica de Pastel 1 (Categorías)
+    if cat_data_end_row >= start_cat_row + 1:
         pie_cat = PieChart()
         pie_cat.title = "Porcentaje por Tipo de Incidencia"
-        if pie_cat.title:
-            pie_cat.title.overlay = False
-        pie_cat.width = 18
-        pie_cat.height = 11.5
-        if pie_cat.legend:
-            pie_cat.legend.overlay = False
-            pie_cat.legend.position = "r"
-
-        labels_cat = Reference(ws1, min_col=1, min_row=6, max_row=cat_data_end_row)
-        data_cat = Reference(ws1, min_col=2, min_row=5, max_row=cat_data_end_row)
+        pie_cat.title.text.font = Font(name="Arial", size=10, bold=True)
+        pie_cat.width = 16
+        pie_cat.height = 9.5
+        labels_cat = Reference(ws1, min_col=1, min_row=start_cat_row + 1, max_row=cat_data_end_row)
+        data_cat = Reference(ws1, min_col=2, min_row=start_cat_row, max_row=cat_data_end_row)
         pie_cat.add_data(data_cat, titles_from_data=True)
         pie_cat.set_categories(labels_cat)
 
@@ -2243,13 +2283,12 @@ def reporte_mensual_incidentes_excel(request):
                 dp = DataPoint(idx=idx)
                 dp.graphicalProperties.solidFill = color
                 series.data_points.append(dp)
-
-        ws1.add_chart(pie_cat, "E5")
+        ws1.add_chart(pie_cat, "E10")
 
     # -------------------------------------------------------------
     # TABLA 2: PORCENTAJE POR ESTADO DEL REPORTE
     # -------------------------------------------------------------
-    start_estado_row = 16
+    start_estado_row = row_idx + 3
     ws1.cell(row=start_estado_row, column=1, value="Estado del Reporte").font = font_header
     ws1.cell(row=start_estado_row, column=2, value="Cantidad").font = font_header
     ws1.cell(row=start_estado_row, column=3, value="Porcentaje").font = font_header
@@ -2259,9 +2298,9 @@ def reporte_mensual_incidentes_excel(request):
         ws1.cell(row=start_estado_row, column=c).alignment = Alignment(horizontal="center", vertical="center")
 
     estados_list = [
-        ('Pendiente', reportes.filter(estado='Pendiente').count(), 'EF4444', 'FEE2E2', '991B1B'),
-        ('En proceso', reportes.filter(estado='En proceso').count(), '3B82F6', 'DBEAFE', '1E40AF'),
-        ('Resuelto', reportes.filter(estado='Resuelto').count(), '10B981', 'D1FAE5', '065F46'),
+        ('Pendiente', pendientes_count, 'EF4444', 'FEE2E2', '991B1B'),
+        ('En proceso', proceso_count, '3B82F6', 'DBEAFE', '1E40AF'),
+        ('Resuelto', resueltos_count, '10B981', 'D1FAE5', '065F46'),
         ('Cancelado', reportes.filter(estado='Cancelado').count(), '64748B', 'F1F5F9', '475569'),
     ]
 
@@ -2270,7 +2309,7 @@ def reporte_mensual_incidentes_excel(request):
     for nombre_e, cant_e, color_e, fill_bg, text_color in estados_list:
         ws1.cell(row=e_row, column=1, value=nombre_e).font = Font(name="Arial", size=10, bold=True, color=text_color)
         ws1.cell(row=e_row, column=2, value=cant_e).font = font_bold
-        ws1.cell(row=e_row, column=3, value=cant_e / total_reps).number_format = '0.0%'
+        ws1.cell(row=e_row, column=3, value=cant_e / total_reps_divisor).number_format = '0.0%'
         ws1.cell(row=e_row, column=3).font = font_bold
 
         ws1.cell(row=e_row, column=1).alignment = Alignment(horizontal="left", vertical="center")
@@ -2287,7 +2326,7 @@ def reporte_mensual_incidentes_excel(request):
 
     # Fila Total Tabla 2
     ws1.cell(row=e_row, column=1, value="TOTAL").font = font_bold
-    ws1.cell(row=e_row, column=2, value=reportes.count()).font = font_bold
+    ws1.cell(row=e_row, column=2, value=total_reps).font = font_bold
     ws1.cell(row=e_row, column=3, value=1.0).number_format = '0.0%'
     ws1.cell(row=e_row, column=3).font = font_bold
 
@@ -2302,17 +2341,12 @@ def reporte_mensual_incidentes_excel(request):
 
     e_data_end_row = e_row - 1
 
-    # Crear Gráfica de Pastel 2 (Estados) posicionada en E27 (Sin solapamiento)
+    # Gráfica de Pastel 2 (Estados)
     pie_est = PieChart()
     pie_est.title = "Porcentaje por Estado del Reporte"
-    if pie_est.title:
-        pie_est.title.overlay = False
-    pie_est.width = 18
-    pie_est.height = 11.5
-    if pie_est.legend:
-        pie_est.legend.overlay = False
-        pie_est.legend.position = "r"
-
+    pie_est.title.text.font = Font(name="Arial", size=10, bold=True)
+    pie_est.width = 16
+    pie_est.height = 9.5
     labels_est = Reference(ws1, min_col=1, min_row=start_estado_row + 1, max_row=e_data_end_row)
     data_est = Reference(ws1, min_col=2, min_row=start_estado_row, max_row=e_data_end_row)
     pie_est.add_data(data_est, titles_from_data=True)
@@ -2324,8 +2358,82 @@ def reporte_mensual_incidentes_excel(request):
             dp = DataPoint(idx=idx)
             dp.graphicalProperties.solidFill = color
             series2.data_points.append(dp)
+    ws1.add_chart(pie_est, "E25")
 
-    ws1.add_chart(pie_est, "E27")
+    # -------------------------------------------------------------
+    # TABLA 3: PORCENTAJE POR PRIORIDAD DEL REPORTE
+    # -------------------------------------------------------------
+    start_prioridad_row = e_row + 3
+    ws1.cell(row=start_prioridad_row, column=1, value="Prioridad del Reporte").font = font_header
+    ws1.cell(row=start_prioridad_row, column=2, value="Cantidad").font = font_header
+    ws1.cell(row=start_prioridad_row, column=3, value="Porcentaje").font = font_header
+    ws1.row_dimensions[start_prioridad_row].height = 22
+    for c in range(1, 4):
+        ws1.cell(row=start_prioridad_row, column=c).fill = header_fill
+        ws1.cell(row=start_prioridad_row, column=c).alignment = Alignment(horizontal="center", vertical="center")
+
+    prioridades_list = [
+        ('Baja', reportes.filter(prioridad='Baja').count(), '10B981', 'D1FAE5', '065F46'),
+        ('Media', reportes.filter(prioridad='Media').count(), 'F59E0B', 'FEF3C7', '92400E'),
+        ('Alta', reportes.filter(prioridad='Alta').count(), 'F97316', 'FFEDD5', '9A3412'),
+        ('Urgente', reportes.filter(prioridad='Urgente').count(), 'EF4444', 'FEE2E2', '991B1B'),
+    ]
+
+    p_row = start_prioridad_row + 1
+    prioridad_slice_colors = []
+    for nombre_p, cant_p, color_p, fill_bg, text_color in prioridades_list:
+        ws1.cell(row=p_row, column=1, value=nombre_p).font = Font(name="Arial", size=10, bold=True, color=text_color)
+        ws1.cell(row=p_row, column=2, value=cant_p).font = font_bold
+        ws1.cell(row=p_row, column=3, value=cant_p / total_reps_divisor).number_format = '0.0%'
+        ws1.cell(row=p_row, column=3).font = font_bold
+
+        ws1.cell(row=p_row, column=1).alignment = Alignment(horizontal="left", vertical="center")
+        ws1.cell(row=p_row, column=2).alignment = Alignment(horizontal="center", vertical="center")
+        ws1.cell(row=p_row, column=3).alignment = Alignment(horizontal="center", vertical="center")
+
+        row_fill = PatternFill(start_color=fill_bg, end_color=fill_bg, fill_type="solid")
+        for c in range(1, 4):
+            ws1.cell(row=p_row, column=c).border = thin_border
+            ws1.cell(row=p_row, column=c).fill = row_fill
+
+        prioridad_slice_colors.append(color_p)
+        p_row += 1
+
+    # Fila Total Tabla 3
+    ws1.cell(row=p_row, column=1, value="TOTAL").font = font_bold
+    ws1.cell(row=p_row, column=2, value=total_reps).font = font_bold
+    ws1.cell(row=p_row, column=3, value=1.0).number_format = '0.0%'
+    ws1.cell(row=p_row, column=3).font = font_bold
+
+    for c in range(1, 4):
+        cell = ws1.cell(row=p_row, column=c)
+        cell.fill = light_total_fill
+        cell.border = double_bottom_border
+        if c > 1:
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        else:
+            cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    p_data_end_row = p_row - 1
+
+    # Gráfica de Pastel 3 (Prioridades)
+    pie_prio = PieChart()
+    pie_prio.title = "Porcentaje por Prioridad del Reporte"
+    pie_prio.title.text.font = Font(name="Arial", size=10, bold=True)
+    pie_prio.width = 16
+    pie_prio.height = 9.5
+    labels_prio = Reference(ws1, min_col=1, min_row=start_prioridad_row + 1, max_row=p_data_end_row)
+    data_prio = Reference(ws1, min_col=2, min_row=start_prioridad_row, max_row=p_data_end_row)
+    pie_prio.add_data(data_prio, titles_from_data=True)
+    pie_prio.set_categories(labels_prio)
+
+    if pie_prio.series:
+        series3 = pie_prio.series[0]
+        for idx, color in enumerate(prioridad_slice_colors):
+            dp = DataPoint(idx=idx)
+            dp.graphicalProperties.solidFill = color
+            series3.data_points.append(dp)
+    ws1.add_chart(pie_prio, "E40")
 
     # Ajustar dimensiones de columnas para Hoja 1
     ws1.column_dimensions['A'].width = 28
@@ -2343,8 +2451,12 @@ def reporte_mensual_incidentes_excel(request):
     ws2.views.sheetView[0].showGridLines = True
 
     headers_ws2 = [
-        "Folio", "Fecha", "Categoría / Incidencia", "Título", 
-        "Descripción", "Ubicación (Calle/Colonia)", "Estado", "Prioridad", "Ciudadano"
+        "Folio", "Fecha de Creación", "Categoría / Incidencia", "Título", 
+        "Descripción", "Municipio", "Colonia", "Calle", "Código Postal", 
+        "Referencia de Ubicación", "Latitud", "Longitud", "Prioridad", "Estado", 
+        "Creado por (Ciudadano)", "Nombre Ciudadano", "Correo Ciudadano", 
+        "Intentos Reapertura", "Tiene Foto Antes", "Fotos Evidencia Después", 
+        "Calificación Servicio", "Opinión Servicio"
     ]
 
     ws2.append(headers_ws2)
@@ -2357,17 +2469,34 @@ def reporte_mensual_incidentes_excel(request):
     ws2.row_dimensions[1].height = 25
 
     for rep in reportes:
-        ubicacion = f"{rep.calle or ''}, {rep.colonia or ''}".strip(', ')
+        resena = rep.reseñas.first()
+        score_val = resena.puntuacion if resena else "Sin calificar"
+        comment_val = resena.comentario if resena else ""
+        nombre_completo = f"{rep.usuario.first_name} {rep.usuario.last_name}".strip() or "No especificado"
+
         ws2.append([
             rep.folio or f"REP-{rep.id}",
             rep.fecha_reporte.strftime("%d/%m/%Y %H:%M"),
             rep.categoria.nombre if rep.categoria else "Sin categoría",
             rep.titulo or "",
             rep.descripcion or "",
-            ubicacion or "No especificada",
-            rep.estado,
+            rep.municipio or "Acapulco de Juárez",
+            rep.colonia or "No registrada",
+            rep.calle or "No registrada",
+            rep.codigo_postal or "",
+            rep.referencia or "",
+            float(rep.latitud) if rep.latitud else "",
+            float(rep.longitud) if rep.longitud else "",
             rep.prioridad,
-            rep.usuario.username
+            rep.estado,
+            rep.usuario.username,
+            nombre_completo,
+            rep.usuario.email or "No registrado",
+            rep.intentos_reapertura,
+            "Sí" if rep.foto else "No",
+            rep.evidencias.count(),
+            score_val,
+            comment_val
         ])
 
     for row in range(2, ws2.max_row + 1):
@@ -2376,11 +2505,54 @@ def reporte_mensual_incidentes_excel(request):
             cell.font = font_regular
             cell.border = thin_border
             cell.alignment = Alignment(vertical="center")
+            
+        # Formato condicional de prioridades (Columna 13)
+        prioridad_cell = ws2.cell(row=row, column=13)
+        val_p = prioridad_cell.value
+        if val_p == 'Baja':
+            prioridad_cell.fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
+            prioridad_cell.font = Font(name="Arial", size=10, bold=True, color="065F46")
+        elif val_p == 'Media':
+            prioridad_cell.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+            prioridad_cell.font = Font(name="Arial", size=10, bold=True, color="92400E")
+        elif val_p == 'Alta':
+            prioridad_cell.fill = PatternFill(start_color="FFEDD5", end_color="FFEDD5", fill_type="solid")
+            prioridad_cell.font = Font(name="Arial", size=10, bold=True, color="9A3412")
+        elif val_p == 'Urgente':
+            prioridad_cell.fill = PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid")
+            prioridad_cell.font = Font(name="Arial", size=10, bold=True, color="991B1B")
 
+        # Formato condicional de estados (Columna 14)
+        estado_cell = ws2.cell(row=row, column=14)
+        val_e = estado_cell.value
+        if val_e == 'Pendiente':
+            estado_cell.fill = PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid")
+            estado_cell.font = Font(name="Arial", size=10, bold=True, color="991B1B")
+        elif val_e == 'En proceso':
+            estado_cell.fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
+            estado_cell.font = Font(name="Arial", size=10, bold=True, color="1E40AF")
+        elif val_e == 'Resuelto':
+            estado_cell.fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
+            estado_cell.font = Font(name="Arial", size=10, bold=True, color="065F46")
+        elif val_e == 'Cancelado':
+            estado_cell.fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+            estado_cell.font = Font(name="Arial", size=10, bold=True, color="475569")
+
+    # Ajuste automático de ancho de columnas con límite y envoltura de texto
     for col in ws2.columns:
-        max_len = max(len(str(cell.value or '')) for cell in col)
+        max_len = 0
+        for cell in col:
+            val_str = str(cell.value or '')
+            if len(val_str) > max_len:
+                max_len = len(val_str)
         col_letter = get_column_letter(col[0].column)
-        ws2.column_dimensions[col_letter].width = max(max_len + 4, 12)
+        calculated_width = max(max_len + 4, 12)
+        if calculated_width > 50:
+            ws2.column_dimensions[col_letter].width = 50
+            for cell in col:
+                cell.alignment = Alignment(wrap_text=True, vertical="center")
+        else:
+            ws2.column_dimensions[col_letter].width = calculated_width
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

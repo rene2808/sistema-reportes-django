@@ -311,33 +311,35 @@
     </div>
 
     {% if grupo.reportes %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Folio</th>
-                    <th>Título</th>
-                    <th>Colonia</th>
-                    <th>Calle</th>
-                    <th>Prioridad</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for reporte in grupo.reportes %}
-                    <tr style="cursor: pointer;" onclick="window.location.href='{% url 'detalle_reporte' reporte.id %}'">
-                        <td>{{ reporte.folio }}</td>
-                        <td>{{ reporte.titulo|default:"Sin título" }}</td>
-                        <td>{{ reporte.colonia|default:"No registrada" }}</td>
-                        <td>{{ reporte.calle|default:"No registrada" }}</td>
-                        <td>{{ reporte.prioridad }}</td>
-                        <td>{{ reporte.estado }}</td>
-                        <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Título</th>
+                        <th>Colonia</th>
+                        <th>Calle</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    {% for reporte in grupo.reportes %}
+                        <tr style="cursor: pointer;" onclick="window.location.href='{% url 'detalle_reporte' reporte.id %}'">
+                            <td>{{ reporte.folio }}</td>
+                            <td>{{ reporte.titulo|default:"Sin título" }}</td>
+                            <td>{{ reporte.colonia|default:"No registrada" }}</td>
+                            <td>{{ reporte.calle|default:"No registrada" }}</td>
+                            <td>{{ reporte.prioridad }}</td>
+                            <td>{{ reporte.estado }}</td>
+                            <td>{{ reporte.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
         <p style="color: #64748b; font-style: italic;">No hay reportes de esta categoría registrados.</p>
     {% endif %}

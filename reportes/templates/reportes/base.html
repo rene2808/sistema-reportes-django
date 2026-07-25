@@ -1371,6 +1371,34 @@
                     }
                 });
             }
+
+            // --- Persistencia de Scroll ---
+            const pathKey = 'scroll_pos_' + window.location.pathname;
+            const savedScroll = sessionStorage.getItem(pathKey);
+            if (savedScroll !== null) {
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: parseInt(savedScroll, 10),
+                        behavior: 'instant'
+                    });
+                    sessionStorage.removeItem(pathKey);
+                }, 50);
+            }
+
+            window.addEventListener('beforeunload', () => {
+                sessionStorage.setItem(pathKey, window.scrollY);
+            });
+
+            document.querySelectorAll('.menu a, .sidebar a, .logo-box-desktop a, .mobile-brand-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        const key = sessionStorage.key(i);
+                        if (key && key.startsWith('scroll_pos_')) {
+                            sessionStorage.removeItem(key);
+                        }
+                    }
+                });
+            });
         });
     </script>
 
