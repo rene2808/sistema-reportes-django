@@ -1290,41 +1290,7 @@
         modal.style.display = 'none';
     };
 
-    const btnSnap = document.getElementById('btn-snap-photo');
-    if (btnSnap) {
-        btnSnap.addEventListener('click', function() {
-            const video = document.getElementById('live-webcam-stream');
-            if (!video || !webcamStream) return;
-
-            // Crear canvas para capturar el fotograma
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(function(blob) {
-                const capturedFile = new File([blob], `evidencia_camara_${Date.now()}.jpg`, {
-                    type: 'image/jpeg',
-                    lastModified: Date.now()
-                });
-
-                if (selectedFiles.length < 3) {
-                    compressAndAddFile(capturedFile);
-                } else {
-                    alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
-                }
-                closeLiveWebcam();
-            }, 'image/jpeg', 0.8);
-        });
-    }
-
-    const btnCancelCam = document.getElementById('btn-cancel-camera');
-    if (btnCancelCam) {
-        btnCancelCam.addEventListener('click', closeLiveWebcam);
-    }
-
-    // Ocultar el botón de tomar foto si se ingresa desde laptop/desktop
+    // Ocultar el botón de tomar foto si se ingresa desde laptop/desktop y configurar botones de cámara
     document.addEventListener("DOMContentLoaded", function() {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
             || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
@@ -1334,6 +1300,40 @@
             if (btnCam) {
                 btnCam.style.display = 'none'; // Ocultar botón de cámara en laptops/desktops
             }
+        }
+
+        const btnSnap = document.getElementById('btn-snap-photo');
+        if (btnSnap) {
+            btnSnap.addEventListener('click', function() {
+                const video = document.getElementById('live-webcam-stream');
+                if (!video || !webcamStream) return;
+
+                // Crear canvas para capturar el fotograma
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                canvas.toBlob(function(blob) {
+                    const capturedFile = new File([blob], `evidencia_camara_${Date.now()}.jpg`, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+
+                    if (selectedFiles.length < 3) {
+                        compressAndAddFile(capturedFile);
+                    } else {
+                        alert('Solo se pueden adjuntar un máximo de 3 imágenes.');
+                    }
+                    closeLiveWebcam();
+                }, 'image/jpeg', 0.8);
+            });
+        }
+
+        const btnCancelCam = document.getElementById('btn-cancel-camera');
+        if (btnCancelCam) {
+            btnCancelCam.addEventListener('click', closeLiveWebcam);
         }
     });
 </script>
