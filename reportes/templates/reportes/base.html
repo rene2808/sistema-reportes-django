@@ -1178,15 +1178,28 @@
                 }, 10000); // 10000 milisegundos = 10 segundos
             });
 
-            // Polling en tiempo real para verificar nuevas notificaciones sin refrescar
+            // Polling en tiempo real para verificar nuevas notificaciones e inactividad
             {% if user.is_authenticated %}
             const badge = document.getElementById('notif-badge-counter');
 
             function verificarNuevasNotificaciones() {
                 fetch("{% url 'api_notificaciones_sin_leer' %}")
-                    .then(response => response.json())
+                    .then(response => {
+                        // Si la sesión expiró en el servidor, Django redirige a la página de login (o inicio).
+                        // Detectamos esto mediante response.redirected y mandamos al usuario a la página de inicio.
+                        if (response.redirected) {
+                            window.location.href = "{% url 'inicio' %}";
+                            return;
+                        }
+                        if (!response.ok) {
+                            window.location.href = "{% url 'inicio' %}";
+                            return;
+                        }
+                        return response.json();
+                    })
                     .then(data => {
-                        if (data && typeof data.unread_count !== 'undefined') {
+                        if (!data) return;
+                        if (typeof data.unread_count !== 'undefined') {
                             const count = data.unread_count;
                             if (count > 0) {
                                 badge.textContent = count;
@@ -1196,11 +1209,37 @@
                             }
                         }
                     })
-                    .catch(err => console.error("Error al obtener notificaciones:", err));
+                    .catch(err => {
+                        console.error("Error al obtener notificaciones:", err);
+                    });
             }
 
             // Ejecutar cada 10 segundos
             setInterval(verificarNuevasNotificaciones, 10000);
+
+            // --- Control Dinámico de Inactividad de Sesión (Cliente) ---
+            let temporizadorInactividad;
+            // session_cookie_age proviene de Django Context Processor (por defecto 10 min = 600 seg)
+            const tiempoLimiteInactividad = ({{ session_cookie_age|default:600 }}) * 1000;
+
+            function reiniciarTemporizadorInactividad() {
+                clearTimeout(temporizadorInactividad);
+                temporizadorInactividad = setTimeout(cerrarSesionPorInactividad, tiempoLimiteInactividad);
+            }
+
+            function cerrarSesionPorInactividad() {
+                // Redirigir directamente al logout para destruir la sesión y mandar al inicio
+                window.location.href = "{% url 'logout' %}";
+            }
+
+            // Eventos que indican actividad del usuario en la página
+            const eventosInteractivos = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+            eventosInteractivos.forEach(evento => {
+                document.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
+            });
+
+            // Iniciar temporizador
+            reiniciarTemporizadorInactividad();
             {% endif %}
 
             // Manejo del cambio de tema (Sidebar Switch)
