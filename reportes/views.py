@@ -2433,7 +2433,7 @@ def reporte_mensual_incidentes_excel(request):
             dp = DataPoint(idx=idx)
             dp.graphicalProperties.solidFill = color
             series3.data_points.append(dp)
-    ws1.add_chart(pie_prio, "E28")
+    ws1.add_chart(pie_prio, "O10")
 
     # Ajustar dimensiones de columnas para Hoja 1
     ws1.column_dimensions['A'].width = 28
@@ -2450,6 +2450,11 @@ def reporte_mensual_incidentes_excel(request):
     ws1.column_dimensions['L'].width = 16
     ws1.column_dimensions['M'].width = 16
     ws1.column_dimensions['N'].width = 16
+    ws1.column_dimensions['O'].width = 16
+    ws1.column_dimensions['P'].width = 16
+    ws1.column_dimensions['Q'].width = 16
+    ws1.column_dimensions['R'].width = 16
+    ws1.column_dimensions['S'].width = 16
 
     # -------------------------------------------------------------
     # HOJA 2: DETALLE REGISTRO COMPLETO DE REPORTES
