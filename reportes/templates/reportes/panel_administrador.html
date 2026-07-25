@@ -797,8 +797,11 @@
                 <label>Incidente / Categoría</label>
                 <select name="sector">
                     <option value="">Todos los incidentes</option>
-                    <option value="bache">Solo Baches</option>
-                    <option value="basura">Solo Basura</option>
+                    <option value="bache">Solo Baches (Agrupado)</option>
+                    <option value="basura">Solo Basura (Agrupado)</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div>
