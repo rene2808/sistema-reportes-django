@@ -2387,7 +2387,7 @@ def reporte_mensual_incidentes_excel(request):
             dp = DataPoint(idx=idx)
             dp.graphicalProperties.solidFill = color
             series2.data_points.append(dp)
-    ws1.add_chart(pie_est, "J10")
+    ws1.add_chart(pie_est, "E31")
 
     # -------------------------------------------------------------
     # TABLA 3: PORCENTAJE POR PRIORIDAD DEL REPORTE
@@ -2476,7 +2476,7 @@ def reporte_mensual_incidentes_excel(request):
             dp = DataPoint(idx=idx)
             dp.graphicalProperties.solidFill = color
             series3.data_points.append(dp)
-    ws1.add_chart(pie_prio, "O10")
+    ws1.add_chart(pie_prio, "E52")
 
     # Ajustar dimensiones de columnas para Hoja 1
     ws1.column_dimensions['A'].width = 28

@@ -338,6 +338,40 @@
             border: 1px solid #ddd;
         }
     }
+
+    /* Estilos para botón de colapsar categorías */
+    .btn-toggle-categoria {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+        margin-top: 15px;
+        width: 100%;
+    }
+    
+    .btn-toggle-categoria:hover {
+        background: #2563eb;
+    }
+    
+    body.dark-mode .btn-toggle-categoria {
+        background: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+    }
+    
+    body.dark-mode .btn-toggle-categoria:hover {
+        background: #334155;
+        color: #f8fafc;
+    }
 </style>
 
 <div class="report-header">
@@ -403,6 +437,32 @@
                 }
             }
         }
+
+        // --- Lógica de Colapsar/Expandir Categorías ---
+        const toggleButtons = document.querySelectorAll('.btn-toggle-categoria');
+        toggleButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const targetId = btn.getAttribute('data-target');
+                const count = btn.getAttribute('data-count');
+                const extraRows = document.querySelectorAll('.extra-report-row-' + targetId);
+                const isHidden = extraRows.length > 0 && extraRows[0].style.display === 'none';
+                
+                extraRows.forEach(function(row) {
+                    row.style.display = isHidden ? '' : 'none';
+                });
+                
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                
+                if (isHidden) {
+                    if (icon) icon.className = 'bi bi-chevron-up';
+                    if (text) text.textContent = 'Ocultar extras';
+                } else {
+                    if (icon) icon.className = 'bi bi-chevron-down';
+                    if (text) text.textContent = 'Mostrar todos los reportes (' + count + ' más)';
+                }
+            });
+        });
     });
 
     function filtrarIncidencias() {
@@ -484,7 +544,7 @@
 
                 <tbody>
                     {% for reporte in grupo.reportes %}
-                        <tr style="cursor: pointer;" onclick="window.location.href='{% url 'detalle_reporte' reporte.id %}'">
+                        <tr style="cursor: pointer; {% if not forloop.first %}display: none;{% endif %}" {% if not forloop.first %}class="extra-report-row-{{ grupo.categoria.id }}"{% endif %} onclick="window.location.href='{% url 'detalle_reporte' reporte.id %}'">
                             <td>{{ reporte.folio }}</td>
                             <td>{{ reporte.titulo|default:"Sin título" }}</td>
                             <td>{{ reporte.colonia|default:"No registrada" }}</td>
@@ -496,6 +556,12 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if grupo.reportes|length > 1 %}
+            <button type="button" class="btn-toggle-categoria" data-target="{{ grupo.categoria.id }}" data-count="{{ grupo.reportes|length|add:"-1" }}">
+                <i class="bi bi-chevron-down"></i>
+                <span>Mostrar todos los reportes ({{ grupo.reportes|length|add:"-1" }} más)</span>
+            </button>
+            {% endif %}
         </div>
     {% else %}
         <p class="no-reports-msg">No hay reportes de esta categoría registrados.</p>
