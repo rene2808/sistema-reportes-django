@@ -273,6 +273,106 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* Estilos para el banner del video tutorial */
+    .tutorial-banner {
+        background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+        border: 1.5px solid #7dd3fc;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        box-shadow: 0 4px 15px rgba(125, 211, 252, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body.dark-mode .tutorial-banner {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        border-color: #334155;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .tutorial-banner:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(125, 211, 252, 0.35);
+    }
+    
+    body.dark-mode .tutorial-banner:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .tutorial-icon {
+        background: #0284c7;
+        color: white;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+    }
+
+    .tutorial-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0369a1;
+    }
+
+    body.dark-mode .tutorial-title {
+        color: #38bdf8;
+    }
+
+    .tutorial-text {
+        margin: 4px 0 0 0;
+        font-size: 13.5px;
+        color: #075985;
+    }
+
+    body.dark-mode .tutorial-text {
+        color: #94a3b8;
+    }
+
+    .tutorial-btn {
+        background: #0284c7;
+        color: white !important;
+        padding: 10px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14.5px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tutorial-btn:hover {
+        background: #0369a1;
+        transform: scale(1.03);
+    }
+
+    @media (max-width: 600px) {
+        .tutorial-banner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .tutorial-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 
 <div class="citizen-header">
@@ -288,6 +388,22 @@
             Ver mi perfil
         </a>
     </div>
+</div>
+
+<!-- Banner de Video Tutorial de Uso -->
+<div class="tutorial-banner">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="tutorial-icon">
+            🎬
+        </div>
+        <div>
+            <h4 class="tutorial-title">¿Eres nuevo en la plataforma?</h4>
+            <p class="tutorial-text">Hemos preparado un video tutorial rápido de 2 minutos para enseñarte a usar la página y reportar incidencias.</p>
+        </div>
+    </div>
+    <a href="https://youtu.be/JO6w3e7SkUc" target="_blank" class="tutorial-btn">
+        ▶️ Ver Tutorial
+    </a>
 </div>
 
 <div class="cards-grid">
