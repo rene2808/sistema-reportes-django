@@ -775,7 +775,19 @@
         // Selección correcta
         statusBox.style.display = 'flex';
         statusBox.className = 'file-status-info file-success';
-        statusBox.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${files.length} fotografía(s) JPG lista(s): ${fileNames.join(', ')}`;
+        
+        let htmlContent = `<div style="display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+            <i class="bi bi-check-circle-fill" style="font-size: 1.25rem; margin-top: 2px; flex-shrink: 0;"></i>
+            <div style="text-align: left;">
+                <strong style="display: block; margin-bottom: 4px;">${files.length} fotografía(s) JPG lista(s):</strong>
+                <ul style="margin: 0; padding-left: 18px; list-style-type: disc;">`;
+        
+        fileNames.forEach(name => {
+            htmlContent += `<li style="margin-top: 2px; word-break: break-all;">${name}</li>`;
+        });
+        
+        htmlContent += `</ul></div></div>`;
+        statusBox.innerHTML = htmlContent;
         return true;
     }
 
@@ -1068,6 +1080,20 @@
     let selectedFiles = [];
 
     function updateFilesAndUI() {
+        // Re-indexar archivos de cámara para que siempre muestren nombres ordenados secuencialmente y limpios (Evidencia_1.jpg, etc.)
+        let cameraCounter = 1;
+        selectedFiles = selectedFiles.map(file => {
+            if (file.name.startsWith('Evidencia_') || file.name.includes('evidencia_camara')) {
+                const renamedFile = new File([file], `Evidencia_${cameraCounter}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: file.lastModified
+                });
+                cameraCounter++;
+                return renamedFile;
+            }
+            return file;
+        });
+
         const dt = new DataTransfer();
         selectedFiles.forEach(file => dt.items.add(file));
         
@@ -1181,7 +1207,17 @@
                 canvas.toBlob(function (blob) {
                     let baseName = file.name.split('.').slice(0, -1).join('.') || 'evidencia_foto';
                     baseName = baseName.replace(/[^a-zA-Z0-9_\-]/g, '_');
-                    const compressedFile = new File([blob], `${baseName}_opt_${Date.now()}.jpg`, {
+                    
+                    if (file.name.includes('evidencia_camara')) {
+                        baseName = 'Evidencia_temp';
+                    } else {
+                        // Limitar longitud de nombres de galería si son extremadamente largos
+                        if (baseName.length > 25) {
+                            baseName = baseName.substring(0, 22) + '...';
+                        }
+                    }
+                    
+                    const compressedFile = new File([blob], `${baseName}.jpg`, {
                         type: 'image/jpeg',
                         lastModified: Date.now()
                     });
@@ -1321,7 +1357,7 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                 canvas.toBlob(function(blob) {
-                    const capturedFile = new File([blob], `evidencia_camara_${Date.now()}.jpg`, {
+                    const capturedFile = new File([blob], 'evidencia_camara_nueva.jpg', {
                         type: 'image/jpeg',
                         lastModified: Date.now()
                     });
