@@ -5,7 +5,7 @@
   agregar y editar usuarios con diferentes roles, y generar informes en PDF.
 -->
 {% extends 'reportes/base.html' %}
-{% block title %}Panel Administrador{% endblock %}
+{% block title %}{% if rol == 'moderador' %}Panel Moderador{% elif rol == 'administrador' %}Panel Administrador{% else %}Panel Ciudadano{% endif %}{% endblock %}
 {% block content %}
 
 <!-- Importación de iconos profesionales para las tarjetas métricas -->
@@ -797,8 +797,15 @@
 </style>
 
 <div class="mb-4">
-    <h1 class="page-title" style="font-weight: 800; color: var(--text-slate-900); margin-bottom: 4px;">Panel
-        Administrador</h1>
+    <h1 class="page-title" style="font-weight: 800; color: var(--text-slate-900); margin-bottom: 4px;">
+        {% if rol == 'moderador' %}
+            Panel Moderador
+        {% elif rol == 'administrador' %}
+            Panel Administrador
+        {% else %}
+            Panel Ciudadano
+        {% endif %}
+    </h1>
     <div class="page-subtitle" style="color: var(--text-slate-500); font-size: 0.95rem;">Administración de reportes
         ciudadanos de baches y basura</div>
 </div>
