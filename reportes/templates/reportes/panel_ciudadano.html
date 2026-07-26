@@ -46,6 +46,10 @@
         border-radius: 12px;
         text-decoration: none;
         font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
     }
 
     .quick-btn.secondary {
@@ -254,6 +258,9 @@
 
         .quick-btn {
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             box-sizing: border-box;
         }
@@ -300,6 +307,12 @@
         gap: 20px;
         box-shadow: 0 4px 15px rgba(125, 211, 252, 0.2);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tutorial-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
     }
 
     body.dark-mode .tutorial-banner {
@@ -375,11 +388,18 @@
         transform: scale(1.03);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
         .tutorial-banner {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
             gap: 16px;
+            padding: 16px;
+        }
+        .tutorial-content {
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+            gap: 12px;
         }
         .tutorial-btn {
             width: 100%;
@@ -405,7 +425,7 @@
 
 <!-- Banner de Video Tutorial de Uso -->
 <div class="tutorial-banner">
-    <div style="display: flex; align-items: center; gap: 16px;">
+    <div class="tutorial-content">
         <div class="tutorial-icon">
             🎬
         </div>
