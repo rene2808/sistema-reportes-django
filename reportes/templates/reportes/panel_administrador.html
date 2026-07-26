@@ -1076,14 +1076,13 @@
     <h2><i class="bi bi-hdd-stack-fill me-2 text-secondary"></i>Buscador e Historial de Reportes</h2>
     <p>Monitoreo completo, filtrado por folios específicos y revisión técnica interna de los incidentes urbanos.</p>
 
-    <form method="GET" action="{% url 'panel_administrador' %}" class="buscar-reportes-form">
-        <input type="text" name="buscar_folio" value="{{ buscar_folio }}"
-            placeholder="Buscar por número de folio exacto (Ej: REP-20260531-00003)">
+    <form method="GET" action="{% url 'panel_administrador' %}" class="buscar-reportes-form" id="search-form">
+        <input type="text" name="buscar_folio" id="search-input" value="{{ buscar_folio }}"
+            placeholder="Buscar por folio, título, descripción, tipo...">
         <button type="submit" class="btn-admin btn-blue"><i class="bi bi-search"></i> Buscar</button>
-        {% if buscar_folio %}
-        <a href="{% url 'panel_administrador' %}" class="btn-admin btn-orange"><i class="bi bi-arrow-clockwise"></i>
-            Limpiar</a>
-        {% endif %}
+        <button type="button" id="btn-clear-search" class="btn-admin btn-orange" style="{% if not buscar_folio %}display: none;{% endif %}">
+            <i class="bi bi-arrow-clockwise"></i> Limpiar
+        </button>
     </form>
 
     <!-- Menú de Pestañas -->
@@ -1122,7 +1121,7 @@
                 </thead>
                 <tbody id="tbody-pendientes">
                     {% for reporte in reportes_pendientes_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-pendientes" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-pendientes" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}" data-titulo="{{ reporte.titulo|default:'' }}" data-descripcion="{{ reporte.descripcion|default:'' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1196,7 +1195,7 @@
                 </thead>
                 <tbody id="tbody-proceso">
                     {% for reporte in reportes_proceso_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-proceso" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-proceso" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}" data-titulo="{{ reporte.titulo|default:'' }}" data-descripcion="{{ reporte.descripcion|default:'' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1270,7 +1269,7 @@
                 </thead>
                 <tbody id="tbody-resueltos">
                     {% for reporte in reportes_resueltos_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-resueltos" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-resueltos" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}" data-titulo="{{ reporte.titulo|default:'' }}" data-descripcion="{{ reporte.descripcion|default:'' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -1336,7 +1335,7 @@
                 </thead>
                 <tbody id="tbody-cancelados">
                     {% for reporte in reportes_cancelados_list %}
-                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-cancelados" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}">
+                    <tr id="reporte-row-{{ reporte.id }}" {% if not forloop.first %}class="extra-report-row-cancelados" style="display: none;"{% endif %} data-prioridad="{{ reporte.prioridad }}" data-fecha="{{ reporte.fecha_reporte|date:'d/m/Y H:i' }}" data-categoria="{{ reporte.categoria.nombre }}" data-usuario="{{ reporte.usuario.username }}" data-folio="{{ reporte.folio|default:'Sin folio' }}" data-titulo="{{ reporte.titulo|default:'' }}" data-descripcion="{{ reporte.descripcion|default:'' }}">
                         <td class="fw-bold text-dark cell-folio">{{ reporte.folio|default:"Sin folio" }}</td>
                         <td class="cell-categoria">{{ reporte.categoria }}</td>
                         <td class="cell-usuario">{{ reporte.usuario.username }}</td>
@@ -2038,6 +2037,142 @@
         setupCollapsibleTable('btn-toggle-reportes-resueltos', 'extra-report-row-resueltos', 'Mostrar todos los reportes resueltos');
         setupCollapsibleTable('btn-toggle-reportes-cancelados', 'extra-report-row-cancelados', 'Mostrar todos los reportes cancelados');
         setupCollapsibleTable('btn-toggle-reportes-galeria', 'extra-report-row-galeria', 'Mostrar todas las incidencias resueltas');
+
+        // --- Lógica de Búsqueda y Filtrado en Tiempo Real (Sin recarga de página) ---
+        const searchInput = document.getElementById('search-input');
+        const searchForm = document.getElementById('search-form');
+        const clearBtn = document.getElementById('btn-clear-search');
+
+        function performSearch() {
+            if (!searchInput) return;
+
+            const query = searchInput.value.trim().toLowerCase();
+
+            // Mostrar/Ocultar botón de limpiar
+            if (clearBtn) {
+                clearBtn.style.display = query ? 'inline-block' : 'none';
+            }
+
+            const tabs = ['pendientes', 'proceso', 'resueltos', 'cancelados'];
+
+            tabs.forEach(tab => {
+                const tbody = document.getElementById(`tbody-${tab}`);
+                if (!tbody) return;
+
+                const rows = Array.from(tbody.children);
+                let matchCount = 0;
+
+                rows.forEach(row => {
+                    const folio = (row.getAttribute('data-folio') || '').toLowerCase();
+                    const categoria = (row.getAttribute('data-categoria') || '').toLowerCase();
+                    const usuario = (row.getAttribute('data-usuario') || '').toLowerCase();
+                    const titulo = (row.getAttribute('data-titulo') || '').toLowerCase();
+                    const descripcion = (row.getAttribute('data-descripcion') || '').toLowerCase();
+                    const prioridad = (row.getAttribute('data-prioridad') || '').toLowerCase();
+
+                    const isMatch = folio.includes(query) || 
+                                    categoria.includes(query) || 
+                                    usuario.includes(query) || 
+                                    titulo.includes(query) || 
+                                    descripcion.includes(query) ||
+                                    prioridad.includes(query);
+
+                    if (query === '') {
+                        // Restablecer el estado colapsado por defecto
+                        const index = rows.indexOf(row);
+                        if (index === 0) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    } else {
+                        if (isMatch) {
+                            row.style.display = '';
+                            matchCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Controlar el botón "Mostrar todos"
+                const toggleBtn = document.getElementById(`btn-toggle-reportes-${tab}`);
+                if (toggleBtn) {
+                    if (query === '') {
+                        toggleBtn.style.display = rows.length > 1 ? 'flex' : 'none';
+                        const icon = toggleBtn.querySelector('i');
+                        const span = toggleBtn.querySelector('span');
+                        if (icon) icon.className = 'bi bi-chevron-down';
+                        if (span) {
+                            if (tab === 'pendientes') span.textContent = `Mostrar todos los reportes recién registrados (${rows.length - 1} más)`;
+                            else if (tab === 'proceso') span.textContent = `Mostrar todos los reportes en proceso (${rows.length - 1} más)`;
+                            else if (tab === 'resueltos') span.textContent = `Mostrar todos los reportes resueltos (${rows.length - 1} más)`;
+                            else if (tab === 'cancelados') span.textContent = `Mostrar todos los reportes cancelados (${rows.length - 1} más)`;
+                        }
+                    } else {
+                        toggleBtn.style.display = 'none';
+                    }
+                }
+
+                // Actualizar los contadores de las pestañas
+                const badgeClass = tab === 'cancelados' ? 'badge-default' : `badge-${tab === 'pendientes' ? 'pendiente' : tab}`;
+                const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+                if (tabBtn) {
+                    const badge = tabBtn.querySelector(`.badge.${badgeClass}`);
+                    if (badge) {
+                        badge.textContent = query === '' ? rows.length : matchCount;
+                    }
+                }
+
+                // Controlar contenedor de tabla y placeholder
+                const container = document.getElementById(`container-${tab}`);
+                const placeholder = document.getElementById(`placeholder-${tab}`);
+                const activeCount = query === '' ? rows.length : matchCount;
+
+                if (container) {
+                    container.style.display = activeCount > 0 ? '' : 'none';
+                }
+                if (placeholder) {
+                    placeholder.style.display = activeCount > 0 ? 'none' : 'block';
+                    const placeholderMsg = placeholder.querySelector('p');
+                    if (placeholderMsg) {
+                        if (query === '') {
+                            if (tab === 'pendientes') placeholderMsg.textContent = 'No hay reportes recién registrados.';
+                            else if (tab === 'proceso') placeholderMsg.textContent = 'No hay reportes en proceso.';
+                            else if (tab === 'resueltos') placeholderMsg.textContent = 'No hay reportes resueltos.';
+                            else if (tab === 'cancelados') placeholderMsg.textContent = 'No hay reportes cancelados.';
+                        } else {
+                            placeholderMsg.textContent = `No se encontraron reportes que coincidan con "${query}".`;
+                        }
+                    }
+                }
+            });
+        }
+
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                performSearch();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', performSearch);
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                if (searchInput) {
+                    searchInput.value = '';
+                    performSearch();
+                }
+            });
+        }
+
+        // Ejecutar inmediatamente al cargar la página si hay un término preestablecido
+        if (searchInput && searchInput.value.trim() !== '') {
+            performSearch();
+        }
     });
 </script>
 
