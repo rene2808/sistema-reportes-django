@@ -212,12 +212,25 @@
         display: inline-block;
         margin-top: 8px;
         background: #2563eb;
-        color: white;
+        color: white !important;
         padding: 7px 10px;
         border-radius: 8px;
         text-decoration: none;
         font-size: 12px;
         font-weight: bold;
+    }
+
+    /* Adaptación del Popup del Mapa para el Modo Oscuro */
+    body.dark-mode .popup-reporte h3 {
+        color: #f8fafc;
+    }
+
+    body.dark-mode .popup-reporte p {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .popup-reporte .popup-folio {
+        color: #ff9800;
     }
 
     @media (max-width: 900px) {
