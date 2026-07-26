@@ -407,60 +407,30 @@
 </div>
 
 <div class="cards-grid">
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    <a href="?estado=Todos" class="mini-card-link">
-    {% endif %}
-        <div class="mini-card {% if request.user.perfilusuario.rol == 'ciudadano' and estado_actual == 'Todos' %}active-filter-card{% endif %}">
-            <h3>Total de reportes</h3>
-            <div class="number">{{ total_reportes }}</div>
-        </div>
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    </a>
-    {% endif %}
+    <div class="mini-card">
+        <h3>Total de reportes</h3>
+        <div class="number">{{ total_reportes }}</div>
+    </div>
 
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    <a href="?estado=Pendiente" class="mini-card-link">
-    {% endif %}
-        <div class="mini-card {% if request.user.perfilusuario.rol == 'ciudadano' and estado_actual == 'Pendiente' %}active-filter-card{% endif %}">
-            <h3>Pendientes</h3>
-            <div class="number">{{ pendientes }}</div>
-        </div>
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    </a>
-    {% endif %}
+    <div class="mini-card">
+        <h3>Pendientes</h3>
+        <div class="number">{{ pendientes }}</div>
+    </div>
 
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    <a href="?estado=En proceso" class="mini-card-link">
-    {% endif %}
-        <div class="mini-card {% if request.user.perfilusuario.rol == 'ciudadano' and estado_actual == 'En proceso' %}active-filter-card{% endif %}">
-            <h3>En proceso</h3>
-            <div class="number">{{ en_proceso }}</div>
-        </div>
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    </a>
-    {% endif %}
+    <div class="mini-card">
+        <h3>En proceso</h3>
+        <div class="number">{{ en_proceso }}</div>
+    </div>
 
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    <a href="?estado=Resuelto" class="mini-card-link">
-    {% endif %}
-        <div class="mini-card {% if request.user.perfilusuario.rol == 'ciudadano' and estado_actual == 'Resuelto' %}active-filter-card{% endif %}">
-            <h3>Resueltos</h3>
-            <div class="number">{{ resueltos }}</div>
-        </div>
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    </a>
-    {% endif %}
+    <div class="mini-card">
+        <h3>Resueltos</h3>
+        <div class="number">{{ resueltos }}</div>
+    </div>
 
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    <a href="?estado=Cancelado" class="mini-card-link">
-    {% endif %}
-        <div class="mini-card {% if request.user.perfilusuario.rol == 'ciudadano' and estado_actual == 'Cancelado' %}active-filter-card{% endif %}">
-            <h3>Cancelados</h3>
-            <div class="number">{{ cancelados }}</div>
-        </div>
-    {% if request.user.perfilusuario.rol == 'ciudadano' %}
-    </a>
-    {% endif %}
+    <div class="mini-card">
+        <h3>Cancelados</h3>
+        <div class="number">{{ cancelados }}</div>
+    </div>
 </div>
 
 <div class="map-card">
