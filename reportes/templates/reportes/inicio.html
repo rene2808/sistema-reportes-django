@@ -189,6 +189,18 @@
         /* ==============================
            CARRUSEL PERSONALIZADO PREMIUM
            ============================== */
+        .custom-carousel-wrapper {
+            position: relative;
+            padding: 0 55px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .custom-carousel-wrapper {
+                padding: 0;
+            }
+        }
+
         .custom-carousel-container {
             position: relative;
             width: 100%;
@@ -251,21 +263,11 @@
         }
 
         .custom-carousel-control.prev {
-            left: -10px;
+            left: 5px;
         }
 
         .custom-carousel-control.next {
-            right: -10px;
-        }
-
-        /* Opcional: en pantallas más chicas empujar botones levemente hacia afuera o adentro */
-        @media (max-width: 1200px) {
-            .custom-carousel-control.prev {
-                left: 5px;
-            }
-            .custom-carousel-control.next {
-                right: 5px;
-            }
+            right: 5px;
         }
 
         @media (max-width: 768px) {
@@ -414,6 +416,11 @@
             background-color: #1f2937 !important;
             color: #f3f4f6 !important;
             border: 1px solid #374151 !important;
+        }
+        body.dark-mode .form-control::placeholder,
+        body.dark-mode .form-select::placeholder {
+            color: #9ca3af !important;
+            opacity: 1 !important;
         }
         body.dark-mode .form-control:focus,
         body.dark-mode .form-select:focus {
@@ -770,47 +777,49 @@
         <section id="galeria" class="mb-5 section-unified-container section-gallery-container">
             <h2 class="fw-bold text-center text-dark-blue mb-4">Galería de incidencias resueltas</h2>
             
-            <div class="custom-carousel-container" id="carousel-galeria-container">
-                <div class="custom-carousel-track" id="carousel-galeria-track">
-                    {% for reporte in resueltas_lista %}
-                    <div class="custom-carousel-slide gallery-slide">
-                        <div class="card border-0 shadow-lg h-100 gallery-card"
-                            style="background: linear-gradient(135deg, #0f2b5c 0%, #03152d 100%) !important; border: 1px solid rgba(255,255,255,0.08); width: 100%;">
-                            <div class="card-body">
-                                <h5 class="fw-bold text-white">{{ reporte.titulo }}</h5>
-                                <p class="text-white-50 small mb-2"><i class="bi bi-geo-alt text-warning"></i> {{ reporte.colonia|default:"Acapulco" }}</p>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="gallery-image-wrapper">
-                                            {% if reporte.foto %}
-                                            <img src="{{ reporte.foto.url }}" alt="Antes" onclick="openLightbox(this.src)">
-                                            {% else %}
-                                            <div class="bg-secondary-subtle text-center py-4 text-muted small h-100 d-flex align-items-center justify-content-center">
-                                                Sin Foto Antes
+            <div class="custom-carousel-wrapper">
+                <div class="custom-carousel-container" id="carousel-galeria-container">
+                    <div class="custom-carousel-track" id="carousel-galeria-track">
+                        {% for reporte in resueltas_lista %}
+                        <div class="custom-carousel-slide gallery-slide">
+                            <div class="card border-0 shadow-lg h-100 gallery-card"
+                                style="background: linear-gradient(135deg, #0f2b5c 0%, #03152d 100%) !important; border: 1px solid rgba(255,255,255,0.08); width: 100%;">
+                                <div class="card-body">
+                                    <h5 class="fw-bold text-white">{{ reporte.titulo }}</h5>
+                                    <p class="text-white-50 small mb-2"><i class="bi bi-geo-alt text-warning"></i> {{ reporte.colonia|default:"Acapulco" }}</p>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="gallery-image-wrapper">
+                                                {% if reporte.foto %}
+                                                <img src="{{ reporte.foto.url }}" alt="Antes" onclick="openLightbox(this.src)">
+                                                {% else %}
+                                                <div class="bg-secondary-subtle text-center py-4 text-muted small h-100 d-flex align-items-center justify-content-center">
+                                                    Sin Foto Antes
+                                                </div>
+                                                {% endif %}
                                             </div>
-                                            {% endif %}
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="gallery-image-wrapper">
+                                                {% if reporte.evidencias.exists %}
+                                                <img src="{{ reporte.evidencias.first.archivo.url }}" alt="Después" onclick="openLightbox(this.src)">
+                                                {% else %}
+                                                <div class="bg-primary-subtle text-center py-4 text-primary small h-100 d-flex align-items-center justify-content-center">
+                                                    Sin Foto Después
+                                                </div>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="gallery-image-wrapper">
-                                            {% if reporte.evidencias.exists %}
-                                            <img src="{{ reporte.evidencias.first.archivo.url }}" alt="Después" onclick="openLightbox(this.src)">
-                                            {% else %}
-                                            <div class="bg-primary-subtle text-center py-4 text-primary small h-100 d-flex align-items-center justify-content-center">
-                                                Sin Foto Después
-                                            </div>
-                                            {% endif %}
-                                        </div>
+                                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-success">Resuelto</span>
+                                        <small class="text-white-50">{{ reporte.fecha_reporte|date:"d M Y" }}</small>
                                     </div>
-                                </div>
-                                <div class="mt-3 d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-success">Resuelto</span>
-                                    <small class="text-white-50">{{ reporte.fecha_reporte|date:"d M Y" }}</small>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
 
                 <!-- Controles del Carrusel -->
@@ -835,81 +844,83 @@
 
             <!-- Carrusel de Reseñas -->
             {% if resenas %}
-            <div class="custom-carousel-container" id="carousel-resenas-container">
-                <div class="custom-carousel-track" id="carousel-resenas-track">
-                    {% for resena in resenas %}
-                    <div class="custom-carousel-slide review-slide">
-                        <div class="card border-0 shadow-sm p-4 h-100 review-item position-relative overflow-hidden"
-                            style="border-radius: 18px; border-top: 4px solid #ff8c32 !important; width: 100%;">
-                            {% if request.user.is_authenticated and request.user.perfilusuario %}
-                            {% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' or request.user.perfilusuario.rol == 'moderador' %}
-                            <div class="position-absolute" style="top: 15px; right: 15px; z-index: 10;">
-                                <a href="{% url 'eliminar_resena' resena.id %}" class="text-danger" title="Eliminar reseña"
-                                    onclick="return confirm('¿Seguro que deseas eliminar esta reseña?')">
-                                    <i class="bi bi-trash-fill" style="font-size: 1.1rem; color: #ef4444;"></i>
-                                </a>
-                            </div>
-                            {% endif %}
-                            {% endif %}
+            <div class="custom-carousel-wrapper">
+                <div class="custom-carousel-container" id="carousel-resenas-container">
+                    <div class="custom-carousel-track" id="carousel-resenas-track">
+                        {% for resena in resenas %}
+                        <div class="custom-carousel-slide review-slide">
+                            <div class="card border-0 shadow-sm p-4 h-100 review-item position-relative overflow-hidden"
+                                style="border-radius: 18px; border-top: 4px solid #ff8c32 !important; width: 100%;">
+                                {% if request.user.is_authenticated and request.user.perfilusuario %}
+                                {% if request.user.is_superuser or request.user.perfilusuario.rol == 'administrador' or request.user.perfilusuario.rol == 'moderador' %}
+                                <div class="position-absolute" style="top: 15px; right: 15px; z-index: 10;">
+                                    <a href="{% url 'eliminar_resena' resena.id %}" class="text-danger" title="Eliminar reseña"
+                                        onclick="return confirm('¿Seguro que deseas eliminar esta reseña?')">
+                                        <i class="bi bi-trash-fill" style="font-size: 1.1rem; color: #ef4444;"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% endif %}
 
-                            {% if resena.reporte %}
-                            <div class="mb-2">
-                                <span class="badge bg-success text-white" style="font-size: 11px; padding: 4px 8px; border-radius: 6px;">
-                                    <i class="bi bi-check-circle-fill me-1"></i> {{ resena.reporte.folio }} (Resuelto)
-                                </span>
-                            </div>
-                            {% endif %}
+                                {% if resena.reporte %}
+                                <div class="mb-2">
+                                    <span class="badge bg-success text-white" style="font-size: 11px; padding: 4px 8px; border-radius: 6px;">
+                                        <i class="bi bi-check-circle-fill me-1"></i> {{ resena.reporte.folio }} (Resuelto)
+                                    </span>
+                                </div>
+                                {% endif %}
 
-                            <div class="mb-2">
-                                <span class="text-warning">
-                                    {% if resena.puntuacion == 5 %}
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star-fill"></i>
-                                    {% elif resena.puntuacion == 4 %}
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star"></i>
-                                    {% elif resena.puntuacion == 3 %}
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
-                                    {% elif resena.puntuacion == 2 %}
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
-                                        class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
-                                    {% else %}
-                                    <i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i
-                                        class="bi bi-star"></i><i class="bi bi-star"></i>
+                                <div class="mb-2">
+                                    <span class="text-warning">
+                                        {% if resena.puntuacion == 5 %}
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star-fill"></i>
+                                        {% elif resena.puntuacion == 4 %}
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star"></i>
+                                        {% elif resena.puntuacion == 3 %}
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                        {% elif resena.puntuacion == 2 %}
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i
+                                            class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                        {% else %}
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i
+                                            class="bi bi-star"></i><i class="bi bi-star"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <p class="text-dark mb-3 review-comment-text"
+                                    style="font-style: italic; font-size: 0.92rem; line-height: 1.5;">
+                                    "{{ resena.comentario }}"</p>
+
+                                <!-- Galería visual de evidencias de la reseña -->
+                                {% if resena.foto1 or resena.foto2 %}
+                                <div class="d-flex gap-2 mb-3">
+                                    {% if resena.foto1 %}
+                                    <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto1.url }}')" title="Ver evidencia fotográfica de la reseña">
+                                        <img src="{{ resena.foto1.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                    </div>
                                     {% endif %}
-                                </span>
-                            </div>
-                            <p class="text-dark mb-3 review-comment-text"
-                                style="font-style: italic; font-size: 0.92rem; line-height: 1.5;">
-                                "{{ resena.comentario }}"</p>
-
-                            <!-- Galería visual de evidencias de la reseña -->
-                            {% if resena.foto1 or resena.foto2 %}
-                            <div class="d-flex gap-2 mb-3">
-                                {% if resena.foto1 %}
-                                <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto1.url }}')" title="Ver evidencia fotográfica de la reseña">
-                                    <img src="{{ resena.foto1.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                    {% if resena.foto2 %}
+                                    <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto2.url }}')" title="Ver evidencia fotográfica de la reseña">
+                                        <img src="{{ resena.foto2.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
-                                {% if resena.foto2 %}
-                                <div style="cursor: zoom-in;" onclick="openLightbox('{{ resena.foto2.url }}')" title="Ver evidencia fotográfica de la reseña">
-                                    <img src="{{ resena.foto2.url }}" style="height: 70px; width: 95px; object-fit: cover; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
 
-                            <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold text-dark-blue mb-0"><i class="bi bi-person-circle me-1"
-                                        style="opacity: 0.7;"></i> {{ resena.usuario.username }}</h6>
-                                <small class="text-muted" style="font-size: 0.75rem;">{{ resena.fecha|date:"d M Y" }}</small>
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-dark-blue mb-0"><i class="bi bi-person-circle me-1"
+                                            style="opacity: 0.7;"></i> {{ resena.usuario.username }}</h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">{{ resena.fecha|date:"d M Y" }}</small>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
 
                 <!-- Controles del Carrusel -->
@@ -1000,9 +1011,9 @@
 
                     <div class="mb-4 text-start">
                         <label for="comentario" class="form-label fw-bold" style="color: #1e40af; font-size: 14px;">Comentario</label>
-                        <textarea class="form-control rounded-3 text-dark" id="comentario" name="comentario"
+                        <textarea class="form-control rounded-3" id="comentario" name="comentario"
                             rows="3" placeholder="Escribe tu opinión sobre la atención y resolución del incidente..." 
-                            style="border: 2px solid #60a5fa; background-color: #ffffff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.07); font-weight: 500;"
+                            style="border: 2px solid #60a5fa; background-color: #ffffff; box-shadow: 0 3px 10px rgba(37, 99, 235, 0.07); font-weight: 500; resize: none;"
                             required></textarea>
                     </div>
 
@@ -1131,11 +1142,11 @@
                     {% csrf_token %}
                     <div class="mb-3 text-start">
                         <label class="form-label fw-semibold" style="color: #1e293b;">Asunto</label>
-                        <input type="text" name="asunto" id="form-asunto" class="form-control rounded-3 bg-white text-dark" style="border: 1px solid #cbd5e1; padding: 10px;" required placeholder="Ej. Duda con un reporte, sugerencia...">
+                        <input type="text" name="asunto" id="form-asunto" class="form-control rounded-3" style="border: 1px solid #cbd5e1; padding: 10px;" required placeholder="Ej. Duda con un reporte, sugerencia...">
                     </div>
                     <div class="mb-3 text-start">
                         <label class="form-label fw-semibold" style="color: #1e293b;">Mensaje</label>
-                        <textarea name="mensaje" id="form-mensaje" class="form-control rounded-3 bg-white text-dark" style="border: 1px solid #cbd5e1; padding: 10px;" rows="5" required placeholder="Escribe detalladamente tu mensaje aquí..."></textarea>
+                        <textarea name="mensaje" id="form-mensaje" class="form-control rounded-3" style="border: 1px solid #cbd5e1; padding: 10px; resize: none;" rows="5" required placeholder="Escribe detalladamente tu mensaje aquí..."></textarea>
                     </div>
                     <div class="text-center mt-4">
                         <button type="submit" class="btn btn-primary px-5 py-2.5 rounded-pill fw-bold shadow-sm text-white"
@@ -1662,6 +1673,35 @@
         }
     }
 
+    function updateControlsVisibility(id) {
+        const c = carousels[id];
+        if (!c) return;
+
+        const visibleCount = getVisibleSlidesCount();
+        const slidesCount = c.slides.length;
+        const needsNavigation = slidesCount > visibleCount;
+
+        const container = document.getElementById(`carousel-${id}-container`);
+        if (!container) return;
+
+        const wrapper = container.parentElement;
+        if (!wrapper) return;
+
+        const prevBtn = wrapper.querySelector('.custom-carousel-control.prev');
+        const nextBtn = wrapper.querySelector('.custom-carousel-control.next');
+        const dotsContainer = document.getElementById(`carousel-${id}-dots`);
+
+        if (needsNavigation) {
+            if (prevBtn) prevBtn.style.display = '';
+            if (nextBtn) nextBtn.style.display = '';
+            if (dotsContainer) dotsContainer.style.display = '';
+        } else {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (dotsContainer) dotsContainer.style.display = 'none';
+        }
+    }
+
     window.moveCarousel = function(id, direction) {
         const c = carousels[id];
         if (!c) return;
@@ -1729,6 +1769,7 @@
 
         createDots(id);
         updateCarousel(id);
+        updateControlsVisibility(id);
         startAutoScroll(id);
 
         // Eventos para pausar en hover
@@ -1776,6 +1817,7 @@
         Object.keys(carousels).forEach(id => {
             createDots(id);
             updateCarousel(id);
+            updateControlsVisibility(id);
         });
     });
 </script>
