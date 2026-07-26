@@ -742,8 +742,15 @@
         }
 
         @media (max-width: 900px) {
+            html, body {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
             .layout {
                 flex-direction: column;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .sidebar {
@@ -827,8 +834,11 @@
             }
 
             .main-content {
+                width: 100%;
+                max-width: 100%;
                 padding: 16px 14px;
                 overflow-x: hidden;
+                box-sizing: border-box;
             }
 
             .page-title {
