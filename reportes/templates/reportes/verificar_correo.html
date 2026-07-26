@@ -1,16 +1,16 @@
 {% load static %}
 <!-- 
   Plantilla: verificar_correo.html
-  Descripción: Interfaz para ingresar el código de verificación de 6 dígitos enviado por correo.
-  Sigue la paleta de colores del proyecto: Azul Marino (#03152d) para el encabezado,
-  Naranja (#ff8c32) para el botón de acción principal y Blanco para el contenedor.
+  Descripción: Interfaz informativa que avisa al usuario que se le ha enviado un enlace
+  directo de activación a su correo electrónico.
+  Sigue la paleta de colores del proyecto: Azul Marino (#03152d) y Naranja (#ff8c32).
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificar Correo - Sistema de Reportes</title>
+    <title>Activa tu cuenta - Sistema de Reportes</title>
     <!-- Iconos de Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -32,7 +32,7 @@
             position: relative;
             z-index: 1;
             padding: 40px 20px;
-            background-color: #eef2f6; /* Fondo azul claro secundario */
+            background-color: #eef2f6;
         }
 
         /* Fondo decorativo con ondas usando el recurso estático existente */
@@ -48,14 +48,14 @@
             pointer-events: none;
         }
 
-        /* Tarjeta principal contenedora (Blanca con bordes suaves) */
+        /* Tarjeta principal contenedora */
         .verification-card {
             width: 100%;
             max-width: 480px;
-            background: #ffffff; /* Contenedor blanco limpio */
+            background: #ffffff;
             border-radius: 20px;
             border: none;
-            box-shadow: 0 15px 35px rgba(3, 21, 45, 0.12); /* Sombra suave con tinte azul marino */
+            box-shadow: 0 15px 35px rgba(3, 21, 45, 0.12);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -67,16 +67,16 @@
 
         /* Encabezado con fondo Azul Marino y letras blancas */
         .verification-header {
-            background: #03152d; /* Azul Marino principal */
+            background: #03152d;
             color: #ffffff;
             padding: 35px 20px;
             text-align: center;
-            border-bottom: 4px solid #ff8c32; /* Detalle naranja secundario */
+            border-bottom: 4px solid #ff8c32;
         }
 
         .verification-header i {
             font-size: 3rem;
-            color: #ff8c32; /* Detalle Naranja */
+            color: #ff8c32;
             margin-bottom: 10px;
             display: inline-block;
         }
@@ -90,47 +90,34 @@
         /* Cuerpo de la tarjeta */
         .verification-body {
             padding: 40px 30px;
+            text-align: center;
         }
 
         .info-text {
             color: #4a5568;
-            font-size: 0.95rem;
+            font-size: 1rem;
             line-height: 1.6;
             margin-bottom: 25px;
-            text-align: center;
         }
 
-        /* Entrada numérica centrada */
-        .code-input-group {
-            position: relative;
-            margin-bottom: 30px;
-        }
-
-        .code-input {
-            width: 100%;
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: 12px;
-            text-align: center;
-            padding: 12px 15px;
-            border: 2px solid #cbd5e1;
+        .spam-alert {
+            background-color: #fff9db;
+            border: 1px solid #ffe3e3;
+            color: #b25e00;
             border-radius: 12px;
-            outline: none;
-            color: #03152d; /* Texto Azul Marino */
-            background-color: #f8fafc;
-            transition: all 0.2s ease;
-        }
-
-        .code-input:focus {
-            border-color: #03152d; /* Foco Azul Marino */
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(3, 21, 45, 0.1);
+            padding: 12px;
+            font-size: 0.88rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
         }
 
         /* Botón de acción Naranja destacado */
         .btn-verify {
             width: 100%;
-            background: #ff8c32; /* Naranja destacado */
+            background: #ff8c32;
             color: #ffffff;
             border: none;
             padding: 14px;
@@ -138,18 +125,17 @@
             font-size: 1.1rem;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(255, 140, 50, 0.3);
+            text-decoration: none;
+            display: inline-block;
             transition: all 0.3s ease;
+            margin-bottom: 20px;
         }
 
         .btn-verify:hover {
-            background: #e0721b; /* Tono de naranja más oscuro para el hover */
+            background: #e0721b;
             color: #ffffff;
             transform: translateY(-1px);
             box-shadow: 0 6px 18px rgba(255, 140, 50, 0.45);
-        }
-
-        .btn-verify:active {
-            transform: translateY(1px);
         }
 
         /* Estilo de los mensajes de Django */
@@ -158,14 +144,16 @@
             font-size: 0.9rem;
             font-weight: bold;
             margin-bottom: 20px;
+            text-align: left;
         }
 
         /* Enlaces secundarios */
         .secondary-links {
-            margin-top: 25px;
+            margin-top: 15px;
             text-align: center;
             border-top: 1px solid #e2e8f0;
             padding-top: 20px;
+            width: 100%;
         }
 
         .secondary-links a {
@@ -179,21 +167,17 @@
         .secondary-links a:hover {
             color: #ff8c32;
         }
-
-
     </style>
 </head>
 <body>
 
     <div class="verification-card">
-        <!-- Encabezado de la Tarjeta (Azul Marino con borde Naranja) -->
         <div class="verification-header">
-            <i class="bi bi-envelope-check-fill"></i>
-            <h2>Verificación de Cuenta</h2>
+            <i class="bi bi-envelope-open-fill"></i>
+            <h2>Verificación Enviada</h2>
         </div>
 
         <div class="verification-body">
-            <!-- Bloque de visualización de alertas / mensajes de Django -->
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
@@ -211,27 +195,22 @@
             {% endif %}
 
             <p class="info-text">
-                Hemos enviado un código de seguridad de 6 dígitos al correo electrónico: <br>
-                <strong>{{ email }}</strong>. <br>
-                Ingrésalo a continuación para activar tu cuenta.
+                Hemos enviado un enlace de activación directo al correo electrónico:<br>
+                <strong>{{ email }}</strong>.<br><br>
+                Por favor, abre el correo y haz clic en el enlace para activar tu cuenta de ciudadano e ingresar al sistema.
             </p>
 
-            <!-- Formulario POST para verificar el código -->
-            <form method="POST" action="{% url 'verificar_correo' %}" id="verification-form">
-                {% csrf_token %}
-                
-                <div class="code-input-group">
-                    <input type="text" name="codigo" class="code-input" id="verification-code"
-                           maxlength="6" autocomplete="off" placeholder="------" required
-                           pattern="[0-9]{6}" title="Debe contener exactamente 6 dígitos numéricos"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <div class="spam-alert">
+                <i class="bi bi-exclamation-circle-fill" style="font-size: 1.2rem; color: #ff8c32; flex-shrink: 0;"></i>
+                <div>
+                    <strong>¿No encuentras el correo?</strong> Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo no deseado</strong>.
                 </div>
+            </div>
 
-                <!-- Botón naranja destacado -->
-                <button type="submit" class="btn-verify">
-                    <i class="bi bi-shield-fill-check me-2"></i>Verificar Cuenta
-                </button>
-            </form>
+            <!-- Botón para reenviar el enlace -->
+            <a href="{% url 'verificar_correo' %}?action=reenviar" class="btn-verify">
+                <i class="bi bi-envelope-arrow-up me-2"></i>Reenviar Correo de Activación
+            </a>
 
             <div class="secondary-links">
                 <a href="{% url 'registro' %}">
@@ -243,11 +222,5 @@
 
     <!-- Bootstrap 5 JS para alertas descartables -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Enfocar automáticamente el campo del código al cargar la página
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("verification-code").focus();
-        });
-    </script>
 </body>
 </html>

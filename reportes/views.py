@@ -13,11 +13,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.conf import settings
 from django.db.models import Q
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.core import signing
 
 # Librerías estándar de Python
 import os
@@ -156,12 +158,21 @@ def login_usuario(request):
             login(request, usuario)
             return redireccion_por_rol(usuario)
 
+        # Si el login falla, verificar si es un registro temporal pendiente de verificación en la sesión
+        temp = request.session.get('registro_temporal')
+        if temp and temp.get('datos_completos') and temp['datos_completos'].get('username') == username:
+            from django.contrib.auth.hashers import check_password
+            if check_password(password, temp['datos_completos'].get('password')):
+                messages.warning(request, 'Tu cuenta aún no está verificada. Por favor abre el enlace que enviamos a tu correo.')
+                return redirect('verificar_correo')
+
         # Si authenticate devuelve None, puede ser por credenciales incorrectas
         # o porque el usuario está inactivo (cuenta suspendida/bloqueada).
         try:
             usuario_db = User.objects.get(username=username)
             if not usuario_db.is_active and usuario_db.check_password(password):
                 perfil = usuario_db.perfilusuario
+
                 if perfil.bloqueado_hasta and perfil.bloqueado_hasta <= timezone.now():
                     perfil.bloqueado_hasta = None
                     perfil.save()
@@ -191,14 +202,126 @@ def login_usuario(request):
     return render(request, 'reportes/login.html', {'mensaje': mensaje})
 
 
+def enviar_correo_verificacion(request, nombre, email, token):
+    """
+    Construye y envía un correo electrónico multipart (HTML y Texto) para la activación de cuenta.
+    Dado que los datos están firmados criptográficamente, se verifica al hacer clic en el enlace.
+    El texto se mantiene conciso para evitar filtros de spam en Gmail.
+    """
+    url_base = request.build_absolute_uri(reverse('verificar_correo'))
+    url_activar = f"{url_base}?token={token}"
+
+    asunto = 'Activa tu cuenta - Sistema de Reportes'
+    
+    mensaje_texto = f"""Estimado(a) {nombre},
+
+Gracias por registrarte en el Sistema de Reportes.
+
+Para activar su cuenta y completar su registro, haga clic en el siguiente enlace:
+{url_activar}
+
+Si usted no solicitó este registro, por favor ignore este mensaje.
+
+Atentamente,
+El equipo del Sistema de Reportes."""
+
+    mensaje_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Activa tu cuenta</title>
+        <style>
+            body {{
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f8fafc;
+                color: #1e293b;
+                margin: 0;
+                padding: 20px;
+            }}
+            .card {{
+                max-width: 500px;
+                margin: 30px auto;
+                background: #ffffff;
+                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(3, 21, 45, 0.05);
+                border-top: 4px solid #03152d;
+                padding: 30px;
+            }}
+            .header {{
+                font-size: 20px;
+                font-weight: bold;
+                color: #03152d;
+                margin-bottom: 15px;
+            }}
+            .text {{
+                font-size: 15px;
+                line-height: 1.6;
+                color: #475569;
+                margin-bottom: 25px;
+            }}
+            .btn-container {{
+                text-align: center;
+                margin: 25px 0;
+            }}
+            .btn {{
+                background-color: #ff8c32;
+                color: #ffffff !important;
+                text-decoration: none;
+                padding: 12px 24px;
+                font-weight: bold;
+                border-radius: 4px;
+                display: inline-block;
+            }}
+            .footer {{
+                font-size: 12px;
+                color: #94a3b8;
+                text-align: center;
+                margin-top: 30px;
+                border-top: 1px solid #f1f5f9;
+                padding-top: 15px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="header">Sistema de Reportes</div>
+            <div class="text">
+                Hola {nombre},<br><br>
+                Gracias por registrarte. Para activar tu cuenta de ciudadano y completar el registro, haz clic en el siguiente botón:
+            </div>
+            <div class="btn-container">
+                <a href="{url_activar}" class="btn">Activar mi cuenta</a>
+            </div>
+            <div class="text">
+                Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                <a href="{url_activar}" style="color: #ff8c32; word-break: break-all;">{url_activar}</a>
+            </div>
+            <div class="footer">
+                Este correo fue enviado de forma automática. Si no te has registrado, por favor ignora este mensaje.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    email_msg = EmailMultiAlternatives(
+        subject=asunto,
+        body=mensaje_texto,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[email]
+    )
+    email_msg.attach_alternative(mensaje_html, "text/html")
+    email_msg.send(fail_silently=False)
+
+
 @ensure_csrf_cookie
 def registro_usuario(request):
     """
     Vista de Registro de Usuarios.
-    Procesa el formulario de registro, valida que los campos obligatorios
-    estén presentes, crea el usuario desactivado (is_active=False), genera un
-    código de verificación de 6 dígitos, lo almacena en la sesión del usuario
-    y envía un correo con dicho código.
+    Procesa el formulario de registro, valida los campos y almacena la información
+    en la sesión de forma temporal. No crea al usuario en base de datos hasta ser verificado.
     """
     crear_catalogos_iniciales()
 
@@ -243,60 +366,35 @@ def registro_usuario(request):
             mensaje = 'Ese correo ya está registrado.'
 
         else:
-            # Crear el usuario en estado inactivo (is_active=False)
-            usuario = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password1,
-                first_name=first_name,
-                last_name=last_name
-            )
-            usuario.is_active = False
-            usuario.save()
+            # Crear diccionario con todos los datos del usuario temporal
+            datos_registro = {
+                'username': username,
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'telefono': telefono,
+                'password': make_password(password1), # Hasheada por seguridad
+            }
 
-            # Crear o actualizar el perfil de usuario asociado
-            perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
-            perfil.rol = 'ciudadano'
-            perfil.telefono = telefono
-            perfil.save()
+            # Generar token firmado criptográficamente
+            token = signing.dumps(datos_registro)
 
-            # Generar código aleatorio de 6 dígitos
-            codigo = str(random.randint(100000, 999999))
+            # Almacenar en la sesión únicamente para mostrar datos en la pantalla informativa y para reenvío
+            request.session['registro_temporal'] = {
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'datos_completos': datos_registro
+            }
 
-            # Almacenar en la sesión del usuario de forma segura
-            request.session['codigo_verificacion'] = codigo
-            request.session['usuario_verificacion_id'] = usuario.id
-
-            # Cuerpo del correo con el código de verificación
-            asunto = 'Código de Verificación - Registro de Usuario'
-            mensaje_correo = f"""¡Hola, {first_name}!
-
-Gracias por registrarte en nuestro Sistema de Reportes.
-
-Para poder activar tu cuenta y acceder al sistema, por favor introduce el siguiente código de verificación de 6 dígitos en la pantalla de verificación:
-
-👉 {codigo} 👈
-
-Si tienes problemas, por favor vuelve a registrarte o solicita soporte al administrador.
-
-Atentamente,
-El equipo del Sistema de Reportes."""
-
-            # Envío de correo electrónico usando SMTP configurado de Django
+            # Envío de correo electrónico con enlace directo firmado
             try:
-                send_mail(
-                    asunto,
-                    mensaje_correo,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False
-                )
-                messages.success(request, 'Se ha enviado un código de verificación a tu correo.')
+                enviar_correo_verificacion(request, f"{first_name} {last_name}", email, token)
+                messages.success(request, 'Se ha enviado un correo de verificación a tu cuenta.')
             except Exception as e:
-                # Fallback en caso de que falle SMTP para que no rompa el flujo
                 messages.warning(request, 'No se pudo enviar el correo de verificación. Por favor contacta al soporte.')
 
-            # Redirigir a la pantalla de verificación de correo
+            # Redirigir a la pantalla de verificación de correo informativa
             return redirect('verificar_correo')
 
     return render(request, 'reportes/registro.html', {'mensaje': mensaje})
@@ -306,61 +404,110 @@ El equipo del Sistema de Reportes."""
 def verificar_correo(request):
     """
     Vista de Verificación de Correo.
-    Compara el código introducido por el usuario con el código almacenado en la sesión.
-    Si coincide, activa la cuenta (is_active=True), realiza el inicio de sesión automático
-    e ingresa la notificación del nuevo ciudadano para administradores y moderadores.
+    Si recibe un token firmado en los parámetros GET, descifra y valida los datos.
+    Si el token es válido, crea y activa al usuario en la base de datos, inicia sesión
+    y lo redirige a su panel.
+    Si no viene un token, muestra la pantalla informativa sobre el correo enviado.
     """
     # Si el usuario ya está autenticado y activo, lo redirigimos a su panel correspondiente
     if request.user.is_authenticated and request.user.is_active:
         return redireccion_por_rol(request.user)
 
-    # Recuperar datos de verificación de la sesión
-    usuario_id = request.session.get('usuario_verificacion_id')
-    codigo_sesion = request.session.get('codigo_verificacion')
+    token = request.GET.get('token', '').strip()
 
-    # Si no hay sesión de verificación activa, lo redirigimos al registro
-    if not usuario_id or not codigo_sesion:
+    # 1. Si viene el token de verificación por enlace directo
+    if token:
+        try:
+            payload = signing.loads(token, max_age=86400) # Válido por 24 horas
+        except signing.SignatureExpired:
+            messages.error(request, 'El enlace de activación ha expirado. Por favor regístrate nuevamente.')
+            return redirect('registro')
+        except signing.BadSignature:
+            messages.error(request, 'El enlace de activación es inválido o corrupto.')
+            return redirect('registro')
+
+        # Validar si el usuario ya existe en la base de datos
+        if User.objects.filter(username=payload['username']).exists() or User.objects.filter(email=payload['email']).exists():
+            # Si el usuario ya se creó (e.g. dio doble clic o verificó antes)
+            try:
+                usuario_db = User.objects.get(Q(username=payload['username']) | Q(email=payload['email']))
+                if usuario_db.is_active:
+                    messages.info(request, 'Esta cuenta ya ha sido verificada y activada anteriormente. Por favor, inicia sesión.')
+                    return redirect('login')
+            except User.DoesNotExist:
+                pass
+            messages.error(request, 'El nombre de usuario o correo de este enlace ya están registrados.')
+            return redirect('registro')
+
+        # Crear el usuario en la base de datos de manera definitiva
+        usuario = User(
+            username=payload['username'],
+            email=payload['email'],
+            first_name=payload['first_name'],
+            last_name=payload['last_name'],
+            password=payload['password'], # Ya viene hasheada
+            is_active=True
+        )
+        usuario.save()
+
+        # Crear perfil y asignar teléfono
+        perfil, _ = PerfilUsuario.objects.get_or_create(usuario=usuario)
+        perfil.rol = 'ciudadano'
+        perfil.telefono = payload.get('telefono')
+        perfil.save()
+
+        # Notificar a administradores y moderadores
+        admins_y_mods = User.objects.filter(
+            Q(is_superuser=True) | Q(perfilusuario__rol__in=['administrador', 'moderador'])
+        ).distinct()
+
+        for admin_mod in admins_y_mods:
+            crear_notificacion(
+                usuario=admin_mod,
+                reporte=None,
+                titulo='Nuevo usuario verificado',
+                mensaje=f'El usuario {usuario.username} ({usuario.first_name} {usuario.last_name}) ha verificado su correo y su cuenta está activa.'
+            )
+
+        # Iniciar sesión automáticamente
+        login(request, usuario)
+
+        # Limpiar variables de sesión del registro temporal si coinciden con este correo
+        temp = request.session.get('registro_temporal')
+        if temp and temp.get('email') == usuario.email:
+            request.session.pop('registro_temporal', None)
+
+        messages.success(request, '¡Felicidades! Tu cuenta ha sido verificada y activada con éxito.')
+        return redireccion_por_rol(usuario)
+
+    # 2. Si no viene token en la URL, mostrar la pantalla informativa
+    temp = request.session.get('registro_temporal')
+    if not temp:
         messages.error(request, 'Sesión de verificación expirada. Por favor regístrate nuevamente.')
         return redirect('registro')
 
-    usuario = get_object_or_404(User, id=usuario_id)
+    email = temp.get('email')
+    action = request.GET.get('action', '').strip() or request.POST.get('action', '').strip()
 
-    if request.method == 'POST':
-        codigo_ingresado = request.POST.get('codigo', '').strip()
+    # Acción de Reenviar Correo
+    if action == 'reenviar':
+        datos_completos = temp.get('datos_completos')
+        if not datos_completos:
+            messages.error(request, 'No se encontraron los datos para reenviar. Regístrate de nuevo.')
+            return redirect('registro')
 
-        if not codigo_ingresado:
-            messages.error(request, 'El código de verificación no puede estar vacío.')
-        elif codigo_ingresado == codigo_sesion:
-            # Activar el usuario en la base de datos
-            usuario.is_active = True
-            usuario.save()
+        # Generar un nuevo token firmado
+        nuevo_token = signing.dumps(datos_completos)
+        try:
+            nombre_completo = f"{temp.get('first_name')} {temp.get('last_name')}"
+            enviar_correo_verificacion(request, nombre_completo, email, nuevo_token)
+            messages.success(request, 'Se ha reenviado el enlace de activación a tu correo.')
+        except Exception:
+            messages.warning(request, 'No se pudo enviar el correo de verificación. Por favor contacta al soporte.')
+        
+        return redirect('verificar_correo')
 
-            # Notificar a administradores y moderadores sobre el registro del nuevo usuario verificado
-            admins_y_mods = User.objects.filter(
-                Q(is_superuser=True) | Q(perfilusuario__rol__in=['administrador', 'moderador'])
-            ).distinct()
-
-            for admin_mod in admins_y_mods:
-                crear_notificacion(
-                    usuario=admin_mod,
-                    reporte=None,
-                    titulo='Nuevo usuario verificado',
-                    mensaje=f'El usuario {usuario.username} ({usuario.first_name} {usuario.last_name}) ha verificado su correo y su cuenta está activa.'
-                )
-
-            # Inicio de sesión automático
-            login(request, usuario)
-
-            # Limpiar variables de sesión de verificación
-            request.session.pop('codigo_verificacion', None)
-            request.session.pop('usuario_verificacion_id', None)
-
-            messages.success(request, '¡Felicidades! Tu cuenta ha sido verificada y activada con éxito.')
-            return redireccion_por_rol(usuario)
-        else:
-            messages.error(request, 'El código ingresado es incorrecto. Inténtalo de nuevo.')
-
-    return render(request, 'reportes/verificar_correo.html', {'email': usuario.email})
+    return render(request, 'reportes/verificar_correo.html', {'email': email})
 
 
 def verificar_usuario(request):
@@ -837,6 +984,9 @@ def actualizar_reporte(request, id):
         if not modificado and not evidencia_creada:
             messages.info(request, 'No se detectaron cambios.')
 
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Reporte actualizado correctamente.'})
+
     next_url = request.POST.get('next')
     if next_url:
         return redirect(next_url)
@@ -973,10 +1123,14 @@ def eliminar_usuario(request, id):
     usuario = get_object_or_404(User, id=id)
 
     if usuario == request.user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'No puedes eliminar tu propio usuario.'})
         messages.error(request, 'No puedes eliminar tu propio usuario.')
         return redirect('panel_administrador')
 
     usuario.delete()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Usuario eliminado correctamente.'})
     messages.success(request, 'Usuario eliminado correctamente.')
 
     return redirect('panel_administrador')
@@ -988,6 +1142,8 @@ def eliminar_reporte(request, id):
     reporte = get_object_or_404(Reporte, id=id)
     reporte.delete()
 
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'message': 'Reporte eliminado correctamente.'})
     messages.success(request, 'Reporte eliminado correctamente.')
     return redirect('panel_administrador')
 

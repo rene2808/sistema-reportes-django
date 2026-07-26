@@ -1104,9 +1104,9 @@
                                     {% endif %}
                                 {% endif %}
                                 {% if request.user.perfilusuario.rol != 'moderador' %}
-                                <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn-admin btn-red"
+                                <a href="{% url 'eliminar_usuario' usuario.id %}" class="btn-admin btn-red btn-eliminar-usuario"
                                     style="padding: 6px 12px; font-size:12px; text-decoration: none;"
-                                    onclick="return confirm('¿Seguro que deseas eliminar al usuario {{ usuario.username }}?')">
+                                    data-username="{{ usuario.username }}">
                                     Eliminar
                                 </a>
                                 {% endif %}
@@ -1212,9 +1212,10 @@
                                         <i class="bi bi-x-lg"></i> Cancelar
                                     </button>
                                 </form>
-                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red btn-eliminar-reporte"
                                     style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    data-folio="{{ reporte.folio }}"
+                                    data-id="{{ reporte.id }}">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -1286,9 +1287,10 @@
                                         <i class="bi bi-x-lg"></i> Cancelar
                                     </button>
                                 </form>
-                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red btn-eliminar-reporte"
                                     style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    data-folio="{{ reporte.folio }}"
+                                    data-id="{{ reporte.id }}">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -1352,9 +1354,10 @@
                                         <i class="bi bi-arrow-counterclockwise"></i> Reabrir
                                     </button>
                                 </form>
-                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red btn-eliminar-reporte"
                                     style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    data-folio="{{ reporte.folio }}"
+                                    data-id="{{ reporte.id }}">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -1418,9 +1421,10 @@
                                         <i class="bi bi-arrow-counterclockwise"></i> Reabrir
                                     </button>
                                 </form>
-                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red"
+                                <a href="{% url 'eliminar_reporte' reporte.id %}" class="btn-admin btn-red btn-eliminar-reporte"
                                     style="padding: 6px 12px; font-size:12px; background: transparent; border: 1px solid #ef4444; color: #ef4444;"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este reporte por completo del sistema?')">
+                                    data-folio="{{ reporte.folio }}"
+                                    data-id="{{ reporte.id }}">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -1970,6 +1974,162 @@
                     console.error("Error AJAX:", err);
                     alert('No se pudo establecer conexión con el servidor.');
                     submitButtons.forEach(btn => btn.disabled = false);
+                }
+            }
+        });
+
+        // Manejador asíncrono para eliminar usuario
+        document.addEventListener('click', async function(e) {
+            const btn = e.target.closest('.btn-eliminar-usuario');
+            if (btn) {
+                e.preventDefault();
+                const deleteUrl = btn.href;
+                const username = btn.getAttribute('data-username') || 'este usuario';
+                const row = btn.closest('tr');
+                if (!row) return;
+
+                const result = await showCustomConfirm(
+                    '❌ Eliminar Usuario',
+                    `¿Estás seguro de que deseas eliminar permanentemente al usuario "${username}"? Esta acción no se puede deshacer.`
+                );
+                if (!result.confirmed) return;
+
+                try {
+                    const response = await fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            row.style.opacity = '0';
+                            row.style.transform = 'scale(0.9)';
+                            row.style.transition = 'all 0.3s ease';
+                            setTimeout(() => {
+                                row.remove();
+                            }, 300);
+                        } else {
+                            alert(data.message || 'No se pudo eliminar el usuario.');
+                        }
+                    } else {
+                        alert('Ocurrió un error al intentar eliminar el usuario.');
+                    }
+                } catch (err) {
+                    console.error("Error al eliminar usuario:", err);
+                    alert('No se pudo establecer conexión con el servidor.');
+                }
+            }
+        });
+
+        // Manejador asíncrono para eliminar reporte
+        document.addEventListener('click', async function(e) {
+            const btn = e.target.closest('.btn-eliminar-reporte');
+            if (btn) {
+                e.preventDefault();
+                const deleteUrl = btn.href;
+                const folio = btn.getAttribute('data-folio') || 'Sin folio';
+                const row = btn.closest('tr');
+                if (!row) return;
+
+                const result = await showCustomConfirm(
+                    '❌ Eliminar Reporte',
+                    `¿Estás seguro de que deseas eliminar permanentemente el reporte ${folio} del sistema? Esta acción no se puede deshacer.`
+                );
+                if (!result.confirmed) return;
+
+                try {
+                    const response = await fetch(deleteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            // Obtener estado actual antes de eliminar para actualizar contadores
+                            const parentPane = row.closest('.tab-pane');
+                            const sourceTabId = parentPane ? parentPane.id : 'pendientes';
+                            let sourceEstado = 'Pendiente';
+                            if (sourceTabId === 'proceso') sourceEstado = 'En proceso';
+                            else if (sourceTabId === 'resueltos') sourceEstado = 'Resuelto';
+                            else if (sourceTabId === 'cancelados') sourceEstado = 'Cancelado';
+
+                            // Remover la fila de forma animada
+                            row.style.opacity = '0';
+                            row.style.transform = 'scale(0.9)';
+                            row.style.transition = 'all 0.3s ease';
+                            setTimeout(() => {
+                                row.remove();
+                                
+                                const sourceTbody = document.getElementById('tbody-' + sourceTabId);
+                                const sourceContainer = document.getElementById('container-' + sourceTabId);
+                                const sourcePlaceholder = document.getElementById('placeholder-' + sourceTabId);
+
+                                if (sourceTbody && sourceTbody.children.length === 0) {
+                                    if (sourceContainer) sourceContainer.style.display = 'none';
+                                    if (sourcePlaceholder) sourcePlaceholder.style.display = 'block';
+                                }
+                            }, 300);
+
+                            // Decrementar contadores
+                            const mapeoMétricas = {
+                                'Pendiente': {
+                                    badgeClass: '.badge-pendiente',
+                                    cardClass: '.card-pendientes .number'
+                                },
+                                'En proceso': {
+                                    badgeClass: '.badge-proceso',
+                                    cardClass: '.card-proceso .number'
+                                },
+                                'Resuelto': {
+                                    badgeClass: '.badge-resuelto',
+                                    cardClass: '.card-resueltos .number'
+                                },
+                                'Cancelado': {
+                                    badgeClass: '.badge-default',
+                                    cardClass: '.card-cancelados .number'
+                                }
+                            };
+
+                            const metrics = mapeoMétricas[sourceEstado];
+                            if (metrics) {
+                                // Decrementar badges del tab
+                                const badges = document.querySelectorAll(metrics.badgeClass);
+                                badges.forEach(b => {
+                                    let val = parseInt(b.textContent.trim()) || 0;
+                                    b.textContent = Math.max(0, val - 1);
+                                });
+                                // Decrementar tarjeta KPI del estado
+                                const cardNum = document.querySelector(metrics.cardClass);
+                                if (cardNum) {
+                                    let val = parseInt(cardNum.textContent.trim()) || 0;
+                                    cardNum.textContent = Math.max(0, val - 1);
+                                }
+                            }
+
+                            // Decrementar total general
+                            const cardTotales = document.querySelector('.card-totales .number');
+                            if (cardTotales) {
+                                let val = parseInt(cardTotales.textContent.trim()) || 0;
+                                cardTotales.textContent = Math.max(0, val - 1);
+                            }
+
+                        } else {
+                            alert(data.message || 'No se pudo eliminar el reporte.');
+                        }
+                    } else {
+                        alert('Ocurrió un error al intentar eliminar el reporte.');
+                    }
+                } catch (err) {
+                    console.error("Error al eliminar reporte:", err);
+                    alert('No se pudo establecer conexión con el servidor.');
                 }
             }
         });

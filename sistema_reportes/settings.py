@@ -208,6 +208,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'reportespigrica@gmail.com'
 EMAIL_HOST_PASSWORD = 'fcsdlejhcchpkvww'
+DEFAULT_FROM_EMAIL = 'Sistema de Reportes <reportespigrica@gmail.com>'
 
 # --- Configuración de Sesiones e Inactividad ---
 # Expira la sesión tras 10 minutos (600 segundos) de inactividad

@@ -570,5 +570,161 @@ class ReabrirEditarReporteTests(TestCase):
         self.assertFalse(mod.is_active)
 
 
+class VerificarCorreoMejoradoTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.username = 'unverified_user'
+        self.password = 'password123'
+        self.email = 'unverified@example.com'
+
+    def test_registro_usuario_y_no_se_guarda_en_bd(self):
+        # 1. Al registrarse, el usuario NO se debe guardar en la base de datos
+        url = reverse('registro')
+        response = self.client.post(url, {
+            'username': self.username,
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': self.email,
+            'telefono': '1234567890',
+            'password1': self.password,
+            'password2': self.password
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verificar_correo'))
+
+        # Comprobar que NO existe en la base de datos
+        self.assertFalse(User.objects.filter(username=self.username).exists())
+
+        # Comprobar que los datos temporales están en la sesión para reenvío
+        session = self.client.session
+        self.assertIn('registro_temporal', session)
+        temp = session['registro_temporal']
+        self.assertEqual(temp['email'], self.email)
+        self.assertEqual(temp['first_name'], 'Test')
+        self.assertIn('datos_completos', temp)
+
+    def test_verificacion_exitosa_por_token_en_url(self):
+        # Registrar para generar el token
+        url_reg = reverse('registro')
+        self.client.post(url_reg, {
+            'username': self.username,
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': self.email,
+            'telefono': '1234567890',
+            'password1': self.password,
+            'password2': self.password
+        })
+
+        # Generar un token válido usando django.core.signing
+        from django.core import signing
+        from django.contrib.auth.hashers import make_password
+        datos_registro = {
+            'username': self.username,
+            'email': self.email,
+            'first_name': 'Test',
+            'last_name': 'User',
+            'telefono': '1234567890',
+            'password': make_password(self.password)
+        }
+        token = signing.dumps(datos_registro)
+
+        # Hacer GET al endpoint de verificación con el token en la URL
+        url_verif = reverse('verificar_correo')
+        response = self.client.get(url_verif, {'token': token})
+        self.assertEqual(response.status_code, 302) # Redirige al panel tras activarse
+
+        # El usuario ahora SÍ debe existir en la base de datos y estar activo
+        self.assertTrue(User.objects.filter(username=self.username).exists())
+        user = User.objects.get(username=self.username)
+        self.assertTrue(user.is_active)
+        self.assertEqual(user.perfilusuario.telefono, '1234567890')
+
+    def test_login_usuario_pendiente_redirige(self):
+        # Registrar para que quede la sesión temporal
+        url_reg = reverse('registro')
+        self.client.post(url_reg, {
+            'username': self.username,
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': self.email,
+            'telefono': '1234567890',
+            'password1': self.password,
+            'password2': self.password
+        })
+
+        # Intentar iniciar sesión antes de verificar el token
+        url_login = reverse('login')
+        response = self.client.post(url_login, {
+            'username': self.username,
+            'password': self.password
+        })
+
+        # Debe redirigir a verificación
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verificar_correo'))
+
+
+class AdminAsyncViewsTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_user(username='admin_test', password='password123')
+        self.admin.perfilusuario.rol = 'administrador'
+        self.admin.perfilusuario.save()
+
+        self.user_to_delete = User.objects.create_user(username='user_to_delete', password='password123')
+
+        # Categoría
+        from .models import Categoria
+        self.categoria = Categoria.objects.create(nombre='Incendios', codigo='IN')
+
+        # Reporte
+        self.reporte = Reporte.objects.create(
+            usuario=self.user_to_delete,
+            categoria=self.categoria,
+            titulo='Reporte a eliminar',
+            prioridad='Baja',
+            estado='Pendiente'
+        )
+
+    def test_eliminar_usuario_async(self):
+        self.client.login(username='admin_test', password='password123')
+        url = reverse('eliminar_usuario', kwargs={'id': self.user_to_delete.id})
+        
+        # Petición AJAX (con la cabecera HTTP_X_REQUESTED_WITH)
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'success': True, 'message': 'Usuario eliminado correctamente.'})
+        self.assertFalse(User.objects.filter(username='user_to_delete').exists())
+
+    def test_eliminar_reporte_async(self):
+        self.client.login(username='admin_test', password='password123')
+        url = reverse('eliminar_reporte', kwargs={'id': self.reporte.id})
+        
+        # Petición AJAX
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'success': True, 'message': 'Reporte eliminado correctamente.'})
+        self.assertFalse(Reporte.objects.filter(id=self.reporte.id).exists())
+
+    def test_actualizar_reporte_async(self):
+        self.client.login(username='admin_test', password='password123')
+        url = reverse('actualizar_reporte', kwargs={'id': self.reporte.id})
+        
+        # Petición AJAX para cambiar estado
+        response = self.client.post(url, {
+            'estado': 'En proceso'
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'success': True, 'message': 'Reporte actualizado correctamente.'})
+        
+        self.reporte.refresh_from_db()
+        self.assertEqual(self.reporte.estado, 'En proceso')
+
+
+
 
 
