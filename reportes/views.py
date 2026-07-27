@@ -266,7 +266,7 @@ El equipo del Sistema de Reportes."""
                 margin: 25px 0;
             }}
             .btn {{
-                background-color: #ff8c32;
+                background-color: #03152d;
                 color: #ffffff !important;
                 text-decoration: none;
                 padding: 12px 24px;
@@ -294,9 +294,9 @@ El equipo del Sistema de Reportes."""
             <div class="btn-container">
                 <a href="{url_activar}" class="btn">Activar mi cuenta</a>
             </div>
-            <div class="text">
+            <div class="text" style="font-size: 13px; margin-top: 20px;">
                 Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-                <a href="{url_activar}" style="color: #ff8c32; word-break: break-all;">{url_activar}</a>
+                <a href="{url_activar}" style="color: #03152d; word-break: break-all; font-size: 11px;">{url_activar}</a>
             </div>
             <div class="footer">
                 Este correo fue enviado de forma automática. Si no te has registrado, por favor ignora este mensaje.
