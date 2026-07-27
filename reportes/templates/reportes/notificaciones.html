@@ -205,6 +205,91 @@
         box-shadow: 0 12px 26px rgba(59, 130, 246, 0.35);
         transform: translateY(-1px);
     }
+
+    .empty-notif-box {
+        border: 2px solid #cbd5e1;
+        border-top: 6px solid #718096 !important;
+        text-align: center;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .empty-notif-icon {
+        font-size: 2.2rem;
+        color: #94a3b8;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .empty-notif-text {
+        margin: 0;
+        color: #718096;
+        font-style: italic;
+        font-weight: bold;
+    }
+
+    /* Ajustes modo oscuro para notificaciones */
+    body.dark-mode .empty-notif-box {
+        background: #111827 !important;
+        border-color: #1f2937 !important;
+        border-top-color: #4b5563 !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    body.dark-mode .empty-notif-text {
+        color: #9ca3af !important;
+    }
+
+    body.dark-mode .notif-card {
+        border-left: 8px solid #10b981 !important;
+        border-color: #1f2937 !important;
+    }
+
+    body.dark-mode .notif-card.unread {
+        border-left: 8px solid #2563eb !important;
+        border-color: #1e3a8a !important;
+    }
+
+    body.dark-mode .notif-report-box {
+        background: #1f2937 !important;
+        border-color: #374151 !important;
+    }
+
+    body.dark-mode .notif-report-box span {
+        color: #9ca3af !important;
+    }
+
+    body.dark-mode .notif-report-box span span {
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .notif-report-box a {
+        color: #60a5fa !important;
+    }
+
+    body.dark-mode .btn-mark-read {
+        background: #1f2937 !important;
+        color: #3b82f6 !important;
+        border-color: #2563eb !important;
+    }
+
+    body.dark-mode .btn-mark-read:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .btn-delete-notif {
+        background: #1f2937 !important;
+        color: #f87171 !important;
+        border-color: #ef4444 !important;
+    }
+
+    body.dark-mode .btn-delete-notif:hover {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
 </style>
 
 <div class="top-actions">
@@ -282,9 +367,9 @@
         </div>
     {% endfor %}
 {% else %}
-    <div style="border: 2px solid #cbd5e1; border-top: 4px solid #718096 !important; text-align: center; padding: 40px; background: white; border-radius: 18px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);">
-        <i class="bi bi-bell-slash" style="font-size: 2.2rem; color: #94a3b8; display: block; margin-bottom: 12px;"></i>
-        <p style="margin: 0; color: #718096; font-style: italic; font-weight: bold;">No tienes notificaciones todavía.</p>
+    <div class="empty-notif-box">
+        <i class="bi bi-bell-slash empty-notif-icon"></i>
+        <p class="empty-notif-text">No tienes notificaciones todavía.</p>
     </div>
 {% endif %}
 
