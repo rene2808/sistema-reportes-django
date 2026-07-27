@@ -469,16 +469,13 @@ def verificar_correo(request):
                 mensaje=f'El usuario {usuario.username} ({usuario.first_name} {usuario.last_name}) ha verificado su correo y su cuenta está activa.'
             )
 
-        # Iniciar sesión automáticamente
-        login(request, usuario)
-
         # Limpiar variables de sesión del registro temporal si coinciden con este correo
         temp = request.session.get('registro_temporal')
         if temp and temp.get('email') == usuario.email:
             request.session.pop('registro_temporal', None)
 
-        messages.success(request, '¡Felicidades! Tu cuenta ha sido verificada y activada con éxito.')
-        return redireccion_por_rol(usuario)
+        messages.success(request, 'Tu cuenta ha sido verificada y activada con éxito. Por favor, inicia sesión para continuar.')
+        return redirect('login')
 
     # 2. Si no viene token en la URL, mostrar la pantalla informativa
     temp = request.session.get('registro_temporal')

@@ -156,6 +156,45 @@
             font-weight: bold;
         }
 
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10B981;
+            color: #a7f3d0;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .warning-message {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #F59E0B;
+            color: #fde68a;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .info-message {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3B82F6;
+            color: #bfdbfe;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
         /* Enlace de redirección a la página de registro */
         .registro-link {
             margin-top: 50px;
@@ -285,6 +324,24 @@
         <div class="error">
             {{ mensaje }}
         </div>
+        {% endif %}
+
+        <!-- Bloque para desplegar notificaciones y mensajes de Django -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}success-message{% elif message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning-message{% else %}info-message{% endif %}">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
         {% endif %}
 
         <!-- Formulario de inicio de sesión por método POST -->

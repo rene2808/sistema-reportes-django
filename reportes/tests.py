@@ -632,7 +632,7 @@ class VerificarCorreoMejoradoTests(TestCase):
         # Hacer GET al endpoint de verificación con el token en la URL
         url_verif = reverse('verificar_correo')
         response = self.client.get(url_verif, {'token': token})
-        self.assertEqual(response.status_code, 302) # Redirige al panel tras activarse
+        self.assertRedirects(response, reverse('login')) # Redirige al inicio de sesión tras activarse
 
         # El usuario ahora SÍ debe existir en la base de datos y estar activo
         self.assertTrue(User.objects.filter(username=self.username).exists())
